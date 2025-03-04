@@ -2,6 +2,7 @@
 .idea/
 *.asc
 *.zip
+03_PoC/log/
 
 
 # Byte-compiled / optimized / DLL files
@@ -20,7 +21,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
