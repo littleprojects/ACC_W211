@@ -20,6 +20,14 @@ With a Database I can read out all needed information how sends the vehicle and 
 Is it possible to replace the ACC with a new controller and sensor?
 I think so -> lets try with a Proofe of Concept (a simple cruise controll at first)
 
+Many thanks to the website:
+https://w220.wiki/Distronic#Distronic
+
+And:
+https://github.com/rnd-ash/mb-w211-pc
+
+This was a Jumpstart!
+
 ## Tooling
 
 Note about the Tooling in need to do this.
