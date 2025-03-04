@@ -1,0 +1,13 @@
+CAN C (Chassis or Motor CAN)
+- 500kb
+- Connector: Fahrerseiteig unter dem Einstieg
+- Grüne Kabel
+- Solid Green CAN_H
+- Green/white CAN_L
+
+
+Usefull Links:
+https://w220.wiki/Distronic
+
+
+PINs
