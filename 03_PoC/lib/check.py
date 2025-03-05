@@ -82,6 +82,7 @@ def is_acc_ready(vehicle_msg, log):
 
     signal = vehicle_msg['signals']
 
+    # cancel conditions
     if (
         # break by driver
         signal['SFB'] == 1
@@ -92,6 +93,8 @@ def is_acc_ready(vehicle_msg, log):
         or signal['SBCSH_AKT'] == 1
         # check for Reverse driving 0 Stop; 1 Forward; 2 reverse
         or signal['DRTGTM'] == 2
+        # not in D
+        or signal['WHST'] != 4
         # BS 200
         # EPS
         or signal['ESP_KL'] == 1

@@ -22,6 +22,9 @@ Tools -> Format Converter -> Other Converters -> DBC to DBF Conversion
 **BUSMASTER** is an excelent CAN BUS software. 
 - quick to learn
 - It helps a lot to read out the CAN and correct the CAN Database
+- CAN logging
+- CAN debugging, parsing and visualisation
+- CAN replay
 
 Also ASAMMDF (Python) comes with a good GUI and a loot of tools.
 

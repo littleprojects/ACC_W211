@@ -132,7 +132,7 @@ def main():
 if __name__ == "__main__":
 
     try:
-        log = Logger('module_name').logger
+        log = Logger(module_name).logger
 
         log.setLevel(utils.parse_log_level(default_config['loglevel']))
         log.info('Start ' + module_name + ' ' + module_version)

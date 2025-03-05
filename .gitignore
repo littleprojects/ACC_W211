@@ -3,6 +3,8 @@
 *.asc
 *.zip
 03_PoC/log/
+*.mdf
+*.mf4
 
 
 # Byte-compiled / optimized / DLL files
