@@ -109,7 +109,7 @@ BO_ 776 MS_308h: 8 Vector__XXX
  SG_ UEHITZ : 39|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ ANL_LFT : 35|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ TEMP_KL : 32|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ T_OEL : 40|8@1- (1,0) [0|0] "°C" Vector__XXX
+ SG_ T_OEL : 40|8@1- (0.5,-40) [0|0] "°C" Vector__XXX
  SG_ OEL_QUAL : 56|8@1- (1,0) [0|0] "" Vector__XXX
  SG_ OEL_FS : 48|8@1- (1,0) [0|0] "" Vector__XXX
  SG_ NMOT : 15|16@0+ (1,0) [0|0] "" Vector__XXX
@@ -123,9 +123,9 @@ BO_ 786 MS_312h: 8 Vector__XXX
 BO_ 1408 AAD_580h: 8 Vector__XXX
 
 BO_ 1544 MS_608h: 8 Vector__XXX
- SG_ VB : 47|16@0+ (1,0) [0|0] "" Vector__XXX
- SG_ T_MOT : 0|8@1+ (1,0) [0|0] "°C" Vector__XXX
- SG_ T_LUFT : 8|8@1+ (1,0) [0|0] "°C" Vector__XXX
+ SG_ VB : 47|16@0+ (0.1,0) [0|0] "L/100km" Vector__XXX
+ SG_ T_MOT : 0|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
+ SG_ T_LUFT : 8|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
  SG_ V_MAX_FIX : 32|8@1+ (1,0) [0|0] "kph" Vector__XXX
 
 BO_ 824 GS_338h: 8 Vector__XXX
@@ -137,9 +137,9 @@ BO_ 1048 GS_418h: 8 Vector__XXX
  SG_ FPC : 8|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ WHST : 51|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ GIC : 32|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ T_GET : 16|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ T_GET : 16|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
 
-BO_ 560 EWM_230h: 8 Vector__XXX
+BO_ 560 EWM_230h: 1 Vector__XXX
 
 BO_ 1786 VIN: 8 Vector__XXX
 
@@ -187,12 +187,12 @@ BO_ 566 ART_LRW_236h: 8 Vehicle
  SG_ LRWS_ST : 32|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LRWS_ID : 34|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BZ236h : 36|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ vLRW : 21|14@0+ (0.5,0) [0|0] "-2048" Vector__XXX
- SG_ LRW : 5|14@0+ (0.5,-2048) [0|0] "" Vector__XXX
+ SG_ vLRW : 21|14@0+ (0.5,0) [0|0] "-4096" Vector__XXX
+ SG_ LRW : 5|14@0+ (0.5,-2048) [0|0] "deg" Vector__XXX
 
 BO_ 832 FS_340h: 8 Vector__XXX
 
-BO_ 1328 LWR_530h: 8 Vector__XXX
+BO_ 1328 LWR_530h: 2 Vector__XXX
 
 BO_ 536 GS_218h: 8 Vector__XXX
  SG_ UEHITZ_GET : 35|1@1- (1,0) [0|0] "" Vector__XXX
