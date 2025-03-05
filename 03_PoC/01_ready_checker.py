@@ -5,6 +5,7 @@ interprete the data and evaluate if everything for a ACC is available
 
 """
 
+import can
 import time
 import traceback
 import cantools
@@ -32,15 +33,37 @@ default_config = {
     'can_1_channel':            '1',
     'can_0_speed':              500000,
     'can_0_dbc':                'CAN_C.dbc',
-    'mdf_log_file':             'log\CANlog_' + utils.date_time_str() + '.mf4',
+    'mdf_log':                  0,
+    'mdf_log_file':             'log/ANlog_' + utils.date_time_str() + '.mf4',
     'check_msg_delay':          '500',          # [ms] max delay
 }
 
 
 config = {}
 
+needed_msg_id_list = [
+        # mandatory msgs
+        '0x200',    # BS (Break System) - drive direction, ESP
+        '0x300',    # BS - enable ART
+        '0x236',    # ART_LRW - Steering
+        '0x238',    # ART_MRM - Buttons
+        '0x240',    # EZS - Buttons
+        '0x212',    # MS - Enable ART
+        '0x308',    # MS - Data
+        '0x312',    # MS - Moments
+        '0x412',    # Kombi - speed
+        # other msgs
+        '0x408',    # Kombi
+        '0x328',    # BS
+        '0x218',    # GS - Gearbox System
+        '0x418',    # GS
+        '0x210',    # MS (Motor System) - Pedal
+        '0x608',    # MS
+        '0x328',    # BS
+    ]
+
 # global storage (dictionary) for CAN Siganls - will be updated with every new msg
-vehicle_msg = { 'msgs': {}, 'signals': {}}
+vehicle_msg = {'msgs': {}, 'signals': {}}
 #{'msgs':{'0x123': 1234567890, '0x234': 1234567891}, 'signals':{ 'Siganl1':12, 'Signal2': 345}}
 
 
@@ -48,42 +71,63 @@ def main():
 
     log.info('START')
 
-    mdf = Mdf(config['mdf_log_file'])
+    mdf = Mdf(config['mdf_log_file'], log)
 
-    can_0 = Can(config['can_0_interface'], config['can_0_channel'], config['can_0_speed'], config['can_0_dbc'], log)
+    #can_0 = Can(config['can_0_interface'], config['can_0_channel'], config['can_0_speed'], config['can_0_dbc'], log)
+    can_0 = can.interface.Bus(interface=config['can_0_interface'], channel=config['can_0_channel'], bitrate=500000, app_name='NewApp')
 
-    db_0 = cantools.database.load(config['can_0_dbc'])
+    db_0 = cantools.database.load_file(config['can_0_dbc'])
 
 
-    can_0.shutdown_connection()
-    can_0.get_connection()
+    #can_0.shutdown_connection()
+    #can_0.get_connection()
 
     #can_1 = Can(config['can_0_interface'], config['can_1_channel'], config['can_0_speed'], config['can_0_dbc'], log)
 
-    for _ in range(100):
+    ready = False
+
+    #for _ in range(2000):
+    while True:
         msg = can_0.recv()
 
         if msg:
+            vehicle_msg_id = hex(msg.arbitration_id)
+
             # update msg timestamp
-            vehicle_msg['msgs'].update({msg.arbitration_id: utils.ts_ms()})
+            vehicle_msg['msgs'].update({vehicle_msg_id: utils.ts_ms()})
+
 
             # decode msg with DBC information to signals
-            decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
+            if vehicle_msg_id in needed_msg_id_list:
+                decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
 
-            # store siganls in MDF file
-            mdf.add_signals(decode_msg, signal_prefix='CAN_0_')
+                # store siganls in MDF file
+                if config['mdf_log']:
+                    mdf.add_signals(decode_msg, signal_prefix='CAN_0_')
 
-            # all signals in the msg
-            for key in decode_msg.keys():
-                signal_name = key
-                signal_data = decode_msg[key]
+                # all signals in the msg
+                for key in decode_msg.keys():
+                    signal_name = key
+                    signal_data = decode_msg[key]
 
-                # update msg storage
-                vehicle_msg['signals'].update({signal_name: signal_data})
+                    # update msg storage
+                    vehicle_msg['signals'].update({signal_name: signal_data})
 
-            ready = check.is_acc_ready()
+                ready = check.is_acc_ready(vehicle_msg, log)
 
-    mdf.write_mdf()
+                if ready:
+                    enabled = check.enable_acc(vehicle_msg, log)
+                    if enabled:
+                        log.info('Enabeled')
+                        break
+    if config['mdf_log']:
+        mdf.write_mdf()
+
+    log.info('READY: ' + str(ready))
+
+    can_0.shutdown()
+
+    print(vehicle_msg)
 
 if __name__ == "__main__":
 

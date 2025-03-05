@@ -1,5 +1,11 @@
+"""
+Simple script to replay a CAN Log made by _can_logger.py
+"""
+
 import can
 import time
+
+file = 'can_log.asc'
 
 # Erstelle eine Bus-Instanz
 bus = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name='NewApp')
@@ -10,8 +16,11 @@ i = 0
 
 last_ts = 0
 
+print('Replay CAN msg from ' + file)
+
 # Öffne die Datei mit den aufgezeichneten Nachrichten
-with open('can_log.asc', 'r') as log_file:
+with open(file, 'r') as log_file:
+    print('Start...')
     for line in log_file:
         parts = line.strip().split()
         timestamp = float(parts[0])
@@ -42,5 +51,7 @@ with open('can_log.asc', 'r') as log_file:
             print(str(i) + ' Msgs recorded')
 
     print('END of file')
+
+    bus.shutdown()
 
     time.sleep(100)

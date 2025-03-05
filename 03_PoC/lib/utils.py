@@ -20,7 +20,7 @@ def ts_ms():
 
 # return date and Time string
 def date_time_str(ts=time.time()):
-    return str(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')) + ": "
+    return str(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S'))
 
 
 # parse Float numbers

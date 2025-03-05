@@ -37,20 +37,44 @@ BU_: DTR Vehicle
 
 
 BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
- SG_ N_VRBT_SBCSH_AKT : 0|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ RT_EIN : 0|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ CRC_260h : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SBC_S_H_AKT : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ FZG_STEHT : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ VEH_DIR_REVERSE : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ V_FZG : 0|12@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ DTR_SENS_DMODE : 0|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ DTR_RX_INVALID : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ DTR_LANE : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ DTR_CAN_VALID : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ DTR_AC_LANECFG : 0|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_NINIT : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_DIRTY : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_TXRX_ERR : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ UB_LOW : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ OBJ_NVERM : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_EXT_ERR : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_TEMP_ERR : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SEND_DEJUST : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SEND_DEF : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_SW_KM : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_SW_JAHR : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SENS_VAR : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 544 x_RDU_A1: 8 Vector__XXX
- SG_ FZG_STEHT : 51|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ VEH_DIR_REVERSE : 55|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ V_FZG : 3|12@0+ (1,0) [0|0] "" Vector__XXX
+BO_ 616 MS_268: 8 Vector__XXX
+ SG_ PW_F : 40|8@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 556 x_RDU_A4: 8 Vector__XXX
+BO_ 576 ESZ_240: 8 Vector__XXX
+ SG_ ST3_BET : 44|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BN_NTLF : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ART_VH : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ART_ABW_BET : 42|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ART_ABSTAND : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BLI_RE : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BLI_LI : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ESP_BET : 37|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ CRASH_CNF : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ CRASH : 26|1@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 558 x_RDU_A5: 8 Vector__XXX
-
-BO_ 592 _ART_250h: 7 DTR
+BO_ 592 ART_250h: 7 DTR
  SG_ GMIN_ART : 48|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ GMAX_ART : 51|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ AKT_R_ART : 55|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -69,24 +93,23 @@ BO_ 592 _ART_250h: 7 DTR
  SG_ SLV_ART : 4|4@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 528 MS_210h: 8 Vector__XXX
- SG_ Pedalwert : 16|8@1+ (0.5,0) [0|0] "?" Vector__XXX
+ SG_ TM_REG : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ PWG_ERR : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ V_MAX_EIN : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ NOTL : 33|1@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ Pedalwert : 16|8@1+ (0.5,0) [0|0] "%" Vector__XXX
 
 BO_ 530 MS_212h: 8 Vector__XXX
- SG_ M_ART_E : 21|1@1- (1,0) [0|0] "Nm" Vector__XXX
+ SG_ M_ART_E : 21|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ M_FEV : 7|13@0+ (1,0) [0|0] "Nm" Vector__XXX
  SG_ M_FV : 20|13@0+ (1,0) [0|0] "Nm" Vector__XXX
-
-BO_ 616 x_MS_268h: 8 Vector__XXX
- SG_ PW_F : 40|8@1+ (1,0) [0|0] "" Vector__XXX
-
-BO_ 755 x_MS_2F3h: 8 Vector__XXX
 
 BO_ 776 MS_308h: 8 Vector__XXX
  SG_ OEL_KL : 26|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ UEHITZ : 39|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ ANL_LFT : 35|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ TEMP_KL : 32|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ T_OEL : 40|8@1- (1,0) [0|0] "°C" Vector__XXX
+ SG_ T_OEL : 40|8@1- (0.5,-40) [0|0] "°C" Vector__XXX
  SG_ OEL_QUAL : 56|8@1- (1,0) [0|0] "" Vector__XXX
  SG_ OEL_FS : 48|8@1- (1,0) [0|0] "" Vector__XXX
  SG_ NMOT : 15|16@0+ (1,0) [0|0] "" Vector__XXX
@@ -100,38 +123,33 @@ BO_ 786 MS_312h: 8 Vector__XXX
 BO_ 1408 AAD_580h: 8 Vector__XXX
 
 BO_ 1544 MS_608h: 8 Vector__XXX
- SG_ VB : 47|16@0+ (1,0) [0|0] "" Vector__XXX
- SG_ T_MOT : 0|8@1+ (1,0) [0|0] "°C" Vector__XXX
- SG_ T_LUFT : 8|8@1+ (1,0) [0|0] "°C" Vector__XXX
+ SG_ VB : 47|16@0+ (0.1,0) [0|0] "L/100km" Vector__XXX
+ SG_ T_MOT : 0|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
+ SG_ T_LUFT : 8|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
  SG_ V_MAX_FIX : 32|8@1+ (1,0) [0|0] "kph" Vector__XXX
 
 BO_ 824 GS_338h: 8 Vector__XXX
 
 BO_ 1048 GS_418h: 8 Vector__XXX
+ SG_ M_VERL : 40|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ FMRAD : 50|11@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ FSC : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ FPC : 8|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ WHST : 51|3@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ GIC : 32|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ T_GET : 16|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
 
-BO_ 560 EWM_230h: 8 Vector__XXX
-
-BO_ 576 EZS_240h: 8 Vector__XXX
- SG_ ART_VH : 63|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ CRASH_CNF : 25|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ CRASH : 24|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ ART_ABSTAND : 48|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ ART_ABW_BET : 42|2@1+ (1,0) [0|0] "" Vector__XXX
- SG_ ESP_BET : 37|2@1+ (1,0) [0|0] "" Vector__XXX
+BO_ 560 EWM_230h: 1 Vector__XXX
 
 BO_ 1786 VIN: 8 Vector__XXX
 
 BO_ 584 ZGW_248h: 8 Vector__XXX
 
-BO_ 588 x_ZGW_24Ch: 8 Vector__XXX
-
 BO_ 1038 KLA_40Eh: 8 Vector__XXX
-
-BO_ 1627 x_DGR_65Bh: 8 Vector__XXX
 
 BO_ 1791 CONFIG_6FFh: 8 Vehicle
 
-BO_ 1032 _KOMBI_408h: 8 Vector__XXX
+BO_ 1032 KOMBI_408h: 8 Vector__XXX
  SG_ WRC : 56|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ZH_FREIG : 60|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ SGT_VH : 61|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -151,10 +169,7 @@ BO_ 1032 _KOMBI_408h: 8 Vector__XXX
  SG_ TF_AUF : 15|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ TANK_FS : 0|8@1+ (1,0) [0|0] "L" Vector__XXX
 
-BO_ 1042 _KOMBI_412h: 8 Vector__XXX
- SG_ Free_3 : 52|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ Free_2 : 43|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ Free_1 : 0|6@1+ (1,0) [0|0] "" Vector__XXX
+BO_ 1042 KOMBI_412h: 8 Vector__XXX
  SG_ MAZ_NEU : 51|12@0+ (1,0) [0|0] "" Vector__XXX
  SG_ PRW_ANF : 40|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ PTS_TON_AUS : 42|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -167,42 +182,27 @@ BO_ 1042 _KOMBI_412h: 8 Vector__XXX
  SG_ OPT_WARN_AUS : 6|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ AKU_WARN_AUS : 7|1@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 566 _ART_LRW_236h: 8 Vehicle
+BO_ 566 ART_LRW_236h: 8 Vehicle
  SG_ CRC_236h : 56|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LRWS_ST : 32|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LRWS_ID : 34|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BZ236h : 36|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ vLRW : 21|14@0+ (1,0) [0|0] "" Vector__XXX
- SG_ LRW : 5|14@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ vLRW : 21|14@0+ (0.5,0) [0|0] "-4096" Vector__XXX
+ SG_ LRW : 5|14@0+ (0.5,-2048) [0|0] "deg" Vector__XXX
 
 BO_ 832 FS_340h: 8 Vector__XXX
 
-BO_ 1328 LWR_530h: 8 Vector__XXX
-
-BO_ 1104 x_RGS_L_450h: 8 Vector__XXX
-
-BO_ 1112 x_RGS_R_458h: 8 Vector__XXX
-
-BO_ 53 x_ARCADE_A2_35h: 8 Vector__XXX
-
-BO_ 500 x_BN14_A1: 8 Vector__XXX
-
-BO_ 258 x_GS_102h: 8 Vector__XXX
-
-BO_ 260 x_EWM_104h: 8 Vector__XXX
+BO_ 1328 LWR_530h: 2 Vector__XXX
 
 BO_ 536 GS_218h: 8 Vector__XXX
  SG_ UEHITZ_GET : 35|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ GS_NOTL : 36|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ GET_OK : 39|1@1- (1,0) [0|0] "" Vector__XXX
 
-BO_ 562 x_SBW_232h: 8 Vector__XXX
-
-BO_ 568 _ART_MRM_238h: 5 Vehicle
- SG_ ART_ABSTAND : 32|8@1+ (1,0) [0|0] "" Vector__XXX
+BO_ 568 ART_MRM_238h: 4 Vehicle
  SG_ LW_VZ : 19|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ LW_INI : 20|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ LW : 18|11@0+ (1,0) [0|0] "deg" Vector__XXX
+ SG_ LW : 18|11@0+ (0.5,0) [0|0] "deg" Vector__XXX
  SG_ LW_CF : 21|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LW_OV : 22|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LW_PA : 23|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -217,112 +217,20 @@ BO_ 568 _ART_MRM_238h: 5 Vehicle
  SG_ VMAX_AKT : 4|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ WH_UP : 5|1@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 840 x_ABC_348h: 8 Vector__XXX
-
-BO_ 881 x_AFS_L_371h: 8 Vector__XXX
-
-BO_ 883 x_AFS_R_373h: 8 Vector__XXX
-
-BO_ 948 x_PSM_3B4h: 8 Vector__XXX
-
-BO_ 952 x_PSM_3B8h: 8 Vector__XXX
-
 BO_ 1040 KLA_410h: 8 Vector__XXX
 
-BO_ 1044 x_KOMBI_414h: 8 Vector__XXX
-
-BO_ 1064 x_VG_428h: 8 Vector__XXX
-
 BO_ 1628 BS_65Ch: 8 Vector__XXX
-
-BO_ 1440 x_SD_RS_DTR_5A0: 8 Vector__XXX
-
-BO_ 1184 x_D_RS_DTR_4A0h: 8 Vector__XXX
-
-BO_ 620 x_DTR_A5_26Ch: 8 DTR
-
-BO_ 612 x_DTR_A4_264h: 8 DTR
- SG_ CRC_264h : 0|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_ZIELVLST : 52|2@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_V_REL : 28|12@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_STEHT : 50|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_NEU : 51|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_FAHRT_STEHT : 49|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_ABSTAND : 17|11@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_ABLAGE : 8|9@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_ABL_GRAD : 54|10@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ3_A_OBJ : 40|8@1+ (1,0) [0|0] "" Vector__XXX
-
-BO_ 608 x__DTR_A3_260: 8 DTR
- SG_ OBJ2_ZIELVLST : 52|2@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_V_REL : 28|12@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_STEHT : 50|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_NEU : 51|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_FAHRT_STEHT : 49|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_ABSTAND : 17|11@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_ABLAGE : 8|9@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_ABL_GRAD : 54|10@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ2_A_OBJ : 40|8@1+ (1,0) [0|0] "" Vector__XXX
-
-BO_ 604 x__DTR_A2_25C: 8 DTR
- SG_ REL_ZIELVLST : 52|2@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_NEU : 51|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_ABL_GRAD : 54|10@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_STEHT : 50|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_FAHRT_STEHT : 49|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ CMS_VAL : 48|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_V_REL : 28|12@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_ABSTAND : 17|11@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_ABLAGE : 8|9@1+ (1,0) [0|0] "" Vector__XXX
- SG_ REL_A_OBJ : 40|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ CRC_25Ch : 0|8@1+ (1,0) [0|0] "" Vector__XXX
-
-BO_ 596 x_DTR_A1_254: 8 DTR
- SG_ BZ254h : 56|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ DTR_SENS_DMODE : 62|2@1+ (1,0) [0|0] "" Vector__XXX
- SG_ DTR_RX_INVALID : 37|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ DTR_LANE : 40|16@1+ (1,0) [0|0] "" Vector__XXX
- SG_ DTR_CAN_VALID : 36|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ DTR_AC_LANECFG : 38|2@1+ (1,0) [0|0] "" Vector__XXX
- SG_ RX_SPUR_VALID : 35|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_NINIT : 31|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_DIRTY : 29|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_TXRX_ERR : 28|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ UB_LOW : 34|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ_NVERM : 30|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_EXT_ERR : 27|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_TEMP_ERR : 26|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SEND_DEJUST : 25|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SEND_DEF : 24|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_SW_KM : 16|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_SW_JAHR : 8|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ SENS_VAR : 0|8@1+ (1,0) [0|0] "" Vector__XXX
-
-BO_ 1697 x_PRW_MESS2_6A1: 8 Vector__XXX
-
-BO_ 1611 x_BS_APPL4_64B: 8 Vector__XXX
-
-BO_ 1589 x_BS_APPL2_635h: 8 Vector__XXX
-
-BO_ 1826 x_SD_RS_BS_722h: 8 Vector__XXX
-
-BO_ 1843 x_SD_RS_EHB_733h: 8 Vector__XXX
-
-BO_ 1947 x_D_RS_EHB_79Bh: 8 Vector__XXX
-
-BO_ 1925 x_D_RS_BS_785h: 8 Vector__XXX
 
 BO_ 808 BS_328h: 8 Vector__XXX
  SG_ SBCSH_AKT : 44|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BRE_AKT_E : 47|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 768 BS_300h: 8 Vector__XXX
+ SG_ GIER_ROH : 55|16@0- (1,0) [0|0] "" Vector__XXX
  SG_ ART_E : 3|1@1- (1,0) [0|0] "" Vector__XXX
  SG_ SFB : 8|2@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 624 x_BS_270h: 8 Vector__XXX
-
-BO_ 600 _ART_258h: 8 DTR
+BO_ 600 ART_258h: 8 DTR
  SG_ ASSIST_ANZ_V2 : 56|5@1+ (1,0) [0|0] "" Vector__XXX
  SG_ CAS_ERR_ANZ_V2 : 61|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ASSIST_FKT_AKT : 48|2@1+ (1,0) [0|0] "" Vector__XXX
@@ -353,31 +261,61 @@ BO_ 600 _ART_258h: 8 DTR
 BO_ 520 BS_208h: 8 Vector__XXX
 
 BO_ 512 BS_200h: 8 Vector__XXX
+ SG_ HAS_KL : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ABS_KL : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ESP_KL : 3|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ ESP_INFO_DL : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ESP_INFO_BL : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BRE_KL : 7|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ TM_DL : 53|14@0+ (1,0) [0|0] "?" Vector__XXX
  SG_ DRTGTM : 54|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ DVL : 21|14@0+ (1,0) [0|0] "?" Vector__XXX
  SG_ BLS : 8|2@1+ (1,0) [0|0] "" Vector__XXX
-
-BO_ 552 x_RDU_A3_228h: 8 Vector__XXX
-
-BO_ 548 x_RDU_A2_224h: 8 Vector__XXX
-
-BO_ 0 x_Msg_000h: 8 Vector__XXX
 
 
 
 CM_ BU_ DTR "Abstands Regel Tempomat
 Distronic Control Modul";
 CM_ BO_ 3221225472 "This is a message for not used signals, created by Vector CANdb++ DBC OLE DB Provider.";
-CM_ SG_ 3221225472 N_VRBT_SBCSH_AKT "SBC-S/H aktiv, ASG darf nicht nach N schalten";
-CM_ SG_ 3221225472 RT_EIN "Rollentestmodus ESP einschalten";
-CM_ SG_ 3221225472 CRC_260h "???";
-CM_ BO_ 544 "Fahrzeuginfo";
-CM_ SG_ 544 FZG_STEHT "Fahrzeug Stillstand erkannt";
-CM_ SG_ 544 VEH_DIR_REVERSE "Vehicle direction reverse";
-CM_ SG_ 544 V_FZG "Eigengeschwindigkeit Fahrzeug";
-CM_ BO_ 556 "DTR Spur 1 Punkte";
-CM_ BO_ 558 "DTR Spur 2 Punkte";
+CM_ SG_ 3221225472 SBC_S_H_AKT "SBC-S/H aktiv, ASG darf nicht nach N schalten";
+CM_ SG_ 3221225472 FZG_STEHT "Fahrzeug Stillstand erkannt";
+CM_ SG_ 3221225472 VEH_DIR_REVERSE "Vehicle direction reverse";
+CM_ SG_ 3221225472 V_FZG "Eigengeschwindigkeit Fahrzeug";
+CM_ SG_ 3221225472 DTR_SENS_DMODE "DTR Sensor Diagnosemode";
+CM_ SG_ 3221225472 DTR_RX_INVALID "RX invalid (Timeout,Parity,MC)";
+CM_ SG_ 3221225472 DTR_LANE "DTR -Spur";
+CM_ SG_ 3221225472 DTR_CAN_VALID "DTR CAN valid  (Valid CAN-Data)";
+CM_ SG_ 3221225472 DTR_AC_LANECFG "Active lane configuration numeric 
+Left, Center, Right?";
+CM_ SG_ 3221225472 SENS_NINIT "Sensor nicht initialisiert";
+CM_ SG_ 3221225472 SENS_DIRTY "Sensor / Sensorabdeckung verschmutzt";
+CM_ SG_ 3221225472 SENS_TXRX_ERR "Sensor hat Sende- / Empfangsprobleme";
+CM_ SG_ 3221225472 UB_LOW "Unterspannung erkannt";
+CM_ SG_ 3221225472 OBJ_NVERM "Objekt nicht vermessen";
+CM_ SG_ 3221225472 SENS_EXT_ERR "Sensor extern gestört";
+CM_ SG_ 3221225472 SENS_TEMP_ERR "Sensorabschaltung wegen Temperatur";
+CM_ SG_ 3221225472 SEND_DEJUST "SENS_DEJUST";
+CM_ SG_ 3221225472 SEND_DEF "Sensor defekt";
+CM_ SG_ 3221225472 SENS_SW_KM "Sensor Software Kalenderwoche";
+CM_ SG_ 3221225472 SENS_SW_JAHR "Sensor Software Jahr";
+CM_ SG_ 3221225472 SENS_VAR "Sensor Variante";
+CM_ SG_ 616 PW_F "Pedalwert Fahrer (nur 169)";
+CM_ SG_ 576 ST3_BET "LF/ABC 3-stufiger Schalter betätigt";
+CM_ SG_ 576 BN_NTLF "Bordnetz-Notlauf: Prio1- und Prio2-Verbraucher aus, Zweite Batterie stützt";
+CM_ SG_ 576 ART_VH "ART Vorhanden available";
+CM_ SG_ 576 ART_ABW_BET "ART-distance warning actuated on / off
+0 nijts
+2 switch";
+CM_ SG_ 576 ART_ABSTAND "Abstandsfaktor
+0-200
+default 100";
+CM_ SG_ 576 BLI_RE "Richtungsblinken rechts";
+CM_ SG_ 576 BLI_LI "Richtungsblinken links";
+CM_ SG_ 576 ESP_BET "BET - Betätigt
+ESP operated on / off
+1 betätigung";
+CM_ SG_ 576 CRASH_CNF "CRASH Confirmbit";
+CM_ SG_ 576 CRASH "CRASH";
 CM_ BO_ 592 "Regel Anforderungen";
 CM_ SG_ 592 GMIN_ART "Sollgang, untere Grenze";
 CM_ SG_ 592 GMAX_ART "Sollgang, obere Grenze";
@@ -396,14 +334,16 @@ CM_ SG_ 592 ART_BRE "ART bremst";
 CM_ SG_ 592 ART_OK "ART in Ordnung";
 CM_ SG_ 592 SLV_ART "Schaltlinienverschiebung ART";
 CM_ BO_ 528 "Motor";
-CM_ SG_ 528 Pedalwert "Pedalwert";
+CM_ SG_ 528 TM_REG "Tempomat regelt";
+CM_ SG_ 528 PWG_ERR "Fehler Pedalwertgeber";
+CM_ SG_ 528 V_MAX_EIN "Geschwindigkeitsbegrenzung eingeschaltet";
+CM_ SG_ 528 NOTL "Notlaufbetrieb";
+CM_ SG_ 528 Pedalwert "Pedalwert
+max 92";
 CM_ BO_ 530 "Motor";
 CM_ SG_ 530 M_ART_E "Enable Momentenanforderung ART";
 CM_ SG_ 530 M_FEV "Ersatzvorgabemoment Fahrer";
 CM_ SG_ 530 M_FV "Vorgabemoment Fahrer";
-CM_ BO_ 616 "Motor";
-CM_ SG_ 616 PW_F "Pedalwert Fahrer (nur 169)";
-CM_ BO_ 755 "Fahrstufe";
 CM_ BO_ 776 "Motor infos fürs Dash";
 CM_ SG_ 776 OEL_KL "Ölstand/Öldruck Kontrollampe";
 CM_ SG_ 776 UEHITZ "Motoröltemperatur zu hoch (Überhitzung)";
@@ -423,21 +363,19 @@ CM_ SG_ 1544 T_MOT "Motorkühlmitteltemperatur";
 CM_ SG_ 1544 V_MAX_FIX "Feste Höchstgeschwindigkeit";
 CM_ BO_ 824 "Getriebe";
 CM_ BO_ 1048 "Getriebe";
+CM_ SG_ 1048 M_VERL " Verlustmoment (FFh bei KSG)";
+CM_ SG_ 1048 FMRAD "Faktor Radmoment (7FFh bei KSG)";
+CM_ SG_ 1048 FSC "Farstufe";
+CM_ SG_ 1048 FPC "Fahrprogramm";
+CM_ SG_ 1048 WHST "Getriebewählhebelstellung (NAG, KSG, CVT)";
+CM_ SG_ 1048 GIC "Ist Gang";
+CM_ SG_ 1048 T_GET "Getriebeöltemperatur";
 CM_ BO_ 560 "Getrieb";
-CM_ BO_ 576 "Vehicle INFOs";
-CM_ SG_ 576 ART_VH "ART Vorhanden available";
-CM_ SG_ 576 CRASH_CNF "CRASH Confirmbit";
-CM_ SG_ 576 CRASH "CRASH";
-CM_ SG_ 576 ART_ABSTAND "Abstandsfaktor";
-CM_ SG_ 576 ART_ABW_BET "ART-distance warning actuated on / off";
-CM_ SG_ 576 ESP_BET "ESP operated on / off";
 CM_ BO_ 1786 "VIN";
 CM_ BO_ 584 "Informationen ";
-CM_ BO_ 588 "Abblendlich";
 CM_ BO_ 1038 "Klima 
 
 Anforderung Heizleistung";
-CM_ BO_ 1627 "Getriebe";
 CM_ BO_ 1791 "Vehicle Config";
 CM_ BO_ 1032 "Kombi Daten";
 CM_ SG_ 1032 WRC "Winterreifen-Höchstgeschwindigkeit mit 4 Bit";
@@ -477,21 +415,18 @@ CM_ SG_ 566 LRWS_ST "Status Lenkradwinkelsensor";
 CM_ SG_ 566 LRWS_ID "Identifikation Lenkradwinkelsensor";
 CM_ SG_ 566 BZ236h "Botschaftszähler";
 CM_ SG_ 566 vLRW "Lenkradwinkelgeschwindigkeit";
-CM_ SG_ 566 LRW "Lenkradwinkel";
+CM_ SG_ 566 LRW "Lenkradwinkel
++ R
+- L
+";
 CM_ BO_ 832 "Fahrzeug Niveau Meldungen";
 CM_ BO_ 1328 "LeuchtWeitenRegulierung Meldungen";
-CM_ BO_ 1104 "presafe";
-CM_ BO_ 1112 "presafe";
-CM_ BO_ 53 "Crash";
-CM_ BO_ 500 "U_BAT12 - Istspannung an 12V-Batterie";
 CM_ BO_ 536 "Getriebe";
 CM_ SG_ 536 UEHITZ_GET "Overtemperature gear";
 CM_ SG_ 536 GS_NOTL "GS in emergency operation";
 CM_ SG_ 536 GET_OK "transmission ok";
-CM_ BO_ 562 "Shift by wire";
 CM_ BO_ 568 "ART_ABSTAND - Abstandsfaktor
 Bedienelemente";
-CM_ SG_ 568 ART_ABSTAND "Abstandsfaktor";
 CM_ SG_ 568 LW_VZ "Lenkwinkel-Vorzeichen";
 CM_ SG_ 568 LW_INI "Lenkwinkelsensor: nicht initialisiert";
 CM_ SG_ 568 LW "Lenkwinkel";
@@ -508,78 +443,10 @@ CM_ SG_ 568 S_PLUS_B "Tempomatwählhebel: Setzen und Beschleunigen Stufe0";
 CM_ SG_ 568 S_MINUS_B "Tempomatwählhebel: Setzen und verzögern Stufe0";
 CM_ SG_ 568 VMAX_AKT "Bedienung variable Geschwindigkeitsbegrenzung";
 CM_ SG_ 568 WH_UP "Tempomatwählhebel unplausibel";
-CM_ BO_ 840 "EHB Mehrwertfunktion";
-CM_ BO_ 881 "Kurvenlicht L";
-CM_ BO_ 883 "Kurvenlicht R";
 CM_ BO_ 1040 "Klima Automatik";
-CM_ BO_ 1044 "T_AUSSEN_K - gefilterte Außentemperatur Kombi";
-CM_ BO_ 1064 "Getriebe";
-CM_ BO_ 1440 "SD_RS_DTR - Systemdiagnose-Response";
-CM_ BO_ 1184 "KWP2000 Diagnose-Response";
-CM_ BO_ 620 "DTR Objekt Daten";
-CM_ BO_ 612 "Objekt 3";
-CM_ SG_ 612 CRC_264h "???";
-CM_ SG_ 612 OBJ3_ZIELVLST "Zielverlustgrund numerisch Objekt 3";
-CM_ SG_ 612 OBJ3_V_REL "DTR Relativgeschwindigkeit Objekt 3";
-CM_ SG_ 612 OBJ3_STEHT "DTR Status Objektdaten Objekt 3";
-CM_ SG_ 612 OBJ3_NEU "DTR Status Objektdaten Objekt 3";
-CM_ SG_ 612 OBJ3_FAHRT_STEHT "DTR Status Objektdaten (Objekt fahrend zu stehend) Objekt 3";
-CM_ SG_ 612 OBJ3_ABSTAND "DTR Abstand Objekt 3";
-CM_ SG_ 612 OBJ3_ABLAGE "DTR Ablage Objekt 3";
-CM_ SG_ 612 OBJ3_ABL_GRAD "DTR ABL GRAD Objekt 3";
-CM_ SG_ 612 OBJ3_A_OBJ "DTR Beschleunigung Objekt 3";
-CM_ BO_ 608 "Objekt 2";
-CM_ SG_ 608 OBJ2_ZIELVLST "Zielverlustgrund numerisch Objekt 2";
-CM_ SG_ 608 OBJ2_V_REL "DTR Relativgeschwindigkeit Objekt 2";
-CM_ SG_ 608 OBJ2_STEHT "DTR Status Objektdaten Objekt 2";
-CM_ SG_ 608 OBJ2_NEU "DTR Status Objektdaten Objekt 2";
-CM_ SG_ 608 OBJ2_FAHRT_STEHT "DTR Status Objektdaten";
-CM_ SG_ 608 OBJ2_ABSTAND "DTR Abstand Objekt 2";
-CM_ SG_ 608 OBJ2_ABLAGE "DTR Ablage Objekt 2";
-CM_ SG_ 608 OBJ2_ABL_GRAD "DTR ABL GRAD Objekt 2";
-CM_ SG_ 608 OBJ2_A_OBJ "DTR Beschleunigung Objekt 2";
-CM_ BO_ 604 "Ziel Objekt Daten";
-CM_ SG_ 604 REL_ZIELVLST "Zielverlustgrund numerisch Relevantes Objekt";
-CM_ SG_ 604 REL_NEU "DTR Status Objektdaten Relevantes Objekt";
-CM_ SG_ 604 REL_ABL_GRAD "DTR ABL GRAD Relevantes Objekt";
-CM_ SG_ 604 REL_STEHT "DTR Status Objektdaten Relevantes Objekt";
-CM_ SG_ 604 REL_FAHRT_STEHT "DTR Status Objektdaten (Objekt fahrend zu stehend) Relevantes Objekt";
-CM_ SG_ 604 CMS_VAL "Collision Mitigation System Obj. valid";
-CM_ SG_ 604 REL_V_REL "DTR Relativgeschwindigkeit Relevantes Objekt";
-CM_ SG_ 604 REL_ABSTAND "DTR Abstand Relevantes Objekt";
-CM_ SG_ 604 REL_ABLAGE "DTR Ablage Relevantes Objekt";
-CM_ SG_ 604 REL_A_OBJ "DTR Beschleunigung Relevantes Objekt";
-CM_ SG_ 604 CRC_25Ch "CRC-Checksumme Byte 2 - 8 nach SAE J1850";
-CM_ BO_ 596 "Sensor Information und Error";
-CM_ SG_ 596 BZ254h "Botschaftszähler";
-CM_ SG_ 596 DTR_SENS_DMODE "DTR Sensor Diagnosemode";
-CM_ SG_ 596 DTR_RX_INVALID "RX invalid (Timeout,Parity,MC)";
-CM_ SG_ 596 DTR_LANE "DTR -Spur";
-CM_ SG_ 596 DTR_CAN_VALID "DTR CAN valid  (Valid CAN-Data)";
-CM_ SG_ 596 DTR_AC_LANECFG "Active lane configuration numeric 
-Left, Center, Right?";
-CM_ SG_ 596 RX_SPUR_VALID "IDs Spur Status min. 2X eingelesen (keine Passivwerte)";
-CM_ SG_ 596 SENS_NINIT "Sensor nicht initialisiert";
-CM_ SG_ 596 SENS_DIRTY "Sensor / Sensorabdeckung verschmutzt";
-CM_ SG_ 596 SENS_TXRX_ERR "Sensor hat Sende- / Empfangsprobleme";
-CM_ SG_ 596 UB_LOW "Unterspannung erkannt";
-CM_ SG_ 596 OBJ_NVERM "Objekt nicht vermessen";
-CM_ SG_ 596 SENS_EXT_ERR "Sensor extern gestört";
-CM_ SG_ 596 SENS_TEMP_ERR "Sensorabschaltung wegen Temperatur";
-CM_ SG_ 596 SEND_DEJUST "SENS_DEJUST";
-CM_ SG_ 596 SEND_DEF "Sensor defekt";
-CM_ SG_ 596 SENS_SW_KM "Sensor Software Kalenderwoche";
-CM_ SG_ 596 SENS_SW_JAHR "Sensor Software Jahr";
-CM_ SG_ 596 SENS_VAR "Sensor Variante";
-CM_ BO_ 1697 "MESS2 - Messwerte";
-CM_ BO_ 1611 "APPL4 - Applikation";
-CM_ BO_ 1589 "APPL2 - Applikation";
-CM_ BO_ 1826 "Systemdiagnose-Response";
-CM_ BO_ 1843 "Systemdiagnose-Response";
-CM_ BO_ 1947 "KWP2000 Diagnose-Response";
-CM_ BO_ 1925 "KWP2000 Diagnose-Response";
 CM_ SG_ 808 SBCSH_AKT "Stauassistent/Hillholder aktiv (nur 211/230)";
 CM_ SG_ 808 BRE_AKT_E "Bremsdruckregelung möglich";
+CM_ SG_ 768 GIER_ROH "Rohsignal Gierrate ohne Abgleich/Filterung (+ = links)";
 CM_ SG_ 768 ART_E "Enable ART";
 CM_ SG_ 768 SFB "Fahrer bremst";
 CM_ SG_ 600 ASSIST_ANZ_V2 "Assistenzsystem Anzeigeanforderung";
@@ -608,6 +475,14 @@ CM_ SG_ 600 ART_INFO "ART Infolamoe";
 CM_ SG_ 600 ART_warnton "ART Warnton";
 CM_ SG_ 600 S_OBJ "Erkennung stehendes Objekt";
 CM_ SG_ 600 ART_DSPL_EIN "Display auf ART-Anzeige schalten";
+CM_ SG_ 512 HAS_KL "Handbremse gezogen Kontrollampe
+";
+CM_ SG_ 512 ABS_KL "ABS defekt Kontrollampe";
+CM_ SG_ 512 ESP_KL "ESP defekt Kontrolllampe";
+CM_ SG_ 512 ESP_INFO_DL "ESP Infolampe Dauerlicht";
+CM_ SG_ 512 ESP_INFO_BL "ESP Infolampe Blinklicht";
+CM_ SG_ 512 BRE_KL "Bremse defekt Kontrollampe
+";
 CM_ SG_ 512 TM_DL "Wheel left for cruise control";
 CM_ SG_ 512 DRTGTM "Rotation direction left wheel for cruise control
 0 - stop
@@ -615,8 +490,6 @@ CM_ SG_ 512 DRTGTM "Rotation direction left wheel for cruise control
 2 - R ?";
 CM_ SG_ 512 DVL "Front left wheel speed";
 CM_ SG_ 512 BLS "Bremslichtschalter";
-CM_ BO_ 552 "Raddrehzahlen";
-CM_ BO_ 548 "Gierrate und Lenkwinkel";
 BA_DEF_ SG_  "GenSigSendType" ENUM  "Cyclic","OnWrite","OnWriteWithRepetition","OnChange","OnChangeWithRepetition","IfActive","IfActiveWithRepetition","NoSigSendType";
 BA_DEF_ SG_  "GenSigInactiveValue" INT 0 0;
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 0;

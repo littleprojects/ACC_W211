@@ -8,7 +8,7 @@ class Mdf:
     Creates MDF files to Log CAN Data
     """
 
-    def __int__(self, file_name, log):
+    def __init__(self, file_name, log):
 
         self.log = log
 

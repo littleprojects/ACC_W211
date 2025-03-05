@@ -72,7 +72,7 @@ class Can:
         self.log.info(f"CAN_{self.channel}: Connecting to can")
         try:
             """ Connecting to the can. Its possible to change all values in the .conf file """
-            self.bus = can.interface.Bus(interface=self.interface, channel=self.channel, bitrate=self.bitrate)
+            self.bus = can.interface.Bus(interface=self.interface, channel=self.channel, bitrate=self.bitrate, app_name='NewApp')
 
             # add filter
             try:
@@ -80,7 +80,9 @@ class Can:
                     self.bus.set_filters(self.filter)
             except Exception as e:
                 self.log.warning(f"CAN_{self.channel}: Cant set Filter" + str(e))
-                
+
+            return self.bus
+
         except Exception as e:
             """ If it's not possible to connect, print a message to the log """
             self.log.error(f"CAN_{self.channel}: Connection failed" + str(e) + ' --- retry')

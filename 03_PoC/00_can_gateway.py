@@ -1,7 +1,10 @@
 """
 CAN TEST
 
-receive and send data
+This is a testtool.
+It will be installed in the CANline from vehicle to ACC Control unit.
+
+To see that messages will be send from what side.
 
 pip install python-can
 pip install cantools
@@ -112,6 +115,7 @@ def can_relay():
                 if not (msg_0_id in can_0_filter_list):
                     # print(f"ID: {msg_0.arbitration_id}, Daten: {msg_0.data}")
                     #can_1.send(msg_0)
+                    pass
 
                 i0 += 1
                 if i0 % 1000 == 0:
