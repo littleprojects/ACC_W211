@@ -18,8 +18,8 @@ module_name = 'MDF_LOG'
 module_version = '0.0.1'
 
 config = {
-    #'loglevel':                 'INFO',             # debug
-    'loglevel':                 'DEBUG',             # debug
+    'loglevel':                 'INFO',             # debug
+    #'loglevel':                 'DEBUG',             # debug
     'can_0_dbc':                'CAN_C.dbc',
     'mdf_log_file':             'log/Canlog_' + utils.date_time_str() + '.mf4',
 }

@@ -20,10 +20,9 @@ class Mdf:
         self.ts_start = time.time()
 
         # load existion file
-        #self.mdf = MDF(self.file_name)
+        # self.mdf = MDF(self.file_name)
 
-
-        self.data = {'signal': {'data': [], 'ts': []}}
+        self.data = {'signal': {'data': [], 'ts': [], 'unit': '', 'comment': ''}}
 
         self.i = 0
 
@@ -38,12 +37,13 @@ class Mdf:
                 data = signals[key]
                 ts = ts_now
 
-                # add signal
+                # add signal if not exist
                 if not (name in self.data.keys()):
 
                     unit = ''
                     comm = ''
 
+                    # search for unit and comments
                     if self.dbc is not None:
                         sig = utils.dbc_signal(self.dbc, key)
 
@@ -53,6 +53,7 @@ class Mdf:
                             if sig.comments[None] is not None:
                                 comm = sig.comments[None]
 
+                    # create new siganl
                     new_siganl = {name: {'data': [],
                                              'ts': [],
                                              'unit': unit,
@@ -63,6 +64,7 @@ class Mdf:
                     self.data.update(new_siganl)
                     self.log.debug('add: ' + str(new_siganl))
 
+                # add data
                 self.data[name]['data'].append(data)
                 self.data[name]['ts'].append(ts)
 
@@ -80,6 +82,8 @@ class Mdf:
         # create new MDF
         mdf = MDF(version='4.10')
 
+        self.log.debug(self.data)
+
         for name in self.data:
 
             len_data = len(self.data[name]['data'])
@@ -90,14 +94,27 @@ class Mdf:
             data = list(self.data[name]['data'][0:len_list])
             ts = list(self.data[name]['ts'][0:len_list])
 
+            self.log.debug(self.data[name])
+
             sig = Signal(
                 data,
                 timestamps=ts,
                 name=name,
-                unit = self.data[name]['unit'],
-                comment = self.data[name]['comment'],
+                #unit=self.data[name]['unit'],
+                #comment=self.data[name]['comment'],
                 # conversion = None,
             )
+
+            unit = self.data[name]['unit']
+            if unit is not None:
+                sig.unit = unit
+
+            comm = self.data[name]['comment']
+            if comm is not None:
+                sig.comment = comm
+
+            self.log.debug(self.data[name]['unit'])
+            self.log.debug(sig)
 
             mdf.append([sig])
 
