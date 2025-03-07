@@ -134,3 +134,21 @@ def parse_log_level(log_level_str):
         return log_level.get(log_level_str)
     else:
         return logging.INFO
+
+
+def dbc_signal(dbc, signal_name, msg_id=None):
+
+    if msg_id is not None:
+        message = dbc.get_message_by_frame_id(msg_id)
+
+        signal = next((signal for signal in message.signals if signal.name == signal_name), None)
+
+        return signal
+    else:
+        for message in dbc.messages:
+            signal = dbc_signal(dbc, signal_name, message.frame_id)
+
+            if signal is not None:
+                return signal
+
+    return None

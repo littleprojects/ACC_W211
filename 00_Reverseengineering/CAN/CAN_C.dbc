@@ -59,6 +59,22 @@ BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
  SG_ SENS_SW_JAHR : 0|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ SENS_VAR : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
+BO_ 1624 LWR_MESS1: 8 Vector__XXX
+
+BO_ 273 FBS_111: 8 Vector__XXX
+
+BO_ 1625 LWR_MESS2: 8 Vector__XXX
+
+BO_ 1626 LWR_MESS3: 8 Vector__XXX
+
+BO_ 1648 EDC_MESS1: 8 Vector__XXX
+
+BO_ 1840 SD_RS_LWR: 8 Vector__XXX
+
+BO_ 1597 FS_APPL2: 8 Vector__XXX
+
+BO_ 257 MS_101: 8 Vector__XXX
+
 BO_ 616 MS_268: 8 Vector__XXX
  SG_ PW_F : 40|8@1+ (1,0) [0|0] "" Vector__XXX
 
@@ -78,9 +94,9 @@ BO_ 592 ART_250h: 7 DTR
  SG_ GMIN_ART : 48|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ GMAX_ART : 51|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ AKT_R_ART : 55|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ MBRE_ART : 35|12@0+ (1,0) [0|0] "Nm" Vector__XXX
+ SG_ MBRE_ART : 35|12@0+ (0.1,0) [0|409.5] "Nm" Vector__XXX
  SG_ BZ250h : 36|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ M_ART : 20|13@0+ (1,0) [0|0] "Nm" Vector__XXX
+ SG_ M_ART : 20|13@0+ (0.1,0) [0|0] "Nm" Vector__XXX
  SG_ ART_REG : 21|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LIM_REG : 22|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ CAS_REG : 13|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -100,25 +116,25 @@ BO_ 528 MS_210h: 8 Vector__XXX
  SG_ Pedalwert : 16|8@1+ (0.5,0) [0|0] "%" Vector__XXX
 
 BO_ 530 MS_212h: 8 Vector__XXX
- SG_ M_ART_E : 21|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ M_FEV : 7|13@0+ (1,0) [0|0] "Nm" Vector__XXX
- SG_ M_FV : 20|13@0+ (1,0) [0|0] "Nm" Vector__XXX
+ SG_ M_ART_E : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ M_FEV : 7|13@0+ (0.1,0) [0|0] "Nm" Vector__XXX
+ SG_ M_FV : 20|13@0+ (0.1,0) [0|819.1] "Nm" Vector__XXX
 
 BO_ 776 MS_308h: 8 Vector__XXX
- SG_ OEL_KL : 26|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ UEHITZ : 39|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ ANL_LFT : 35|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ TEMP_KL : 32|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ T_OEL : 40|8@1- (0.5,-40) [0|0] "°C" Vector__XXX
- SG_ OEL_QUAL : 56|8@1- (1,0) [0|0] "" Vector__XXX
- SG_ OEL_FS : 48|8@1- (1,0) [0|0] "" Vector__XXX
- SG_ NMOT : 15|16@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ OEL_KL : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ UEHITZ : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ANL_LFT : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ TEMP_KL : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ T_OEL : 40|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
+ SG_ OEL_QUAL : 56|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ OEL_FS : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ NMOT : 15|16@0+ (1,0) [0|0] "rpm" Vector__XXX
 
 BO_ 786 MS_312h: 8 Vector__XXX
- SG_ M_STA : 4|13@0+ (1,0) [0|0] "Nm" Vector__XXX
- SG_ M_MIN : 52|13@0+ (1,0) [0|0] "Nm" Vector__XXX
- SG_ M_MAX_ATL : 20|13@0+ (1,0) [0|0] "Nm" Vector__XXX
- SG_ M_MAX : 36|13@0+ (1,0) [0|0] "Nm" Vector__XXX
+ SG_ M_STA : 4|13@0+ (0.1,0) [0|819.1] "Nm" Vector__XXX
+ SG_ M_MIN : 52|13@0+ (0.1,0) [0|819.1] "Nm" Vector__XXX
+ SG_ M_MAX_ATL : 20|13@0+ (0.1,0) [0|819.1] "Nm" Vector__XXX
+ SG_ M_MAX : 36|13@0+ (0.1,0) [0|819.1] "Nm" Vector__XXX
 
 BO_ 1408 AAD_580h: 8 Vector__XXX
 
@@ -156,10 +172,10 @@ BO_ 1032 KOMBI_408h: 8 Vector__XXX
  SG_ V_DSPL_AKT : 62|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ WRC3 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ KM16 : 47|16@0+ (1,0) [0|0] "" Vector__XXX
- SG_ MAZ : 32|8@1- (1,0) [0|0] "" Vector__XXX
+ SG_ MAZ : 32|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ KL_58D : 24|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ T_AUSSEN : 23|8@0+ (0.5,-40) [0|0] "°C" Vector__XXX
- SG_ KL_61E : 8|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ KL_61E : 8|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ TFSM : 9|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ VGL_KL_DEF : 10|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ KLA_VH : 11|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -187,7 +203,7 @@ BO_ 566 ART_LRW_236h: 8 Vehicle
  SG_ LRWS_ST : 32|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LRWS_ID : 34|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BZ236h : 36|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ vLRW : 21|14@0+ (0.5,0) [0|0] "-4096" Vector__XXX
+ SG_ vLRW : 21|14@0- (0.5,0) [0|0] "0" Vector__XXX
  SG_ LRW : 5|14@0+ (0.5,-2048) [0|0] "deg" Vector__XXX
 
 BO_ 832 FS_340h: 8 Vector__XXX
@@ -195,12 +211,12 @@ BO_ 832 FS_340h: 8 Vector__XXX
 BO_ 1328 LWR_530h: 2 Vector__XXX
 
 BO_ 536 GS_218h: 8 Vector__XXX
- SG_ UEHITZ_GET : 35|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ GS_NOTL : 36|1@1- (1,0) [0|0] "" Vector__XXX
- SG_ GET_OK : 39|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ UEHITZ_GET : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ GS_NOTL : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ GET_OK : 39|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 568 ART_MRM_238h: 4 Vehicle
- SG_ LW_VZ : 19|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ LW_VZ : 19|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LW_INI : 20|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LW : 18|11@0+ (0.5,0) [0|0] "deg" Vector__XXX
  SG_ LW_CF : 21|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -211,7 +227,7 @@ BO_ 568 ART_MRM_238h: 4 Vehicle
  SG_ BLI_LI : 14|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BLI_RE : 15|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ AUS : 0|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ WA : 1|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ WA : 1|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ S_PLUS_B : 2|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ S_MINUS_B : 3|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ VMAX_AKT : 4|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -227,7 +243,7 @@ BO_ 808 BS_328h: 8 Vector__XXX
 
 BO_ 768 BS_300h: 8 Vector__XXX
  SG_ GIER_ROH : 55|16@0- (1,0) [0|0] "" Vector__XXX
- SG_ ART_E : 3|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ ART_E : 3|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ SFB : 8|2@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 600 ART_258h: 8 DTR
@@ -244,7 +260,7 @@ BO_ 600 ART_258h: 8 DTR
  SG_ TM_EIN_ART : 32|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_DSPL_BL : 33|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_SEG_EIN : 34|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ OBJ_EKR : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ OBJ_ERK : 35|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_EIN : 36|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_DSPL_LIM : 37|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_VFBR : 38|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -254,7 +270,7 @@ BO_ 600 ART_258h: 8 DTR
  SG_ V_ART : 8|8@1+ (1,0) [0|0] "kmh" Vector__XXX
  SG_ ART_ERROR : 0|4@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_INFO : 4|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ ART_warnton : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ART_WT : 5|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ S_OBJ : 6|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ART_DSPL_EIN : 7|1@1+ (1,0) [0|0] "" Vector__XXX
 
@@ -263,11 +279,11 @@ BO_ 520 BS_208h: 8 Vector__XXX
 BO_ 512 BS_200h: 8 Vector__XXX
  SG_ HAS_KL : 1|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ABS_KL : 2|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ ESP_KL : 3|1@1- (1,0) [0|0] "" Vector__XXX
+ SG_ ESP_KL : 3|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ESP_INFO_DL : 4|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ESP_INFO_BL : 5|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BRE_KL : 7|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ TM_DL : 53|14@0+ (1,0) [0|0] "?" Vector__XXX
+ SG_ TM_DL : 53|14@0+ (1,0) [0|0] "rpm" Vector__XXX
  SG_ DRTGTM : 54|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ DVL : 21|14@0+ (1,0) [0|0] "?" Vector__XXX
  SG_ BLS : 8|2@1+ (1,0) [0|0] "" Vector__XXX
@@ -347,10 +363,12 @@ CM_ SG_ 530 M_FV "Vorgabemoment Fahrer";
 CM_ BO_ 776 "Motor infos fürs Dash";
 CM_ SG_ 776 OEL_KL "Ölstand/Öldruck Kontrollampe";
 CM_ SG_ 776 UEHITZ "Motoröltemperatur zu hoch (Überhitzung)";
+CM_ SG_ 776 ANL_LFT "Anlasser läuft";
 CM_ SG_ 776 TEMP_KL "Kühlwassertemperatur zu hoch";
 CM_ SG_ 776 T_OEL "Öltemperatur";
 CM_ SG_ 776 OEL_QUAL "Ölqualität";
 CM_ SG_ 776 OEL_FS "Ölstand";
+CM_ SG_ 776 NMOT "Motordrehzahl";
 CM_ BO_ 786 "Motor";
 CM_ SG_ 786 M_STA "Motormoment statisch";
 CM_ SG_ 786 M_MIN "Motormoment minimal";
@@ -360,15 +378,24 @@ CM_ BO_ 1408 "Fahrer";
 CM_ BO_ 1544 "Fahrzeuginfos";
 CM_ SG_ 1544 VB "Verbrauch";
 CM_ SG_ 1544 T_MOT "Motorkühlmitteltemperatur";
+CM_ SG_ 1544 T_LUFT "Ansauglufttemperatur";
 CM_ SG_ 1544 V_MAX_FIX "Feste Höchstgeschwindigkeit";
 CM_ BO_ 824 "Getriebe";
 CM_ BO_ 1048 "Getriebe";
-CM_ SG_ 1048 M_VERL " Verlustmoment (FFh bei KSG)";
+CM_ SG_ 1048 M_VERL "Verlustmoment (FFh bei KSG)";
 CM_ SG_ 1048 FMRAD "Faktor Radmoment (7FFh bei KSG)";
 CM_ SG_ 1048 FSC "Farstufe";
 CM_ SG_ 1048 FPC "Fahrprogramm";
-CM_ SG_ 1048 WHST "Getriebewählhebelstellung (NAG, KSG, CVT)";
-CM_ SG_ 1048 GIC "Ist Gang";
+CM_ SG_ 1048 WHST "Getriebewählhebelstellung (NAG, KSG, CVT)
+7 unknow
+0 Park
+1 Reverse
+2 N
+4 D
+";
+CM_ SG_ 1048 GIC "Ist Gang
+12 P
+0 N";
 CM_ SG_ 1048 T_GET "Getriebeöltemperatur";
 CM_ BO_ 560 "Getrieb";
 CM_ BO_ 1786 "VIN";
@@ -462,7 +489,7 @@ CM_ SG_ 600 V_ZIEL "Geschwindigkeit erkanntes Zielfahrzeug";
 CM_ SG_ 600 TM_EIN_ART "ART-Tempomat eingeschaltet";
 CM_ SG_ 600 ART_DSPL_BL "Geschwindigkeitsanzeige blinken";
 CM_ SG_ 600 ART_SEG_EIN "ART-Segmentanzeige einschalten";
-CM_ SG_ 600 OBJ_EKR "Relevantes Objekt erkannt";
+CM_ SG_ 600 OBJ_ERK "Relevantes Objekt erkannt";
 CM_ SG_ 600 ART_EIN "Abstandsregeltempomat eingeschaltet";
 CM_ SG_ 600 ART_DSPL_LIM "Anzeige --- am Display wenn man zu langsam oder zu schnell ist";
 CM_ SG_ 600 ART_VFBR "Anzeige DTR AUS [0]";
@@ -471,8 +498,8 @@ CM_ SG_ 600 SOLL_ABST "Fahrerwunschabstand";
 CM_ SG_ 600 ABST_R_OBJ "Abstand relevantes Objekt";
 CM_ SG_ 600 V_ART "eingestellte ART-Geschwindigkeit";
 CM_ SG_ 600 ART_ERROR "ART Fehlercode";
-CM_ SG_ 600 ART_INFO "ART Infolamoe";
-CM_ SG_ 600 ART_warnton "ART Warnton";
+CM_ SG_ 600 ART_INFO "ART Infolampe";
+CM_ SG_ 600 ART_WT "ART Warnton";
 CM_ SG_ 600 S_OBJ "Erkennung stehendes Objekt";
 CM_ SG_ 600 ART_DSPL_EIN "Display auf ART-Anzeige schalten";
 CM_ SG_ 512 HAS_KL "Handbremse gezogen Kontrollampe

@@ -1,6 +1,7 @@
 import logging
 import time
 from asammdf import MDF, Signal
+from lib import utils
 
 
 class Mdf:
@@ -8,11 +9,12 @@ class Mdf:
     Creates MDF files to Log CAN Data
     """
 
-    def __init__(self, file_name, log):
+    def __init__(self, file_name, log, dbc=None):
 
         self.log = log
 
         self.file_name = file_name
+        self.dbc = dbc
 
         # starttime
         self.ts_start = time.time()
@@ -38,21 +40,37 @@ class Mdf:
 
                 # add signal
                 if not (name in self.data.keys()):
-                    # create init dataset
-                    self.data.update({name: {'data': [],
+
+                    unit = ''
+                    comm = ''
+
+                    if self.dbc is not None:
+                        sig = utils.dbc_signal(self.dbc, key)
+
+                        if sig is not None:
+                            if sig.unit is not None:
+                                unit = sig.unit
+                            if sig.comments[None] is not None:
+                                comm = sig.comments[None]
+
+                    new_siganl = {name: {'data': [],
                                              'ts': [],
-                                             #'unit': unit,
-                                             #'comment' : ''
-                                             }})
-                    self.log.debug('add: ' + name)
+                                             'unit': unit,
+                                             'comment': comm
+                                             }}
+
+                    # create init dataset
+                    self.data.update(new_siganl)
+                    self.log.debug('add: ' + str(new_siganl))
 
                 self.data[name]['data'].append(data)
                 self.data[name]['ts'].append(ts)
 
-            self.i += 1
-
+            # save after X msgs
             if self.i % 1000 == 0:
                 self.write_mdf()
+
+            self.i += 1
 
         except Exception as e:
             self.log.error('MDF: Cant add Signals ' + str(e))
@@ -76,9 +94,9 @@ class Mdf:
                 data,
                 timestamps=ts,
                 name=name,
-                #unit = 's',
-                #conversion = None,
-                #comment = 'Unsigned 64 bit channel {}'
+                unit = self.data[name]['unit'],
+                comment = self.data[name]['comment'],
+                # conversion = None,
             )
 
             mdf.append([sig])

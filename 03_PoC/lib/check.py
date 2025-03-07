@@ -104,7 +104,7 @@ def is_acc_ready(vehicle_msg, log):
         or signal['ABS_KL'] == 1
         or signal['BRE_KL'] == 1
         # BS_300 Enabel ART
-        or signal['ART_E'] == 1
+        or signal['ART_E'] == 0
         # ESZ_240
         or signal['ART_VH'] == 0
         # MS210 Notlauf
