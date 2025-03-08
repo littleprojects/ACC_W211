@@ -113,6 +113,9 @@ def is_acc_ready(vehicle_msg, log):
         or signal['OEL_KL'] == 1
         or signal['UEHITZ'] == 1
         or signal['TEMP_KL'] == 1
+        # GS 218 Gearbox
+        #or signal['GS_NOTL'] == 1
+        or signal['UEHITZ_GET'] == 1
             ):
         return False
 

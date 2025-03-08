@@ -9,14 +9,16 @@ class Mdf:
     Creates MDF files to Log CAN Data
     """
 
-    def __init__(self, file_name, log, dbc=None):
+    def __init__(self, file_name, log, dbc=None, save_interval=0):
 
         self.log = log
 
         self.file_name = file_name
         self.dbc = dbc
+        # autosave interval over msg count (by time would be better)
+        self.save_interval = save_interval
 
-        # starttime
+        # start time of msg timestamp calc (ts_msg - ts_start)
         self.ts_start = time.time()
 
         # load existion file
@@ -69,9 +71,11 @@ class Mdf:
                 self.data[name]['ts'].append(ts)
 
             # save after X msgs
-            if self.i % 1000 == 0:
-                self.write_mdf()
+            if self.save_interval > 0:
+                if self.i % self.save_interval == 0:
+                    self.write_mdf()
 
+            # increment counter
             self.i += 1
 
         except Exception as e:

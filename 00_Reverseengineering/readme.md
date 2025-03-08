@@ -273,3 +273,21 @@ Warning calc
 * if warnings are active
 * distance to low warning <0.8 sec over 3 sec (red distance waring lamp)
 * high speed differences to target
+
+
+## Reverse Engineering
+
+It takes a while to create the CAN DBC.
+Especially to find all needed factors and offset (value = can_raw_value * factor + offset).
+Most values have a factor of 0,5 or 0,1.
+
+* T_MOT    = can_raw_value * 0.5 - 20
+* T_AUSSEN = can_raw_value * 0.5 - 40
+* VB       = can_raw_value * 0.01
+* vLRW     = can_raw_value * 0.5 - 2048
+
+**And the ACC ECU controls the LIMITER to -> more work...**
+But more or less the same functions.
+
+
+

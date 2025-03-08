@@ -125,7 +125,7 @@ BO_ 776 MS_308h: 8 Vector__XXX
  SG_ UEHITZ : 39|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ ANL_LFT : 35|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ TEMP_KL : 32|1@1+ (1,0) [0|0] "" Vector__XXX
- SG_ T_OEL : 40|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
+ SG_ T_OEL : 40|8@1+ (0.5,-20) [0|0] "°C" Vector__XXX
  SG_ OEL_QUAL : 56|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ OEL_FS : 48|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ NMOT : 15|16@0+ (1,0) [0|0] "rpm" Vector__XXX
@@ -139,21 +139,21 @@ BO_ 786 MS_312h: 8 Vector__XXX
 BO_ 1408 AAD_580h: 8 Vector__XXX
 
 BO_ 1544 MS_608h: 8 Vector__XXX
- SG_ VB : 47|16@0+ (0.1,0) [0|0] "L/100km" Vector__XXX
- SG_ T_MOT : 0|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
- SG_ T_LUFT : 8|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
+ SG_ VB : 47|16@0+ (0.01,0) [0|0] "L/100km" Vector__XXX
+ SG_ T_MOT : 0|8@1+ (0.5,-20) [0|0] "°C" Vector__XXX
+ SG_ T_LUFT : 8|8@1+ (0.5,-20) [0|0] "°C" Vector__XXX
  SG_ V_MAX_FIX : 32|8@1+ (1,0) [0|0] "kph" Vector__XXX
 
 BO_ 824 GS_338h: 8 Vector__XXX
 
 BO_ 1048 GS_418h: 8 Vector__XXX
- SG_ M_VERL : 40|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ M_VERL : 40|8@1+ (1,0) [0|0] "Nm" Vector__XXX
  SG_ FMRAD : 50|11@0+ (1,0) [0|0] "" Vector__XXX
  SG_ FSC : 0|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ FPC : 8|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ WHST : 51|3@1+ (1,0) [0|0] "" Vector__XXX
- SG_ GIC : 32|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ T_GET : 16|8@1+ (0.5,-40) [0|0] "°C" Vector__XXX
+ SG_ WHST : 51|3@1+ (1,0) [0|0] "PRND" Vector__XXX
+ SG_ GIC : 32|4@1+ (1,0) [0|0] "Gang" Vector__XXX
+ SG_ T_GET : 16|8@1+ (0.5,-20) [0|0] "°C" Vector__XXX
 
 BO_ 560 EWM_230h: 1 Vector__XXX
 
@@ -172,7 +172,7 @@ BO_ 1032 KOMBI_408h: 8 Vector__XXX
  SG_ V_DSPL_AKT : 62|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ WRC3 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ KM16 : 47|16@0+ (1,0) [0|0] "" Vector__XXX
- SG_ MAZ : 32|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ MAZ : 32|8@1+ (1,0) [0|0] "min" Vector__XXX
  SG_ KL_58D : 24|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ T_AUSSEN : 23|8@0+ (0.5,-40) [0|0] "°C" Vector__XXX
  SG_ KL_61E : 8|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -186,7 +186,7 @@ BO_ 1032 KOMBI_408h: 8 Vector__XXX
  SG_ TANK_FS : 0|8@1+ (1,0) [0|0] "L" Vector__XXX
 
 BO_ 1042 KOMBI_412h: 8 Vector__XXX
- SG_ MAZ_NEU : 51|12@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ MAZ_NEU : 51|12@0+ (1,0) [0|0] "min" Vector__XXX
  SG_ PRW_ANF : 40|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ PTS_TON_AUS : 42|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BTRBSART_UMSCH : 47|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -203,7 +203,7 @@ BO_ 566 ART_LRW_236h: 8 Vehicle
  SG_ LRWS_ST : 32|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LRWS_ID : 34|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BZ236h : 36|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ vLRW : 21|14@0- (0.5,0) [0|0] "0" Vector__XXX
+ SG_ vLRW : 21|14@0- (0.5,-2048) [0|0] "deg/s²" Vector__XXX
  SG_ LRW : 5|14@0+ (0.5,-2048) [0|0] "deg" Vector__XXX
 
 BO_ 832 FS_340h: 8 Vector__XXX
@@ -411,7 +411,7 @@ CM_ SG_ 1032 SGT_VH "Segment-Tacho vorhanden";
 CM_ SG_ 1032 V_DSPL_AKT "Geschw.begrenzer-/Tempomat-Anzeige aktiv";
 CM_ SG_ 1032 WRC3 "Winterreifen-Höchstgeschwindigkeit Bit 3";
 CM_ SG_ 1032 KM16 "Kilometerstand";
-CM_ SG_ 1032 MAZ "Motorabstellzeit (wird ab Kl.15 gesendet)";
+CM_ SG_ 1032 MAZ "Motorabstellzeit (wird ab Kl.15 gesendet) oder Anstellzeit?";
 CM_ SG_ 1032 KL_58D "Klemme 58 gedimmt
 Regelbare Instrumentenbeleuchtung";
 CM_ SG_ 1032 T_AUSSEN "Außenlufttemperatur Rohwert";
@@ -425,7 +425,7 @@ CM_ SG_ 1032 V_DSPL_AUS "Geschw.begrenzer-/Tempomat-Anzeige nicht möglich";
 CM_ SG_ 1032 TF_AUF "Fahrertür auf";
 CM_ SG_ 1032 TANK_FS "Tankfüllstand";
 CM_ BO_ 1042 "Kombi Daten";
-CM_ SG_ 1042 MAZ_NEU "Motorabstellzeit";
+CM_ SG_ 1042 MAZ_NEU "Motorabstellzeit oder Motorlaufzeit?";
 CM_ SG_ 1042 PRW_ANF "Anforderung Plattrollwarner";
 CM_ SG_ 1042 PTS_TON_AUS "Parktronic Warnton ist ausgeschaltet";
 CM_ SG_ 1042 BTRBSART_UMSCH "Betriebsart Umschaltung";

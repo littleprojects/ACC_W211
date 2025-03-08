@@ -1,5 +1,7 @@
 # Requiremnts
 
+Limiter and ACC are controlled by the ACC ecu program.
+
 ## State machine
 
 INIT
@@ -130,18 +132,20 @@ ART 0x258
 
 
 ### Distance Calc
-Distance = Speed (kph) x 0,36 x Distance_sec
-```
-# returns the distance to the next vehicle in meter
-dist (speed, dist_factor):
-  dist = speed * 0.36 # k/h to m/s
-  # dist factor is a factor between 0 an 200
-  sec_factor = 1 + dist_factor/200 
-  dist = dist * sec_factor
-  if dist < 3:
-    return 3
-  return dist
-```
+
+SOLL_ABSTAND is linked to Speed (kph) and ART_ABSTAND (0-200)
+
+ART_ABSTAND
+200 = short
+100 = normal
+0 = wide
+
+min distance 3.5m
+
+factor_var = ART_ABSTAND / 100 # turn 200->-2; 100->-1; 0->0
+SOLL_ABSTAND [m] = round(Speed * (0,475 - factor_var * 0,2476 ) + 3.5) 
+
+Or a 3D Look Up Table
 
 Warn if distance below 0.8 sec
 ```

@@ -76,6 +76,9 @@ def main():
     #can_0 = Can(config['can_0_interface'], config['can_0_channel'], config['can_0_speed'], config['can_0_dbc'], log)
     can_0 = can.interface.Bus(interface=config['can_0_interface'], channel=config['can_0_channel'], bitrate=500000, app_name='NewApp')
 
+    # set filter
+    #can_0.set_filters([{"can_id": 0x11, "can_mask": 0x21, "extended": False}])
+
     db_0 = cantools.database.load_file(config['can_0_dbc'])
 
 

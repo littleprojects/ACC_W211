@@ -20,40 +20,58 @@ module_version = '0.0.1'
 config = {
     'loglevel':                 'INFO',             # debug
     #'loglevel':                 'DEBUG',             # debug
-    'can_0_dbc':                'CAN_C.dbc',
+    'can_0_dbc':                '../00_Reverseengineering/CAN/CAN_C.dbc',
     'mdf_log_file':             'log/Canlog_' + utils.date_time_str() + '.mf4',
 }
 
 log = Logger(module_name).logger
 log.setLevel(utils.parse_log_level(config['loglevel']))
 
+log.info('Init')
+
 db_0 = cantools.database.load_file(config['can_0_dbc'])
 
-mdf = Mdf(config['mdf_log_file'], log, db_0)
+mdf = Mdf(config['mdf_log_file'], log, db_0) #, save_interval=10000)
 
 # Erstelle eine Bus-Instanz
 bus = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name='NewApp')
 
 i = 0
 
-log.info('Start Logging to: ' + config['can_0_dbc'])
+log.info('Start Logging to: ' + config['mdf_log_file'])
+log.info(('Load DBC: ' + config['can_0_dbc']))
 
 # loop infinity
-while True:
+try:
+    while True:
 
-    msg = bus.recv()
+        # wait for msgs for 1 sec - is a blocking function
+        msg = bus.recv(1)
 
-    if msg:
-        vehicle_msg_id = hex(msg.arbitration_id)
+        if msg:
+            vehicle_msg_id = hex(msg.arbitration_id)
 
-        try:
-            decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
+            try:
+                decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
 
-            mdf.add_signals(decode_msg)
+                mdf.add_signals(decode_msg)
 
-            i += 1
-        except:
-            pass
+                i += 1
+            except:
+                pass
 
-        if i % 1000 == 0:
-            log.info('Msgs: ' + str(i))
+            if i % 1000 == 0:
+                log.info('Msgs: ' + str(i))
+
+except KeyboardInterrupt:
+    log.info('Shut down bus')
+    # stop bus
+    bus.shutdown()
+
+    log.info(str(i) + ' Msgs logt ')
+
+    if i > 0:
+        mdf.write_mdf()
+
+    log.info('STOPPED Logging')
+
