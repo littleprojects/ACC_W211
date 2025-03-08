@@ -5,6 +5,8 @@
 *.mdf
 *.mf4
 ~*
+*.xlsx
+*.lnk
 
 
 # Byte-compiled / optimized / DLL files
