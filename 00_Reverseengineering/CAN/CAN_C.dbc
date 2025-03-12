@@ -203,7 +203,7 @@ BO_ 566 ART_LRW_236h: 8 Vehicle
  SG_ LRWS_ST : 32|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LRWS_ID : 34|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BZ236h : 36|4@1+ (1,0) [0|0] "" Vector__XXX
- SG_ vLRW : 21|14@0- (0.5,-2048) [0|0] "deg/s²" Vector__XXX
+ SG_ vLRW : 21|14@0+ (0.5,-2048) [0|0] "deg/s²" Vector__XXX
  SG_ LRW : 5|14@0+ (0.5,-2048) [0|0] "deg" Vector__XXX
 
 BO_ 832 FS_340h: 8 Vector__XXX
@@ -242,7 +242,7 @@ BO_ 808 BS_328h: 8 Vector__XXX
  SG_ BRE_AKT_E : 47|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 768 BS_300h: 8 Vector__XXX
- SG_ GIER_ROH : 55|16@0- (1,0) [0|0] "" Vector__XXX
+ SG_ GIER_ROH : 55|16@0+ (0.01,-327.68) [0|0] "°/s²" Vector__XXX
  SG_ ART_E : 3|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ SFB : 8|2@1+ (1,0) [0|0] "" Vector__XXX
 

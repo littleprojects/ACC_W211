@@ -99,7 +99,6 @@ def main():
             # update msg timestamp
             vehicle_msg['msgs'].update({vehicle_msg_id: utils.ts_ms()})
 
-
             # decode msg with DBC information to signals
             if vehicle_msg_id in needed_msg_id_list:
                 decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
@@ -132,6 +131,7 @@ def main():
 
     print(vehicle_msg)
 
+
 if __name__ == "__main__":
 
     try:
@@ -157,3 +157,4 @@ if __name__ == "__main__":
         print('Logger init Error')
         print(e)
         traceback.print_exc()
+

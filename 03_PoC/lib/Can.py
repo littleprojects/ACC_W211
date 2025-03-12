@@ -12,7 +12,7 @@ class Can:
     Connecting to the can and send messages
     """
 
-    def __init__(self, interface, channel, bitrate, dbc, log, retry_in_sec='5', is_extended=False, filter=None):
+    def __init__(self, interface, channel, bitrate, log, retry_in_sec='5', is_extended=False, filter=None):
 
         self.log = log
 
@@ -27,44 +27,13 @@ class Can:
         self.retry_in_seconds = int(retry_in_sec)
         self.is_extended_id = int(is_extended)
 
-        """ Database """
-        self.db = self.get_database(dbc)
-
-        """ Parser """
-        self.parser = None
-        self.parser_queue = queue.Queue()
-
         """ Filter """
         self.filter = filter
 
         """ Index to check if we should log the receive message """
         self.index = 0
 
-    def set_parser(self, parser):
-        """ Setting the parser. We need the parser to store already decoded messages """
-        self.log.debug(f"CAN_{self.channel}: Setting the parser: {parser}")
-        self.parser = parser
-
-    def add_to_parser_queue(self, parser):
-        """ Adding a new parser to the queue, so we don't skip one """
-        self.log.debug(f"CAN_{self.channel}: adding a new parser to the queue: {parser}")
-        self.parser_queue.put(parser)
-
-    def get_database(self, dbc):
-        """ Getting the database path from the .conf file """
-        database_path = dbc
-
-        self.log.info(f"CAN_{self.channel}: Connecting to database: {database_path}")
-
-        try:
-            """ Trying to connect to the database """
-            return cantools.database.load_file(database_path)
-        except Exception as e:
-            self.log.critical("CAN_{self.channel}: Failed to connect to database: " + dbc)
-            self.log.error(e)
-            exit()
-
-    def get_connection(self):
+    def connect(self):
         """
         trying to connect to the can
         :return:
@@ -146,29 +115,3 @@ class Can:
             self.log.debug(f"CAN_{self.channel}: Could not send the message")
             self.log.error(e)
 
-    def receive_message(self):
-        """ We don't need this function at the moment. But with this function its possible to receive messages from the can """
-        try:
-            self.log.debug(f"CAN_{self.channel}: Received message {self.bus.recv()}")
-        except Exception as e:
-            self.log.debug(f"CAN_{self.channel}: Receiving message was not possible")
-            self.log.error(e)
-
-    def create_messages(self, parser):
-        """ Checking which parser needs which can messages. You can change that f.e. in BESTPOS.py """
-        for can_message in parser.can_messages:
-            exec(f"self.create_message(self.{can_message})")
-
-    def create_message(self, function):
-        try:
-            """ Executing the message we want to create """
-            message, data = function()
-
-            """ Sending the can message with the id and the data """
-            self.logger.debug(f"CAN_{self.channel}: Sending can message: {data}")
-            self.send_message(data, message.frame_id)
-
-            # self.receive_message()
-        except Exception as e:
-            self.logger.debug("CAN_{self.channel}: Missing attribute")
-            self.logger.debug(e)

@@ -34,7 +34,7 @@ db_0 = cantools.database.load_file(config['can_0_dbc'])
 mdf = Mdf(config['mdf_log_file'], log, db_0) #, save_interval=10000)
 
 # Erstelle eine Bus-Instanz
-bus = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name='NewApp')
+bus = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name='vCAN')
 
 i = 0
 
