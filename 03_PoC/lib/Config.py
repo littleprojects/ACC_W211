@@ -10,6 +10,17 @@ import configparser
 
 from lib import utils
 
+class Dict2Obj(object):
+    """
+    Transform a dict into an object
+    """
+    def __init__(self, d):
+        for k, v in d.items():
+            if isinstance(k, (list, tuple)):
+                setattr(self, k, [obj(x) if isinstance(x, dict) else x for x in v])
+            else:
+                setattr(self, k, obj(v) if isinstance(v, dict) else v)
+
 
 class Config:
     """
@@ -22,6 +33,7 @@ class Config:
         self.name = name
         self.default_config = default_config
         self.config = {}
+        self.config_obj = None
 
         self.log = log
 
@@ -70,13 +82,16 @@ class Config:
             if data_type is float:
                 self.config[key] = float(value)
 
+        # create the config object
+        self.config_obj = Dict2Obj(self.config)
+
         # update logger with new setting
         #self.log.set_config(self.config)
 
     #def get_config(self):
     #    return self.config
 
-    def read_config(self, file, section):
+    def read_config(self, file, section, as_obj=False):
         """
         Read the section form the config file
         :param file: path and name of the config file
@@ -89,14 +104,13 @@ class Config:
         config = configparser.ConfigParser()
         config.read(file)
 
-        # TODO: parse flaot, int, bool(True,False), str
-
         # self.log.info(str(config.has_section(section)))
 
-        if config.has_section(section):  # Todo: is everytime true
+        if config.has_section(section):
             self.log.debug('config section found ' + section)
             return dict(config[section])
         else:
+            # no section found - return empty dict
             self.log.warning(
                 'Config section NOT found: config file: ' + file + '; Module: ' + self.module_name + '; config group MISSING: [' + section + ']; use default settings')
             return dict()

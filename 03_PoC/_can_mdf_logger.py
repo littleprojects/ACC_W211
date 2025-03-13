@@ -60,6 +60,9 @@ try:
             except:
                 pass
 
+            if i == 1:
+                log.info('Recording started')
+
             if i % 1000 == 0:
                 log.info('Msgs: ' + str(i))
 
