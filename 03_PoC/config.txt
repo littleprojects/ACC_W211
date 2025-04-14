@@ -1,3 +1,14 @@
 
 [READY_CHECK]
 #loglevel = debug
+
+
+[BASIC_MSG_SEND]
+
+# Loglevel (default is INFO)
+loglevel = debug
+
+# CAN INTERFACE selection (default is: vCAN)
+# hardware interface
+# can_0_app_name = VN1610
+
