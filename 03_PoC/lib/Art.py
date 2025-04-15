@@ -15,6 +15,21 @@ from enum import Enum
 from lib import utils
 
 
+# ART Statemachine states class
+class ArtState(Enum):
+    ACC = 1  # init ACC/CC function
+    LIM = 2  # Limiter function
+    ACC_active = 3
+    LIM_active = 4
+
+
+class ArtStates:
+    def __init__(self):
+        self.ready = False
+        self.state = ArtState.ACC
+        self.dspl_trigger = 0 # timestamp of display trigger
+
+
 class Art:
 
     def __init__(self, config, log):
@@ -138,43 +153,49 @@ class Art:
                     pass
                 """
 
-                # Lim
-                if self.art.state == ArtState.LIM:
-                    # todo check for Limiter activation
-                    # todo check for switch to ACC/CC mode
-                    pass
+
 
                 # ACC/CC active
                 if self.art.state == ArtState.ACC_active:
                     # check for ACC/CC deactivation
                     # BRAKING
                     if signal_name == 'SFB' and signal_data == 1:
-                        self.level_off()
-                        self.acc_deactivation()
+                        self.art_braking()
+
+                """
+                # Lim
+                if self.art.state == ArtState.LIM:
+                    # todo check for Limiter activation
+                    # todo check for switch to ACC/CC mode
+                    pass
 
                 # Lim active
                 if self.art.state == ArtState.LIM_active:
                 # todo check for LIM deactivatio
                 # todo check for LIM adjustments
                     pass
+                """
 
                 # state independent adjustments
 
+                if signal_name == ['AUS']:
+                    print(new_msgs)
+
                 # level off
                 if signal_name == ['AUS'] and signal_data == 1:
-                    self.level_off()
+                    self.lever_off()
 
                 # +1 kph is pressed and was not pressed before
                 if signal_name == 'WA' and signal_data == 1 and self.vehicle_msgs['signals']['WA'] == 0:
-                    self.level_resume()
+                    self.lever_resume()
 
                 # Round up (+10) is pressed and was not pressed before
                 if signal_name == 'S_PLUS_B' and signal_data == 1 and self.vehicle_msgs['signals']['S_PLUS_B'] == 0:
-                    self.level_up()
+                    self.lever_up()
 
                 # Round down (-10) is pressed and was not pressed before
                 if signal_name == 'S_MINUS_B' and signal_data == 1 and self.vehicle_msgs['signals']['S_MINUS_B'] == 0:
-                    self.level_down()
+                    self.lever_down()
 
                 # ART warning ON/OFF button and was not pressed before
                 if signal_name == 'ART_ABW_BET' and signal_data == 1 and self.vehicle_msgs['signals']['ART_ABW_BET'] == 0:
@@ -185,6 +206,11 @@ class Art:
                     if signal_data == 1:
                         self.log.critial('CRASH detected')
                         self.reset_to_default()
+
+                # Limiter is activ
+                if signal_name == 'VMAX_AKT' and signal_data == 1:
+                    # todo LIMITER
+                    pass
 
             # update msg storage
             #self.vehicle_msgs['signals'].update({signal_name: signal_data})
@@ -206,15 +232,29 @@ class Art:
             self.art_msg['ART_ABW_AKT'] = 0
             self.log.debug('Deactivate warnings')
 
-    def level_off(self):
+    def art_braking(self):
+
+        # self.level_off()
+        self.acc_deactivation()
+
+        # display trigger
+        self.acc_set_dspl_trigger()
+
+    def lever_off(self):
         self.log.debug('Lever off pressed')
+
+        # display trigger
+        self.acc_set_dspl_trigger()
 
         if self.art.state == ArtState.ACC_active:
             self.acc_deactivation()
 
     # level_resume pressed
-    def level_resume(self):
+    def lever_resume(self):
         self.log.debug('Lever resume pressed')
+
+        # display trigger
+        self.acc_set_dspl_trigger()
 
         signal = self.vehicle_msgs['signals']
 
@@ -223,13 +263,15 @@ class Art:
             # check for min speed
             if signal['V_ANZ'] < int(self.config.acc_min_speed):
                 self.log.warning('Cant enable ACC: too slow')
-                # todo trigger '---'
+                # trigger '---' display
+                self.acc_set_dspl_lim_trigger()
                 return False
 
             # check for max speed
             if signal['V_ANZ'] > int(self.config.acc_max_speed):
                 self.log.warning('Cant enable ACC: too fast')
-                # todo trigger '---'
+                # trigger '---' display
+                self.acc_set_dspl_lim_trigger()
                 return False
 
             # level ok
@@ -259,9 +301,11 @@ class Art:
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
         pass
 
-    # todo --- trigger
-    def level_up(self):
+    def lever_up(self):
         self.log.debug('Lever up pressed')
+
+        # display trigger
+        self.acc_set_dspl_trigger()
 
         signal = self.vehicle_msgs['signals']
 
@@ -270,11 +314,15 @@ class Art:
             # if signal['V_ANZ'] < 30.0:
             if signal['V_ANZ'] < int(self.config.acc_min_speed):
                 self.log.warning('Cant enable ACC: too slow')
+                # trigger '---' display
+                self.acc_set_dspl_lim_trigger()
                 return False
 
             # check for max speed
             if signal['V_ANZ'] > int(self.config.acc_max_speed):
                 self.log.warning('Cant enable ACC: too fast')
+                # trigger '---' display
+                self.acc_set_dspl_lim_trigger()
                 return False
 
             # lever check
@@ -302,9 +350,11 @@ class Art:
 
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
 
-    # todo --- trigger
-    def level_down(self):
+    def lever_down(self):
         self.log.debug('Lever down pressed')
+
+        # display trigger
+        self.acc_set_dspl_trigger()
 
         signal = self.vehicle_msgs['signals']
 
@@ -313,11 +363,15 @@ class Art:
             # if signal['V_ANZ'] < 30.0:
             if signal['V_ANZ'] < int(self.config.acc_min_speed):
                 self.log.warning('Cant enable ACC: to slow')
+                # trigger '---' display
+                self.acc_set_dspl_lim_trigger()
                 return False
 
             # check for max speed
             if signal['V_ANZ'] > int(self.config.acc_max_speed):
                 self.log.warning('Cant enable ACC: too fast')
+                # trigger '---' display
+                self.acc_set_dspl_lim_trigger()
                 return False
 
             # lever check
@@ -354,6 +408,7 @@ class Art:
 
         # todo set outputs
         # display ein
+        self.art_msg['ART_SEG_EIN'] == 1
         # read distance ajust
         # calc distance
 
@@ -367,13 +422,17 @@ class Art:
         # check braking
         # min limit
         # max limit
+        # switch off if car is too slow
 
-        # timed functions
-        # Anzeige neu triggern ART_DSPL_NEU
-        # Too fast/slow '---' ART_DSPL_LIM
+        # todo ART_VFBR (VerFügBaR - available)
+        # goes off [0] if speed it too slow (trigger dspy), recover [1] after trigger time
+        # blocks reactivation if state is 0 ???
 
+        # update safety distance
+        self.acc_calc_distance()
 
-        # read distance
+        # general warnings
+        self.acc_calc_warnings()
 
         # calc only when acc is ready
         if self.art.state == ArtState.ACC_active:
@@ -390,7 +449,13 @@ class Art:
 
             pass
 
+        # reset trigger
+        self.acc_reset_trigger()
+
     def acc_deactivation(self):
+
+        # disable segment display
+        self.art_msg['ART_SEG_EIN'] == 0
 
         self.log.debug('ACC deactivation')
 
@@ -398,6 +463,64 @@ class Art:
         self.art.state = ArtState.ACC
 
         # todo reset outputs
+
+    # todo calc warnings
+    def acc_calc_warnings(self):
+        # todo car too close
+        # todo delta speed too big
+        pass
+
+    def acc_calc_distance(self):
+        # get vehicle speed
+        speed = self.vehicle_msgs['signals']['V_ANZ']
+        # round up
+        speed = math.ceil(speed)
+
+        # todo get distance ajust value
+
+        # calc distance in [m]
+        # todo do the right calc
+        dist = math.ceil(speed / 2)
+
+        # set distance
+        self.art_msg['SOLL_ABST'] = dist
+
+    def acc_set_dspl_trigger(self):
+        # set art show trigger in display
+        self.art_msg['ART_DSPL_NEU'] == 1
+
+        # display switch to art page
+        self.art_msg['ART_DSPL_EIN'] == 1
+        self.art.dspl_trigger = utils.ts_ms
+        # needs to reset after a some time
+
+        # clear blinking '---' this is set later if needed
+        self.art_msg['ART_DSPL_LIM'] == 0
+        self.art_msg['ART_DSPL_BL'] == 0
+
+    def acc_set_dspl_lim_trigger(self):
+
+        # show --- in display if speed is too slow or too fast
+        self.art_msg['ART_DSPL_LIM'] == 1
+        # blink display
+        self.art_msg['ART_DSPL_BL'] == 1
+
+    def acc_reset_trigger(self):
+        # a trigger is active
+        if self.art.dspl_trigger > 0:
+
+            now = utils.ts_ms
+
+            delta_time = now - self.art.dspl_trigger
+
+            # time is up
+            if delta_time > self.config.art_triiger_time:
+                # clear
+                self.art_msg['ART_DSPL_EIN'] == 0
+                self.art_msg['ART_DSPL_LIM'] == 0
+                self.art_msg['ART_DSPL_BL'] == 0
+                # clear trigger
+                self.art.dspl_trigger = 0
 
     def get_can_data(self):
 
@@ -431,8 +554,12 @@ class Art:
         # reset state
         self.art.state = ArtState.ACC
 
+        # save target speed
+        target_speed = self.art_msg['V_ART']
+
         # load default values
         self.art_msg = self.art_default_msg.copy()
+        self.art_msg['V_ART'] = target_speed
 
     def set_art_ready(self):
 
@@ -494,9 +621,10 @@ class Art:
 
             if self.art.ready:
                 self.art.ready = False
+                self.log.debug('Checker: Msgs incomplete')
                 # reset default output values
                 self.reset_to_default()
-                self.log.debug('Checker: Msgs incomplete')
+
             return False
 
         # no MSG ts is too old
@@ -523,21 +651,25 @@ class Art:
         if not all_msg_in_time:
             if self.art.ready:
                 self.art.ready = False
+                self.log.warning('Checker: Msgs to old')
                 # load default output values
                 self.reset_to_default()
-                self.log.warning('Checker: Msgs to old')
             return False
 
         # Todo: needed Signals are in range check
         # signals = self.vehicle_msgs['signals']
 
         # Gear is in D
-        if self.vehicle_msgs['signals']['DRTGTM'] is not 1:
-            if self.art.ready:
-                self.art.ready = False
-                # load default output values
-                self.reset_to_default()
-                self.log.info('Checker: Gear is NOT in D')
+        if 'DRTGTM' in self.vehicle_msgs['signals']:
+            if self.vehicle_msgs['signals']['DRTGTM'] != 1:
+                if self.art.ready:
+                    self.art.ready = False
+                    # load default output values
+                    self.reset_to_default()
+                    self.log.info('Checker: Gear is NOT in D')
+                return False
+        else:
+            # Dataset incomplete
             return False
 
         # set ready values
@@ -546,18 +678,3 @@ class Art:
         return True
 
 # end class ART
-
-
-# ART Statemachine states class
-class ArtState(Enum):
-    ACC = 1  # init ACC/CC function
-    LIM = 2  # Limiter function
-    ACC_active = 3
-    LIM_active = 4
-
-class ArtStates:
-    def __init__(self):
-        self.ready = False
-        self.state = ArtState.ACC
-
-

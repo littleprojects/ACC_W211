@@ -45,7 +45,8 @@ default_config = {
     'can_0_bitrate':            '500000',
     'can_0_app_name':           'vCAN',             # 'VN1610' for hardware interface
     # 'can_0_app_name':           'VN1610',           # Hardware interface
-    'can_0_dbc':                'CAN_C.dbc',
+    'can_0_dbc':                'CAN_C.dbc',        # path to DBC
+    'can_0_send':               True,               # enables or disables MSG sending
     # MDF Log
     # 'mdf_log':                  false,
     # 'mdf_log_file':             'log/ANlog_' + utils.date_time_str() + '.mf4',
@@ -53,6 +54,8 @@ default_config = {
     # ACC setting
     'acc_min_speed':            30,                 # [kph]
     'acc_max_speed':            180,                # [kph]
+    # Display
+    'art_trigger_time':         8000,               # [ms] show art display after a trigger
 }
 
 needed_msg_id_list = [

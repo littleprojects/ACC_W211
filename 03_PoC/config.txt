@@ -12,3 +12,9 @@
 # hardware interface
 # can_0_app_name = VN1610
 
+# disables sending CAN MSGS
+can_0_send = False
+
+# acc_min_speed = 30
+# acc_max_speed = 180
+

@@ -92,7 +92,7 @@ class CanHandler:
             # send all msgs
             # self.Art.update_input(self.vehicle_msg)
 
-            # send just the new msgs
+            # send new msgs and all
             self.Art.update_input(new_msgs, self.vehicle_msg)
 
             # Todo?: instant update needed for quick changes -> request quick can response
@@ -159,14 +159,13 @@ class CanHandler:
 
     def send_status_msg(self):
 
-        # Todo Trigger output calc
-
         # create output
         self.create_out_msgs()
 
-        # write msg to output queue
-        # dict {'id': arbitration_id, 'data': msg_binary_data}
-        self.q_cc_out.put({'id': 0x250, 'data': self.art_250_data})
-        self.q_cc_out.put({'id': 0x258, 'data': self.art_258_data})
+        if self.config.can_0_send:
+            # write msg to output queue
+            # dict {'id': arbitration_id, 'data': msg_binary_data}
+            self.q_cc_out.put({'id': 0x250, 'data': self.art_250_data})
+            self.q_cc_out.put({'id': 0x258, 'data': self.art_258_data})
 
 
