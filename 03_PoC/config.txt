@@ -6,7 +6,7 @@
 [BASIC_MSG_SEND]
 
 # Loglevel (default is INFO)
-loglevel = debug
+# loglevel = debug
 
 # CAN INTERFACE selection (default is: vCAN)
 # hardware interface

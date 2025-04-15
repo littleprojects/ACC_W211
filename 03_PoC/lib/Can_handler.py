@@ -47,42 +47,56 @@ class CanHandler:
 
         # CHECK ready
         # ready = check.is_acc_ready(self.vehicle_msg, self.log)
+        # ready check is done in ART Class
 
     def read_in_msgs(self):
 
         new_can_msgs = False
+        new_msgs = {}
 
         # process the msgs in q_in
         while not self.q_cc_in.empty():
-
-            new_can_msgs = True
 
             msg = self.q_cc_in.get()
             self.q_cc_in.task_done()
 
             vehicle_msg_id = hex(msg.arbitration_id)
 
+            # ignore unneeded can msgs
+            #if not (vehicle_msg_id in self.needed_msg_id_list):
+            #    continue
+
             # update msg timestamp
             self.vehicle_msg['msgs'].update({vehicle_msg_id: utils.ts_ms()})
 
-            # ignore unneeded can msgs
-            if not (vehicle_msg_id in self.needed_msg_id_list):
-                break
-
             # decode msg
             decode_msg = self.db_0.decode_message(msg.arbitration_id, msg.data)
+
+            if len(decode_msg) == 0:
+                continue
+
+            new_can_msgs = True
 
             # all signals in the msg
             for key in decode_msg.keys():
                 signal_name = key
                 signal_data = decode_msg[key]
 
-                # update msg storage
+                # update msg storage all
                 self.vehicle_msg['signals'].update({signal_name: signal_data})
+                # update new msgs
+                new_msgs.update({signal_name: signal_data})
 
         # update ART at new messages
         if new_can_msgs:
-            self.Art.update_input(self.vehicle_msg)
+            # send all msgs
+            # self.Art.update_input(self.vehicle_msg)
+
+            # send just the new msgs
+            self.Art.update_input(new_msgs, self.vehicle_msg)
+
+            # Todo?: instant update needed for quick changes -> request quick can response
+            # maybe with a response to the update process or external event
 
     def create_out_msgs(self):
 

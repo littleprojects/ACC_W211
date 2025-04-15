@@ -49,7 +49,10 @@ default_config = {
     # MDF Log
     # 'mdf_log':                  false,
     # 'mdf_log_file':             'log/ANlog_' + utils.date_time_str() + '.mf4',
-    # 'check_msg_delay':          '500',          # [ms] max delay
+    'max_msg_delay':            500,          # [ms] max delay
+    # ACC setting
+    'acc_min_speed':            30,                 # [kph]
+    'acc_max_speed':            180,                # [kph]
 }
 
 needed_msg_id_list = [

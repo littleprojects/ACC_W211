@@ -147,32 +147,31 @@ Needes Signals:
 
 ## inputs
 
-| Input | Signal | Source | Reason | Alternative 
-| --- | --- | --- | -- | --
-| **Driver** |
-| Acc Pedel | M_FV  | MS_212 | overwrite, acc in passiv mode Moment Fahrervorgabe
-| Breake pedal | SFB (Fahrer Bremst) | BS_300 | ACC OFF | BLS (BremsLichtSchalter) BS_200
-| Steeringangle | LWL | ACC_LRW 236 | Target selection in corners, acc passiv at shart corners, switch off at fast steerings 
-| Steering speed | vLWL | ACC_LRW | switch OFF at high steering manouvers | Ableitung von LWL
-| **ACC related** | 
-|    - **from Stick**
-|        - set | WA | ART_MRM_238 | (on, resume, +1 kph)
-|        - up | S_Plus_B | ART_MRM_238 | (on, +10 kph)
-|        - down | S_Minus_B | ART_MRM_238 | (on, -10kph)
-|        - off | AUS | ART_MRM_238 | OFF
-|    - **from Console:**
-|        - distance ajust | ART_Abstand | ESZ_240 | (acc distance calc)
-|        - warning on/off | ART_ABW_BET | ESZ_240 | send worning or not
-| **vehicle** 
-| speed  | V_ANZ kph | Kombi_412 | (current speed -> acceleration calc, NO acc activation below 30 and over max) |
-| current engine moment | M_STAT | MS_312 | startmoment for ACC
-| max speed | V_MAX_FIX (kph) | MS_608 | (winterreifen) (Limit acc) optional, can be hardcoded
-| Fuellevel | Tank_FS (L) | Kombi_408 |  ACC diable or switch off at low fuel
-| Gear is in 'D' | DRTGTM = 1 | BS_200 | enable | V_ANZ speed over 30kph
-| ESP is NOT off | ESP_BET | ESZ_240 | off or diabled
-| ESP Eperation | ESP_BET | ESZ_240  | off
-| Crash | CRASH | ESZ_240 | off | CRASH_CNF
-
+| Input                 | Signal              | Source      | Reason                                                                                 | Alternative                     |
+|-----------------------|---------------------|-------------|----------------------------------------------------------------------------------------|---------------------------------|
+| **Driver**            |                     |             |                                                                                        |                                 |
+| Acc Pedel             | M_FV                | MS_212      | overwrite, acc in passiv mode Moment Fahrervorgabe                                     |                                 |
+| Breake pedal          | SFB (Fahrer Bremst) | BS_300      | ACC OFF                                                                                | BLS (BremsLichtSchalter) BS_200 |
+| Steeringangle         | LWL                 | ACC_LRW 236 | Target selection in corners, acc passiv at shart corners, switch off at fast steerings |                                 |
+| Steering speed        | vLWL                | ACC_LRW     | switch OFF at high steering manouvers                                                  | Ableitung von LWL               |
+| **ACC related**       |                     |             |                                                                                        |                                 |
+| - **from Stick**      |                     |             |                                                                                        |                                 |
+| - set                 | WA                  | ART_MRM_238 | (on, resume, +1 kph)                                                                   |                                 |
+| - up                  | S_Plus_B            | ART_MRM_238 | (on, +10 kph)                                                                          |                                 |
+| - down                | S_Minus_B           | ART_MRM_238 | (on, -10kph)                                                                           |                                 |
+| - off                 | AUS                 | ART_MRM_238 | OFF                                                                                    |                                 |
+| - **from Console:**   |                     |             |                                                                                        |                                 |
+| - distance ajust      | ART_Abstand         | ESZ_240     | (acc distance calc)                                                                    |                                 |
+| - warning on/off      | ART_ABW_BET         | ESZ_240     | send warning or not                                                                    |                                 |
+| **vehicle**           |                     |             |                                                                                        |                                 |
+| speed                 | V_ANZ kph           | Kombi_412   | (current speed -> acceleration calc, NO acc activation below 30 and over max)          |                                 |
+| current engine moment | M_STAT              | MS_312      | startmoment for ACC                                                                    |                                 |
+| max speed             | V_MAX_FIX (kph)     | MS_608      | (winterreifen) (Limit acc) optional, can be hardcoded                                  |                                 |
+| Fuellevel             | Tank_FS (L)         | Kombi_408   | ACC diable or switch off at low fuel                                                   |                                 |
+| Gear is in 'D'        | DRTGTM = 1          | BS_200      | enable                                                                                 | V_ANZ speed over 30kph          |
+| ESP is NOT off        | ESP_BET             | ESZ_240     | off or diabled                                                                         |                                 |
+| ESP Eperation         | ESP_BET             | ESZ_240     | off                                                                                    |                                 |
+| Crash                 | CRASH               | ESZ_240     | off                                                                                    | CRASH_CNF                       |
 
 ## output
 
@@ -215,12 +214,12 @@ Focus on:
 
 ## ECU Comparision
 
-| Device | CANs | Power | Housing | Cost | Addon needs | 
-| --- | --- | --- | ---| --- | --- | 
-| MRS M2600 | 2-3 | 9-32V | Alu IP65 | <500€ | - |
-| TTC 32x | 2 | 8-32V | Alu IP67 | 1000€ | Dev Enviroment (extra cost) | 
-| BODAS RC5-6/40 | 3 | 8-32V | Alu IP6x | ? | - | 
-| BODAS RC-4-5/30 | 2 | 8-32V | Alu IP6x | ? | - | 
+| Device          | CANs | Power | Housing  | Cost  | Addon needs                 |
+|-----------------|------|-------|----------|-------|-----------------------------|
+| MRS M2600       | 2-3  | 9-32V | Alu IP65 | <500€ | -                           |
+| TTC 32x         | 2    | 8-32V | Alu IP67 | 1000€ | Dev Enviroment (extra cost) | 
+| BODAS RC5-6/40  | 3    | 8-32V | Alu IP6x | ?     | -                           | 
+| BODAS RC-4-5/30 | 2    | 8-32V | Alu IP6x | ?     | -                           | 
 
 
 # Software
