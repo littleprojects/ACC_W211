@@ -127,18 +127,6 @@ class Art:
             'VMAX_AKT': 0,          # Limiter
         }
 
-        """
-        # dict to objs
-        class DictObj:
-        def __init__(self, in_dict:dict):
-            assert isinstance(in_dict, dict)
-            for key, val in in_dict.items():
-                if isinstance(val, (list, tuple)):
-                   setattr(self, key, [DictObj(x) if isinstance(x, dict) else x for x in val])
-                else:
-                   setattr(self, key, DictObj(val) if isinstance(val, dict) else val)
-        """
-
         self.log.info('INIT ACC - NOT READY')
 
     def update_input(self, new_msgs, all_data):
@@ -191,125 +179,6 @@ class Art:
                 
             if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=FALLING_EDGE):
                 self.lim_deactivatio()
-            """
-
-            """
-
-            # look for key events in new data
-            # for key in new_msgs.keys():
-            #    signal_name = key
-            #    signal_data = new_msgs[key]
-
-                # ACC/CC active
-                # if self.art.state == ArtState.ACC_active:
-                    # check for ACC/CC deactivation
-                    # BRAKING
-                if signal_name == 'SFB' and signal_data == 1:
-                    self.art_braking()
-
-                # state independent adjustments
-
-                #if signal_name == ['AUS']:
-                #    print(new_msgs)
-                # todo is WH_UP == 0
-
-                # level OFF
-                # is OFF in new msg data
-                if signal_name == ['AUS']:
-                    # is off pressed
-                    if signal_data == 1:
-
-                        print('AUS')
-                        # was off pressed before
-                        if self.art.lever_off_pressed == 0:
-                            # not pressed before -> state change -> action
-                            self.lever_off()
-
-                            # remember it is pressed
-                            self.art.lever_off_pressed = 1
-                    else:
-                        # is not pressed now -> remember this state
-                        self.art.lever_off_pressed = 0
-
-
-                # +1 kph is pressed and was not pressed before
-                # signal in new msg data
-                if signal_name == 'WA':  # and signal_data == 1:    # and old_signals['WA'] == 1:
-                    # is lever pressed
-                    if signal_data == 1:
-                        # was lever pressed before?
-                        if self.art.lever_wa_pressed == 0:
-                            # not -> action
-                            self.lever_wa()
-
-                            # remember lever is pressed
-                            self.art.lever_wa_pressed = 1
-                    else:
-                        # remember lever is not pressed
-                        self.art.lever_wa_pressed = 0
-
-                # Round up (+10) is pressed and was not pressed before
-                if signal_name == 'S_PLUS_B':
-                    if signal_data == 1:  # and self.vehicle_msgs['signals']['S_PLUS_B'] == 0:
-                        if self.art.lever_up_pressed == 0:
-
-                            self.lever_up()
-
-                            self.art.lever_up_pressed = 1
-                    else:
-                        self.art.lever_up_pressed = 0
-
-                # Round down (-10) is pressed and was not pressed before
-                if signal_name == 'S_MINUS_B':
-                    if signal_data == 1:     # and self.vehicle_msgs['signals']['S_MINUS_B'] == 0:
-                        if self.art.lever_dw_pressed == 0:
-                            self.lever_down()
-
-                            self.art.lever_dw_pressed = 1
-                    else:
-                        self.art.lever_dw_pressed = 0
-
-                # ART warning ON/OFF button and was not pressed before
-                if signal_name == 'ART_ABW_BET':
-                    if signal_data == 1:   # and self.vehicle_msgs['signals']['ART_ABW_BET'] == 0:
-                        if self.art.warn_bt_pressed == 0:
-                            self.art_warning_button()
-
-                            self.art.warn_bt_pressed = 1
-                    else:
-                        self.art.warn_bt_pressed = 0
-
-                if signal_name == 'CRASH':
-                    # crash detected
-                    if signal_data == 1:
-                        self.log.critial('CRASH detected')
-                        self.reset_to_default()
-                        
-                
-
-                # LIMITER
-                if signal_name == 'VMAX_AKT':
-                    if signal_data == 1:
-                        # detect state change
-                        if self.art.level_lim_pressed == 0:
-                            # todo Lim activation
-
-                            self.art.level_lim_pressed = 1
-                    else:
-                        # limiter status OFF
-
-                        # was limiter active? (detect state change)
-                        if self.art.level_lim_pressed == 1:
-                            # todo lim deactivation
-
-                            self.art.level_lim_pressed = 0
-                    pass
-                    
-            
-
-                # update msg storage
-                # self.vehicle_msgs['signals'].update({signal_name: signal_data})
-
             """
 
         # update dataset with the newest data
@@ -393,39 +262,7 @@ class Art:
 
         # ACC ready -> activation
         if self.art.state == ArtState.ACC:
-            """
-            # is driver braking
-            if self.button_states['SFB'] == 1:
-                self.log.warning('Cant enable ACC: Driver is braking')
 
-                return False
-
-            # check for min speed
-            if signal['V_ANZ'] < int(self.config.acc_min_speed):
-                self.log.warning('Cant enable ACC: too slow')
-                # trigger '---' display
-                self.acc_set_dspl_lim_trigger()
-                return False
-
-            # check for max speed
-            if signal['V_ANZ'] > int(self.config.acc_max_speed):
-                self.log.warning('Cant enable ACC: too fast')
-                # trigger '---' display
-                self.acc_set_dspl_lim_trigger()
-                return False
-
-            # level ok
-            if signal['WH_UP'] == 1:
-                self.log.warning('Cant enable ACC: Selector Level implausible')
-                return False
-
-            # set speed only if speed was not set yet
-            if self.art_msg['V_ART'] == 0:
-                # round current speed up and set as target speed
-                self.art_msg['V_ART'] = math.ceil(signal['V_ANZ'])
-
-                self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
-            """
             # RESUME Speed
             v_set = self.art_msg['V_ART']
 
@@ -458,37 +295,6 @@ class Art:
         # ACC ready -> activation
         if self.art.state == ArtState.ACC:
 
-            """
-            # is driver braking
-            if self.button_states['SFB'] == 1:
-                self.log.warning('Cant enable ACC: Driver is braking')
-
-                return False
-
-            # if signal['V_ANZ'] < 30.0:
-            if signal['V_ANZ'] < int(self.config.acc_min_speed):
-                self.log.warning('Cant enable ACC: too slow')
-                # trigger '---' display
-                self.acc_set_dspl_lim_trigger()
-                return False
-
-            # check for max speed
-            if signal['V_ANZ'] > int(self.config.acc_max_speed):
-                self.log.warning('Cant enable ACC: too fast')
-                # trigger '---' display
-                self.acc_set_dspl_lim_trigger()
-                return False
-
-            # lever check
-            if signal['WH_UP'] == 1:
-                self.log.warning('Cant enable ACC: Selector Level implausible')
-                return False
-
-            # set target speed to current speed
-            self.art_msg['V_ART'] = math.ceil(signal['V_ANZ'])
-
-            self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
-            """
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
 
             # and power
@@ -516,32 +322,6 @@ class Art:
 
         # ACC ready -> activation
         if self.art.state == ArtState.ACC:
-            """
-            # if signal['V_ANZ'] < 30.0:
-            if signal['V_ANZ'] < int(self.config.acc_min_speed):
-                self.log.warning('Cant enable ACC: to slow')
-                # trigger '---' display
-                self.acc_set_dspl_lim_trigger()
-                return False
-
-            # check for max speed
-            if signal['V_ANZ'] > int(self.config.acc_max_speed):
-                self.log.warning('Cant enable ACC: too fast')
-                # trigger '---' display
-                self.acc_set_dspl_lim_trigger()
-                return False
-
-            # lever check
-            if signal['WH_UP'] == 1:
-                self.log.warning('Cant enable ACC: Selector Level implausible')
-                return False
-
-            # set target speed to current speed
-            # round down and set
-            self.art_msg['V_ART'] = math.floor(signal['V_ANZ'])
-
-            self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
-            """
 
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
 
@@ -615,6 +395,7 @@ class Art:
             # just to be sure
             self.art.state = ArtState.ACC
 
+    # todo
     def acc_calc(self):
         # self.log.debug('ACC calc')
 
@@ -676,6 +457,7 @@ class Art:
         # reset trigger
         self.acc_reset_trigger()
 
+    # todo
     def acc_deactivation(self):
 
         # disable segment display
@@ -688,7 +470,7 @@ class Art:
 
         # todo reset outputs
 
-    # todo calc warnings
+    # todo calc warnings only with radar input
     def acc_calc_warnings(self):
         # todo car too close
         # todo delta speed too big
@@ -697,6 +479,7 @@ class Art:
         # AAS_LED_BL -> LED ACC blinking -> check/test
         pass
 
+    # todo
     def radar(self):
         # Data
         # S_OBJ - standing object detected
@@ -707,6 +490,7 @@ class Art:
         # ART_REAKT - show reaktivation after error -> check/test
         pass
 
+    # todo
     def acc_calc_distance(self):
         # get vehicle speed
 

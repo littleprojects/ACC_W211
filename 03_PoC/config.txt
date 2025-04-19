@@ -5,16 +5,44 @@
 
 [BASIC_MSG_SEND]
 
-# Loglevel (default is INFO)
-# loglevel = debug
+# -----------------------------------------------------------------------
+# ACC Settings
 
-# CAN INTERFACE selection (default is: vCAN)
-# hardware interface
-# can_0_app_name = VN1610
+# ACC minimum activation speed
+# default is 30 kph
+#acc_min_speed = 30
+
+# ACC maximum activation speed
+# default is 180 kph
+#acc_max_speed = 180
+
+# ACC switch off speed
+# default is 20 kph
+#acc_off_speed = 20
+
+# Display time of ACC screen after an ACC Event
+# default is 8000 ms = 8 sec
+#art_trigger_time = 8000
+
+# -----------------------------------------------------------------------
+# CAN Interface Settings
+
+# CAN INTERFACE selection
+# hardware interface default parameter
+#can_0_interface = vector
+#can_0_app_name = VN1610
+#can_0_channel = 0
+#can_0_bitrate = 500000
+
+# -----------------------------------------------------------------------
+# DEVELOPMENT SETTINGS
+
+# Loglevel (default is INFO)
+# for debugging set it to "debug"
+#loglevel = debug
+
+can_0_app_name = vCAN
 
 # disables sending CAN MSGS
-# can_0_send = False
-
-# acc_min_speed = 30
-# acc_max_speed = 180
-
+# default is True
+can_0_send = False
