@@ -59,7 +59,6 @@ class CanHandler:
 
             msg = self.q_cc_in.get()
             self.q_cc_in.task_done()
-
             vehicle_msg_id = hex(msg.arbitration_id)
 
             # ignore unneeded can msgs

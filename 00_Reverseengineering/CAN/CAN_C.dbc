@@ -37,6 +37,7 @@ BU_: DTR Vehicle
 
 
 BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ reserved : 0|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ SBC_S_H_AKT : 0|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ FZG_STEHT : 0|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ VEH_DIR_REVERSE : 0|1@1+ (1,0) [0|0] "" Vector__XXX
@@ -90,7 +91,7 @@ BO_ 576 ESZ_240: 8 Vector__XXX
  SG_ CRASH_CNF : 25|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ CRASH : 26|1@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 592 ART_250h: 7 DTR
+BO_ 592 ART_250h: 8 DTR
  SG_ GMIN_ART : 48|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ GMAX_ART : 51|3@1+ (1,0) [0|0] "" Vector__XXX
  SG_ AKT_R_ART : 55|1@1+ (1,0) [0|0] "" Vector__XXX

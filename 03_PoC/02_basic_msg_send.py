@@ -50,10 +50,11 @@ default_config = {
     # MDF Log
     # 'mdf_log':                  false,
     # 'mdf_log_file':             'log/ANlog_' + utils.date_time_str() + '.mf4',
-    'max_msg_delay':            500,          # [ms] max delay
+    'max_msg_delay':            500,                # [ms] max delay
     # ACC setting
-    'acc_min_speed':            30,                 # [kph]
-    'acc_max_speed':            180,                # [kph]
+    'acc_min_speed':            30,                 # [kph] minimum speed for acc activation
+    'acc_max_speed':            180,                # [kph] max speed for acc activation
+    'acc_off_speed':            20,                 # [kph] switch off acc at this speed
     # Display
     'art_trigger_time':         8000,               # [ms] show art display after a trigger
 }

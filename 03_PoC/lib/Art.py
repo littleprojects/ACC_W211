@@ -23,11 +23,13 @@ class ArtState(Enum):
     LIM_active = 4
 
 
-class ArtStates:
+class ArtObj:
     def __init__(self):
-        self.ready = False
-        self.state = ArtState.ACC
-        self.dspl_trigger = 0 # timestamp of display trigger
+
+        # ART init values
+        self.ready = False          # is not ready
+        self.state = ArtState.ACC   # statemachine
+        self.dspl_trigger_ts = 0    # timestamp of display trigger
 
 
 class Art:
@@ -101,7 +103,7 @@ class Art:
         }
 
         # init ART States
-        self.art = ArtStates()
+        self.art = ArtObj()
 
         """
         # dict to objs
@@ -408,7 +410,7 @@ class Art:
 
         # todo set outputs
         # display ein
-        self.art_msg['ART_SEG_EIN'] == 1
+        self.art_msg['ART_SEG_EIN'] = 1
         # read distance ajust
         # calc distance
 
@@ -424,9 +426,30 @@ class Art:
         # max limit
         # switch off if car is too slow
 
+        # V_ZIEL or in radar calc
+        self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
+
         # todo ART_VFBR (VerFügBaR - available)
         # goes off [0] if speed it too slow (trigger dspy), recover [1] after trigger time
         # blocks reactivation if state is 0 ???
+
+        # ART overwrite by driver
+        # ART_UBERSP
+
+        # ART channels
+        # TM_EIN_ART - ART is active
+        # ART_REG
+        # M_ART
+        # MBRE_ART
+        # ART_BRE
+        # BL_UNT
+        # MPAR_ART - parity bit at changes
+        # GMIN_ART
+        # GMAX_ART
+        # AKT_R_ART
+        # ART_ERROR 4 - External Error
+
+        # LIM_REG
 
         # update safety distance
         self.acc_calc_distance()
@@ -455,7 +478,7 @@ class Art:
     def acc_deactivation(self):
 
         # disable segment display
-        self.art_msg['ART_SEG_EIN'] == 0
+        self.art_msg['ART_SEG_EIN'] = 0
 
         self.log.debug('ACC deactivation')
 
@@ -468,59 +491,88 @@ class Art:
     def acc_calc_warnings(self):
         # todo car too close
         # todo delta speed too big
+        # ART_INFO -> Light
+        # ART_WT -> Warning (Ton) Sound
+        # AAS_LED_BL -> LED ACC blinking -> check/test
+        pass
+
+    def radar(self):
+        # Data
+        # S_OBJ - standing object detected
+        # ABST_R_OBJ - distance to relevant object [m]
+        # OBJ_ERK - object detected
+        # V_ZIEL - target vehicle speed [kph]
+        # OBJ_AGB - Object offer acc ? -> check
+        # ART_REAKT - show reaktivation after error -> check/test
         pass
 
     def acc_calc_distance(self):
         # get vehicle speed
-        speed = self.vehicle_msgs['signals']['V_ANZ']
-        # round up
-        speed = math.ceil(speed)
 
-        # todo get distance ajust value
+        # is signal already in vehcilse data
+        if 'V_ANZ' in self.vehicle_msgs['signals']:
 
-        # calc distance in [m]
-        # todo do the right calc
-        dist = math.ceil(speed / 2)
+            speed = self.vehicle_msgs['signals']['V_ANZ']
+            # round up
+            speed = math.ceil(speed)
 
-        # set distance
-        self.art_msg['SOLL_ABST'] = dist
+            # todo get distance ajust value
+
+            # calc distance in [m]
+            # todo do the right calc
+            dist = speed / 2
+
+            # round up
+            dist = math.ceil(dist)
+
+            # keep a minimum distance of 3 meter
+            dist = max(3, dist)
+
+            # zero dist at standstill
+            if speed == 0:
+                dist = 0
+
+            # and set new distance
+            self.art_msg['SOLL_ABST'] = dist
 
     def acc_set_dspl_trigger(self):
         # set art show trigger in display
-        self.art_msg['ART_DSPL_NEU'] == 1
+        self.art_msg['ART_DSPL_NEU'] = 1
 
         # display switch to art page
-        self.art_msg['ART_DSPL_EIN'] == 1
-        self.art.dspl_trigger = utils.ts_ms
+        self.art_msg['ART_DSPL_EIN'] = 1
+        self.art.dspl_trigger_ts = utils.ts_ms()
         # needs to reset after a some time
 
         # clear blinking '---' this is set later if needed
-        self.art_msg['ART_DSPL_LIM'] == 0
-        self.art_msg['ART_DSPL_BL'] == 0
+        self.art_msg['ART_DSPL_LIM'] = 0
+        self.art_msg['ART_DSPL_BL'] = 0
 
     def acc_set_dspl_lim_trigger(self):
 
         # show --- in display if speed is too slow or too fast
-        self.art_msg['ART_DSPL_LIM'] == 1
+        self.art_msg['ART_DSPL_LIM'] = 1
         # blink display
-        self.art_msg['ART_DSPL_BL'] == 1
+        self.art_msg['ART_DSPL_BL'] = 1
 
     def acc_reset_trigger(self):
-        # a trigger is active
-        if self.art.dspl_trigger > 0:
+        # reset only if a trigger is active
+        if self.art.dspl_trigger_ts != 0:
 
-            now = utils.ts_ms
+            # get current time
+            now = utils.ts_ms()
 
-            delta_time = now - self.art.dspl_trigger
+            # to calc time delta
+            delta_time = now - self.art.dspl_trigger_ts
 
             # time is up
-            if delta_time > self.config.art_triiger_time:
+            if delta_time >= self.config.art_trigger_time:
                 # clear
-                self.art_msg['ART_DSPL_EIN'] == 0
-                self.art_msg['ART_DSPL_LIM'] == 0
-                self.art_msg['ART_DSPL_BL'] == 0
+                self.art_msg['ART_DSPL_EIN'] = 0
+                self.art_msg['ART_DSPL_LIM'] = 0
+                self.art_msg['ART_DSPL_BL'] = 0
                 # clear trigger
-                self.art.dspl_trigger = 0
+                self.art.dspl_trigger_ts = 0
 
     def get_can_data(self):
 
@@ -642,7 +694,7 @@ class Art:
             if delay > max_delay:
                 all_msg_in_time = False
 
-                #self.log.debug('Checker: ' + msg_id + ' is to old - ' + str(delay) + ' ms')
+                # self.log.debug('Checker: ' + msg_id + ' is to old - ' + str(delay) + ' ms')
 
                 # end loop
                 break

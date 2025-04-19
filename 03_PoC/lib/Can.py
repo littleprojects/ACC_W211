@@ -17,6 +17,8 @@ class Can:
 
         self.log = log
 
+        self.print_logger = 1000
+
         # bus
         self.bus = None
 
@@ -26,12 +28,12 @@ class Can:
         self.app_name = app_name
         self.bitrate = int(bitrate)
         self.retry_in_seconds = int(retry_in_sec)
-        self.is_extended_id = int(is_extended)
+        self.is_extended_id = is_extended
 
         # Filter
         self.filter = filter_list
 
-        # Index to check if we should log the receive message
+        # Index to check if we should log the received message
         self.index = 0
 
     def connect(self):
@@ -118,10 +120,17 @@ class Can:
                 msg_data = q_out.get()
                 # create can msg
                 msg = can.Message(arbitration_id=msg_data['id'],
-                                  data=msg_data['data']
+                                  data=msg_data['data'],
+                                  is_extended_id=False
                                   )
                 # send msg
                 self.bus.send(msg)
+
+                # debug output
+                if self.index % self.print_logger == 0:
+                    self.log.info(f"CAN_{self.channel}: Message send: {self.index}")
+
+                self.index += 1
 
             # THEN
 
@@ -139,6 +148,8 @@ class Can:
             if stop_event.is_set():
                 break
 
+    """ 
+    # not in use -> is done in CAN_handler
     def wait_for_new_message(self):
         # Checking for new parsers. If there are any in the queue, start creating the can messages
         self.log.info("CAN_{self.channel}: Starting the can messenger")
@@ -150,20 +161,19 @@ class Can:
                     self.create_messages(self.parser_queue.get())
             except Exception as e:
                 self.log.error(e)
+    """
 
+    """
+    # not in use -> is done in loop function
     def send_message(self, data, arbitration_id):
-        """
-        send a can message
-        :return:
-        """
-        """ Creating the can message. The arbitration_id is the id the can messages has. If you wanna find out the id of a can message, 
-        open the database in CANdb++ """
-        msg = can.Message(arbitration_id=arbitration_id, data=data, is_extended_id=self.is_extended_id)
+
+        # Creating the can message. The arbitration_id is the id the can messages has.
+        msg = can.Message(is_extended_id=False, arbitration_id=arbitration_id, data=data)
 
         try:
-            """ Sending the can message """
+            # Sending the can message
             self.bus.send(msg)
-            """ We are not printing every message to the log """
+            # We are not printing every message to the log 
             if self.index % self.print_logger == 0:
                 self.log.info(f"CAN_{self.channel}: Message send: {msg}")
             else:
@@ -172,4 +182,4 @@ class Can:
         except Exception as e:
             self.log.debug(f"CAN_{self.channel}: Could not send the message")
             self.log.error(e)
-
+    """
