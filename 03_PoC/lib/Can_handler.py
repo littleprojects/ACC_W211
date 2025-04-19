@@ -43,14 +43,6 @@ class CanHandler:
     def new_msg(self):
 
         # decode msgs
-        self.read_in_msgs()
-
-        # CHECK ready
-        # ready = check.is_acc_ready(self.vehicle_msg, self.log)
-        # ready check is done in ART Class
-
-    def read_in_msgs(self):
-
         new_can_msgs = False
         new_msgs = {}
 
@@ -59,11 +51,12 @@ class CanHandler:
 
             msg = self.q_cc_in.get()
             self.q_cc_in.task_done()
-            vehicle_msg_id = hex(msg.arbitration_id)
 
             # ignore unneeded can msgs
-            #if not (vehicle_msg_id in self.needed_msg_id_list):
-            #    continue
+            if msg.arbitration_id not in self.needed_msg_id_list:
+                continue
+
+            vehicle_msg_id = hex(msg.arbitration_id)
 
             # update msg timestamp
             self.vehicle_msg['msgs'].update({vehicle_msg_id: utils.ts_ms()})
@@ -71,9 +64,11 @@ class CanHandler:
             # decode msg
             decode_msg = self.db_0.decode_message(msg.arbitration_id, msg.data)
 
+            # ignore empty msgs
             if len(decode_msg) == 0:
                 continue
 
+            # new msgs received
             new_can_msgs = True
 
             # all signals in the msg
@@ -82,9 +77,12 @@ class CanHandler:
                 signal_data = decode_msg[key]
 
                 # update msg storage all
-                self.vehicle_msg['signals'].update({signal_name: signal_data})
+                # self.vehicle_msg['signals'].update({signal_name: signal_data})
                 # update new msgs
                 new_msgs.update({signal_name: signal_data})
+
+            # update all msgs
+            self.vehicle_msg['signals'].update(new_msgs)
 
         # update ART at new messages
         if new_can_msgs:
@@ -94,7 +92,7 @@ class CanHandler:
             # send new msgs and all
             self.Art.update_input(new_msgs, self.vehicle_msg)
 
-            # Todo?: instant update needed for quick changes -> request quick can response
+            # Todo?: instant update needed for quick changes -> request quick CAN response
             # maybe with a response to the update process or external event
 
     def create_out_msgs(self):

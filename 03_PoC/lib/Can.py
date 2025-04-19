@@ -126,11 +126,11 @@ class Can:
                 # send msg
                 self.bus.send(msg)
 
+                self.index += 1
+
                 # debug output
                 if self.index % self.print_logger == 0:
                     self.log.info(f"CAN_{self.channel}: Message send: {self.index}")
-
-                self.index += 1
 
             # THEN
 
