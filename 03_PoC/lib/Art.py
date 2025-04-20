@@ -723,6 +723,9 @@ class Art:
 
     def status_log(self):
         # write status to log
-        self.log.info(f"ART {self.art.state} \tV_Target: {self.art_msg['V_ART']}")
-        pass
+        # self.log.info(f"ART {self.art.state} \tV_Target: {self.art_msg['V_ART']}")
+        return {
+            **self.art_msg,
+            'state': self.art.state,
+        }
 # end class ART
