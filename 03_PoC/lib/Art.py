@@ -726,6 +726,7 @@ class Art:
         # self.log.info(f"ART {self.art.state} \tV_Target: {self.art_msg['V_ART']}")
         return {
             **self.art_msg,
+            'ready': self.art.ready,
             'state': self.art.state,
         }
 # end class ART

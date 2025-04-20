@@ -1,5 +1,5 @@
 """
-Simple script to replay a CAN Log made by _can_logger.py
+Simple script to replay a CAN Log made by can_logger.py
 """
 
 import can

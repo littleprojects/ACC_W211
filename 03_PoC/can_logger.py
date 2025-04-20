@@ -1,6 +1,6 @@
 """
 Simple scripte to log CAN messages in a file to replay
-it at any time with the _can_replay.py script
+it at any time with the can_replay.py script
 """
 
 

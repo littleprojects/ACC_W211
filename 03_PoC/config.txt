@@ -41,6 +41,11 @@
 # for debugging set it to "debug"
 #loglevel = debug
 
+# Logging status output time in seconds
+# default is 10 sec
+# can be disabled with 0
+stats_update_time = 10
+
 can_0_app_name = vCAN
 
 # disables sending CAN MSGS
