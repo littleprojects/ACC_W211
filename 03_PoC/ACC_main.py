@@ -37,6 +37,7 @@ default_config = {
     'loglevel': 'INFO',  # debug
     'stats_update_time': 10,  # [sec] log stats updates - disable with 0
     'config_file': 'config.txt',
+
     # CAN settings
     'can_0_interface': 'vector',
     'can_0_channel': '0',
@@ -49,12 +50,19 @@ default_config = {
     # 'mdf_log':                  false,
     # 'mdf_log_file':             'log/ANlog_' + utils.date_time_str() + '.mf4',
     'max_msg_delay': 500,  # [ms] max delay
+
     # ACC setting
     'acc_min_speed': 30,  # [kph] minimum speed for acc activation
     'acc_max_speed': 180,  # [kph] max speed for acc activation
     'acc_off_speed': 20,  # [kph] switch off acc at this speed
+
     # Display
     'art_trigger_time': 8000,  # [ms] show art display after a trigger
+
+    # ACC PID Controller parameter
+    'acc_p': 0,
+    'acc_i': 0,
+    'acc_d': 0
 }
 
 needed_msg_id_list = [

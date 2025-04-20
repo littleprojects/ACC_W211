@@ -34,6 +34,25 @@
 #can_0_channel = 0
 #can_0_bitrate = 500000
 
+
+# -----------------------------------------------------------------------
+# ACC PID Controller Settings
+# P Proportional factor
+acc_p = 0
+
+# I Integral Factor
+acc_i = 0
+
+# D Derivative Factor
+acc_d = 0
+
+# Calibration
+# Set I and D to 0
+# 1. Increase P until the System reacts positive to an Error (Set Speed is bigger than current speed).
+# 2. Increase I slowly. Too big steps result in overshoots and instability.
+# 3. Increase D slowly. D helps to reduce overshoots.
+# 4. Tuning: test the system under different situations and adjust values to find a good calibration
+
 # -----------------------------------------------------------------------
 # DEVELOPMENT SETTINGS
 
