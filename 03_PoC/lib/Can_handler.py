@@ -25,10 +25,11 @@ class CanHandler:
         self.needed_msg_id_list = needed_msg_id_list
 
         # data storage
-        self.vehicle_msg = {'msgs': {},
-                            'signals': {},
-                            'ready': 0
-                            }
+        self.vehicle_msg = {
+            'msgs': {},
+            'signals': {},
+            'ready': 0
+        }
 
         # CAN Data
         self.art_250_data = None
@@ -39,6 +40,12 @@ class CanHandler:
             self.db_0 = cantools.database.load_file(config.can_0_dbc)
         except Exception as e:
             self.log.critical('Cant load DBC: ' + str(e))
+
+        # CAN statistic
+        self.stats = {
+            'in': 0,
+            'out': 0
+        }
 
     def new_msg(self):
 
@@ -83,6 +90,9 @@ class CanHandler:
 
             # update all msgs
             self.vehicle_msg['signals'].update(new_msgs)
+
+            # update stats
+            self.stats['in'] += 1
 
         # update ART at new messages
         if new_can_msgs:
@@ -154,7 +164,7 @@ class CanHandler:
         # self.log.debug('ART 0x250 Msg data: ' + str(self.art_250_data))
         # self.log.debug('ART 0x258 Msg data: ' + str(self.art_258_data))
 
-    def send_status_msg(self):
+    def send_art_msg(self):
 
         # create output
         self.create_out_msgs()
@@ -165,4 +175,9 @@ class CanHandler:
             self.q_cc_out.put({'id': 0x250, 'data': self.art_250_data})
             self.q_cc_out.put({'id': 0x258, 'data': self.art_258_data})
 
+            self.stats['out'] += 2
+
+    def status_log(self):
+        self.log.info(f"CAN_0 Rx: {self.stats['in']} \tTx: {self.stats['out']}")
+        self.Art.status_log()
 

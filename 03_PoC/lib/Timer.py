@@ -20,13 +20,17 @@ class Timer:
 
         now = time.time()
 
-        if now - self.last_ts >= self.sec_interval:
-            self.event.set()
+        # only with valid interval
+        if self.sec_interval > 0:
+            # interval check
+            if now - self.last_ts >= self.sec_interval:
+                # time up - set Flag
+                self.event.set()
 
-            # reset time
-            self.last_ts = now
+                # reset time
+                self.last_ts = now
 
-            # print('.')
+                # print('.')
 
     def run(self):
 

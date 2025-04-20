@@ -521,7 +521,7 @@ class Art:
             self.art_msg['SOLL_ABST'] = dist
 
     def acc_set_dspl_trigger(self):
-        self.log.info('Trigger Display')
+        self.log.debug('Trigger Display')
 
         # set art show trigger in display
         self.art_msg['ART_DSPL_NEU'] = 1
@@ -554,7 +554,7 @@ class Art:
 
             # time is up
             if delta_time >= self.config.art_trigger_time:
-                self.log.info('Reset Display trigger')
+                self.log.debug('Reset Display trigger')
 
                 # clear
                 self.art_msg['ART_DSPL_EIN'] = 0
@@ -721,4 +721,8 @@ class Art:
 
         return True
 
+    def status_log(self):
+        # write status to log
+        self.log.info(f"ART {self.art.state} \tV_Target: {self.art_msg['V_ART']}")
+        pass
 # end class ART

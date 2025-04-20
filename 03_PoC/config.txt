@@ -45,4 +45,4 @@ can_0_app_name = vCAN
 
 # disables sending CAN MSGS
 # default is True
-can_0_send = False
+#can_0_send = False
