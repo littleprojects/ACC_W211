@@ -34,6 +34,13 @@
 #can_0_channel = 0
 #can_0_bitrate = 500000
 
+# -----------------------------------------------------------------------
+# MDF log file
+
+# mdf_log default is False
+mdf_log = True
+# mdf_log_file default is log/Acc_' + utils.date_time_str() + '.mf4
+#mdf_log_file = log/Acc_log.mf4
 
 # -----------------------------------------------------------------------
 # ACC PID Controller Settings

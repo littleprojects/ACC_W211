@@ -8,14 +8,15 @@ from lib.Art import Art
 
 class CanHandler:
 
-    def __init__(self, config, log, q_cc_in, q_cc_out, needed_msg_id_list):
+    def __init__(self, config, log, mdf, q_cc_in, q_cc_out, needed_msg_id_list):
         # cc = Can Car
 
         self.config = config
         self.log = log
+        self.mdf = mdf
 
         # init ART Class
-        self.Art = Art(config, log)
+        self.Art = Art(config, log, self.mdf)
 
         # queues CAN C
         self.q_cc_in = q_cc_in
@@ -46,6 +47,9 @@ class CanHandler:
             'in': 0,
             'out': 0
         }
+
+        # set dbc in MDF logger
+        self.mdf.dbc = self.db_0
 
     def new_msg(self):
 
@@ -87,6 +91,9 @@ class CanHandler:
                 # self.vehicle_msg['signals'].update({signal_name: signal_data})
                 # update new msgs
                 new_msgs.update({signal_name: signal_data})
+
+            #mdf log
+            self.mdf.add_signals(decode_msg)
 
             # update all msgs
             self.vehicle_msg['signals'].update(new_msgs)
@@ -163,6 +170,9 @@ class CanHandler:
 
         # self.log.debug('ART 0x250 Msg data: ' + str(self.art_250_data))
         # self.log.debug('ART 0x258 Msg data: ' + str(self.art_258_data))
+
+        # mdf log
+        self.mdf.add_signals(art_data, signal_prefix='art_')
 
     def send_art_msg(self):
 

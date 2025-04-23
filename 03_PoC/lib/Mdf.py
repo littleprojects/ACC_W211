@@ -9,7 +9,7 @@ class Mdf:
     Creates MDF files to Log CAN Data
     """
 
-    def __init__(self, file_name, log, dbc=None, save_interval=0):
+    def __init__(self, file_name, log, dbc=None, save_interval=0, logging=True):
 
         self.log = log
 
@@ -17,6 +17,8 @@ class Mdf:
         self.dbc = dbc
         # autosave interval over msg count (by time would be better)
         self.save_interval = save_interval
+
+        self.logging = logging
 
         # start time of msg timestamp calc (ts_msg - ts_start)
         self.ts_start = time.time()
@@ -28,6 +30,71 @@ class Mdf:
 
         self.i = 0
 
+        if logging:
+            self.log.info(f'MDF log to file: {file_name}')
+        else:
+            self.log.info('MDF logging is deactivated')
+
+    def new_signal(self, name, unit='', comment=''):
+
+        # add data und ts list if signal not exist
+        if not (name in self.data.keys()):
+            # create new signal
+            new_signal = {
+                name: {
+                    'data': [],
+                    'ts': [],
+                    'unit': unit,
+                    'comment': comment
+                }
+            }
+        else:
+            new_signal = {
+                name: {
+                    # dont change data or timestamps
+                    # just update unit and comments
+                    'unit': unit,
+                    'comment': comment
+                }
+            }
+
+
+        # create init dataset
+        self.data.update(new_signal)
+        self.log.debug('add: ' + str(new_signal))
+
+    def add_signal(self, name, data, ts_now=None):
+
+        if ts_now is None:
+            ts_now = time.time() - self.ts_start
+
+        ts = ts_now
+
+        # add signal if not exist
+        if not (name in self.data.keys()):
+
+            unit = ''
+            comm = ''
+
+            # search for unit and comments
+            if self.dbc is not None:
+                sig = utils.dbc_signal(self.dbc, name)
+
+                if sig is not None:
+                    if sig.unit is not None:
+                        unit = sig.unit
+                    if sig.comments[None] is not None:
+                        comm = sig.comments[None]
+
+            self.new_signal(name, unit, comm)
+
+
+
+        # add data only if logging is activ
+        if self.logging:
+            self.data[name]['data'].append(data)
+            self.data[name]['ts'].append(ts)
+
     def add_signals(self, signals, signal_prefix=''):
 
         ts_now = time.time() - self.ts_start
@@ -37,38 +104,8 @@ class Mdf:
 
                 name = signal_prefix + key
                 data = signals[key]
-                ts = ts_now
 
-                # add signal if not exist
-                if not (name in self.data.keys()):
-
-                    unit = ''
-                    comm = ''
-
-                    # search for unit and comments
-                    if self.dbc is not None:
-                        sig = utils.dbc_signal(self.dbc, key)
-
-                        if sig is not None:
-                            if sig.unit is not None:
-                                unit = sig.unit
-                            if sig.comments[None] is not None:
-                                comm = sig.comments[None]
-
-                    # create new siganl
-                    new_siganl = {name: {'data': [],
-                                             'ts': [],
-                                             'unit': unit,
-                                             'comment': comm
-                                             }}
-
-                    # create init dataset
-                    self.data.update(new_siganl)
-                    self.log.debug('add: ' + str(new_siganl))
-
-                # add data
-                self.data[name]['data'].append(data)
-                self.data[name]['ts'].append(ts)
+                self.add_signal(name, data, ts_now)
 
             # save after X msgs
             if self.save_interval > 0:
@@ -82,6 +119,10 @@ class Mdf:
             self.log.error('MDF: Cant add Signals ' + str(e))
 
     def write_mdf(self):
+
+        # skip if logging is off
+        if not self.logging:
+            return False
 
         # create new MDF
         mdf = MDF(version='4.10')

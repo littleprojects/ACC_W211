@@ -13,7 +13,7 @@ ART/DTS Class
 import math
 from enum import Enum
 
-from lib import Pid
+#from lib import Pid
 from lib import utils
 
 
@@ -46,13 +46,14 @@ class ArtObj:
 
 class Art:
 
-    def __init__(self, config, log):
+    def __init__(self, config, log, mdf):
 
         # store config
         self.config = config
 
         # logging
         self.log = log
+        self.mdf = mdf
 
         # output signals with default values
         self.art_default_msg = {
@@ -459,6 +460,10 @@ class Art:
 
         # reset trigger
         self.acc_reset_trigger()
+
+        # mdf log
+        self.mdf.add_signal('art_ready', self.art.ready)
+        self.mdf.add_signal('art_state', self.art.state.value)
 
     # todo
     def acc_deactivation(self):

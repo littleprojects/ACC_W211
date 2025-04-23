@@ -22,6 +22,7 @@ from lib import utils
 from queue import Queue
 from threading import Thread
 from lib.Can import Can
+from lib.Mdf import Mdf
 from lib.Timer import Timer
 from lib.Config import Config
 from lib.Logger import Logger
@@ -46,15 +47,16 @@ default_config = {
     'can_0_app_name': 'VN1610',  # Hardware interface
     'can_0_dbc': 'CAN_C.dbc',  # path to DBC
     'can_0_send': True,  # enables or disables MSG sending
+
     # MDF Log
-    # 'mdf_log':                  false,
-    # 'mdf_log_file':             'log/ANlog_' + utils.date_time_str() + '.mf4',
-    'max_msg_delay': 500,  # [ms] max delay
+    'mdf_log': False,
+    'mdf_log_file': 'log/Acc_' + utils.date_time_str() + '.mf4',
 
     # ACC setting
-    'acc_min_speed': 30,  # [kph] minimum speed for acc activation
-    'acc_max_speed': 180,  # [kph] max speed for acc activation
-    'acc_off_speed': 20,  # [kph] switch off acc at this speed
+    'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
+    'acc_min_speed': 30,        # [kph] minimum speed for acc activation
+    'acc_max_speed': 180,       # [kph] max speed for acc activation
+    'acc_off_speed': 20,        # [kph] switch off acc at this speed
 
     # Display
     'art_trigger_time': 8000,  # [ms] show art display after a trigger
@@ -99,7 +101,8 @@ config = Config(module_name, default_config, log).config_obj
 log.info('Change Loglevel to: ' + config.loglevel)
 log.setLevel(utils.parse_log_level(config.loglevel))
 
-# Parse the config as JSON into an object with attributes corresponding to dict keys.
+# MDF
+mdf = Mdf(config.mdf_log_file, log, logging=config.mdf_log)
 
 # init CAN Queues and Flags/Events
 q_can_c_in = Queue()
@@ -146,6 +149,7 @@ thread_can_0.start()
 # CAN HANDLER
 can_handler = CanHandler(config,
                          log,
+                         mdf,
                          q_can_c_in,
                          q_can_c_out,
                          needed_msg_id_list)
@@ -206,5 +210,8 @@ if __name__ == "__main__":
 
     log.info('Shut down bus')
     can_0.shutdown_connection()
+
+    # write MDF log file
+    mdf.write_mdf()
 
     log.info('STOPPED')
