@@ -1,7 +1,7 @@
 import cantools
 
 from lib import utils
-from lib import check
+#from lib import check
 
 from lib.Art import Art
 

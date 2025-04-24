@@ -62,9 +62,11 @@ default_config = {
     'art_trigger_time': 8000,  # [ms] show art display after a trigger
 
     # ACC PID Controller parameter
-    'acc_p': 0,
-    'acc_i': 0,
-    'acc_d': 0
+    'acc_p': 2,
+    'acc_i': 0.03,
+    'acc_d': 0.02,
+    'acc_max_acceleration': 1,  # [m/s²] maximal acceleration
+    'acc_max_deceleration': 1,  # [m/s²] maximal deceleration
 }
 
 needed_msg_id_list = [

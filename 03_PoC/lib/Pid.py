@@ -1,6 +1,15 @@
 import time
-#from lib import utils
-import utils
+
+try:
+    from lib import utils
+except:
+    pass
+
+try:
+    import utils
+except:
+    pass
+
 #from . import utils
 
 
@@ -20,7 +29,14 @@ class PID:
         self.integral = 0
         self.old_error = 0
 
+        # delta timestamp
         self.dt_ts = 0
+
+        # last speed
+        self.old_speed = 0
+
+        self.acceleration = 0
+
 
     def set_target_speed(self, set_speed):
         self.set_speed = set_speed
@@ -31,7 +47,7 @@ class PID:
 
     def init_pid(self, set_speed, current_moment, m_min, m_max):
         self.set_speed = set_speed
-        self.integral = current_moment
+        self.integral = current_moment / self.I
         self.m_min = m_min
         self.m_max = m_max
 
@@ -43,8 +59,28 @@ class PID:
 
         error = self.set_speed - current_speed
 
+        # calc acceleration
+        delta_speed = current_speed - self.old_speed
+        delta_speed_ms = delta_speed/3.6                # kph to m/s
+        if dt_s > 0:
+            self.acceleration = delta_speed_ms/dt_s
+
+        # remember speed
+        self.old_speed = current_speed
+
+        old_integral = self.integral
+
         if not overwrite:
             self.integral += error * dt_s
+
+        # is accelerating too fast
+        if self.acceleration > self.config.acc_max_acceleration:
+            # freeze integral
+            self.integral = old_integral
+
+        if self.acceleration < (self.config.acc_max_deceleration * -1):
+            # freeze integral
+            self.integral = old_integral
 
         derivative = error - self.old_error
         self.old_error = error
@@ -66,8 +102,12 @@ if __name__ == "__main__":
             self.acc_i = I
             self.acc_d = D
 
+            self.acc_max_acceleration = 1
+            self.acc_max_deceleration = 1
 
-    config = Config(P=2.5, I=0.04, D=0.03)
+
+    config = Config(P=2.5, I=0.04, D=0.03)# soft
+    #config = Config(P=4, I=0.1, D=0.03)
     # PID calibration
     # 1. P: set I and D to and P to a value with a positive effect
     # 2. I: increase I slowly. Too big steps results in swings and instability
@@ -77,7 +117,7 @@ if __name__ == "__main__":
 
     current_speed = 40
 
-    pid.init_pid(100, 150, 100, 300)
+    pid.init_pid(100, 100, 100, 300)
 
     for i in range(1000):
 
@@ -86,16 +126,17 @@ if __name__ == "__main__":
         current_speed += (control - 150) / 10
 
         print(f"I {i} \tSpeed: {round(current_speed, 1)}, "
+              f"\tv {round(pid.acceleration, 2)}"
               f"\tIntegral: {round(pid.integral, 1)}, "
               f"\tm: {round(control, 1)}")
 
-        if i == 100:
+        if i == 60:
             pid.set_target_speed(90)
 
-        if i == 200:
+        if i == 150:
             pid.set_target_speed(70)
 
-        if i == 300:
+        if i == 200:
             pid.set_target_speed(150)
 
 

@@ -13,8 +13,9 @@ ART/DTS Class
 import math
 from enum import Enum
 
-#from lib import Pid
 from lib import utils
+
+from lib.Pid import PID
 
 
 
@@ -117,6 +118,9 @@ class Art:
 
         # init ART States
         self.art = ArtObj()
+
+        # PID Controller
+        self.pid = PID(config)
 
         # dict to remember the button states
         self.button_states = {
@@ -392,6 +396,9 @@ class Art:
             # display ein
             self.art_msg['ART_SEG_EIN'] = 1
 
+            # init PID Controller
+            self.pid.init_pid(signal['V_ART'], signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
+
             # set distance
             self.acc_calc_distance()
 
@@ -402,6 +409,7 @@ class Art:
     # todo
     def acc_calc(self):
         # self.log.debug('ACC calc')
+        signal = self.vehicle_msgs['signals']
 
         # basic ready check also after some time
         self.is_ready()
@@ -418,6 +426,9 @@ class Art:
         # todo ART_VFBR (VerFügBaR - available)
         # goes off [0] if speed it too slow (trigger dspy), recover [1] after trigger time
         # blocks reactivation if state is 0 ???
+
+        if self.art.ready:
+            torque_request = self.pid.pid_calc(signal['V_ANZ'], 0)
 
         # ART overwrite by driver
         # ART_UBERSP
@@ -460,10 +471,6 @@ class Art:
 
         # reset trigger
         self.acc_reset_trigger()
-
-        # mdf log
-        self.mdf.add_signal('art_ready', self.art.ready)
-        self.mdf.add_signal('art_state', self.art.state.value)
 
     # todo
     def acc_deactivation(self):
@@ -572,6 +579,8 @@ class Art:
                 self.art.dspl_trigger_ts = 0
 
     def get_can_data(self):
+        # requestes can output
+        # 10Hz timmer
 
         self.log.debug('request CAN data')
 
@@ -579,8 +588,11 @@ class Art:
         self.acc_calc()
         # todo self.lim_calc()
 
-        # increment can msg counter (BZ - BotschaftsZähler)
+        # increment can msg counter (BZ - BotschaftsZähler 0-15)
         self.update_bz()
+
+        # safe signals to MDF
+        self.signal_log()
 
         return self.art_msg
 
@@ -737,4 +749,14 @@ class Art:
             'ready': self.art.ready,
             'state': self.art.state,
         }
+
+    def signal_log(self):
+        # writes signals to MDF log file
+        self.mdf.add_signal('art_ready', self.art.ready)
+        self.mdf.add_signal('art_state', self.art.state.value)
+
+        # pid signals
+        self.mdf.add_signal('pid_integral', self.pid.integral)
+        self.mdf.add_signal('pid_acceleration', self.pid.acceleration)
+        self.mdf.add_signal('pid_set_speed', self.pid.set_speed)
 # end class ART

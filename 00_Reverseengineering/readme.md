@@ -288,5 +288,18 @@ Most values have a factor of 0,5 or 0,1.
 **And the ACC ECU controls the LIMITER to -> more work...**
 But more or less the same functions.
 
+# PID Controller
+
+I want to use a PID Controller for the cruise control.
+
+To do some simulation for a first calibration,
+and to have some setpoint during touring down without throttle, a torque speed map is needed
+
+| Speed [kph] | Torque [Nm] |
+|-------------|-------------| 
+| 30 | 206,7       |
+| 50 | 213,5 |
+| 60          | 217,9       |
+| 100 | 241,5       |
 
 
