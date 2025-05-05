@@ -8,6 +8,10 @@ ART/DTS Class
     - Adaptive Cruise Control (ACC)
     - Limiter (Lim)
 
+
+- Todos:
+    - Limit acceleration by corner radius
+
 """
 
 import math
