@@ -356,6 +356,8 @@ class Art:
 
         ready_to_activate = True
 
+        target_speed = round(target_speed)
+
         # activation check
 
         signal = self.vehicle_msgs['signals']
@@ -401,7 +403,7 @@ class Art:
             self.art_msg['ART_SEG_EIN'] = 1
 
             # init PID Controller
-            self.pid.init_pid(signal['V_ART'], signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
+            self.pid.init_pid(target_speed, signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
 
             # set distance
             self.acc_calc_distance()
@@ -413,38 +415,88 @@ class Art:
     # todo
     def acc_calc(self):
         # self.log.debug('ACC calc')
+        # get signals
         signal = self.vehicle_msgs['signals']
 
         # basic ready check also after some time
         self.is_ready()
 
-        # double
-        # check braking
-        # min limit
-        # max limit
-        # switch off if car is too slow
+        # TM_EIN_ART - ART is ready
+        if self.art.ready:
+            self.art_msg['TM_EIN_ART'] = 1
+        else:
+            self.art_msg['TM_EIN_ART'] = 0
 
-        # V_ZIEL or in radar calc
-        self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
+        # set/update V_ZIEL or in radar calc (rounded up)
+        # Todo in radar calc
+        self.art_msg['V_ZIEL'] = math.ceil(self.art_msg['V_ART'])
 
         # todo ART_VFBR (VerFügBaR - available)
         # goes off [0] if speed it too slow (trigger dspy), recover [1] after trigger time
         # blocks reactivation if state is 0 ???
 
+        # set default values - will be overwritten if everything is correct
+        self.art_msg['ART_REG'] = 0
+        self.art_msg['M_ART'] = 0
+        self.art_msg['ART_BRE'] = 0
+        self.art_msg['MBRE_ART'] = 0
+
         if self.art.ready:
-            torque_request = self.pid.pid_calc(signal['V_ANZ'], 0)
 
-        # ART overwrite by driver
-        # ART_UBERSP
+            # ACC is ACTIVE
+            if self.art.state == ArtState.ACC_active:
 
-        # ART channels
-        # TM_EIN_ART - ART is active
-        # ART_REG
-        # M_ART
-        # MBRE_ART
-        # ART_BRE
-        # BL_UNT
-        # MPAR_ART - parity bit at changes
+                # double check braking
+                if signal['SFB'] == 1:
+                    # switch off - driver is breaking
+                    self.acc_deactivation()
+                    return
+
+                # min speed limit
+                if signal['V_ANZ'] < self.config.acc_min_speed:
+                    # switch off if car is too slow
+                    self.acc_deactivation()
+                    return
+
+                # ART overwrite by driver
+                # ART_UBERSP
+                # M_FV (Fahrervorgabe) is bigger then the M_MIN (in case of decelerating) AND
+                # M_FV is 15Nm bigger the ACC Moment
+                if signal['M_FV'] > (self.art_msg['M_ART'] + 15) \
+                        and signal['M_FV'] > signal['M_MIN'] \
+                        and self.art_msg['ART_REG'] == 1:
+                    # if was not overwriten before
+                    if self.art_msg['ART_UEBERSP'] == 0:
+                        self.log.info('Overwrite active')
+                    # is overwriten now
+                    self.art_msg['ART_UEBERSP'] = 1
+                else:
+                    # if it was overwriten before
+                    if self.art_msg['ART_UEBERSP'] == 1:
+                        self.log.info('Overwrite deactive')
+                    # it's not overwriten now
+                    self.art_msg['ART_UEBERSP'] = 0
+
+                # DO YOUR MAGIC PID-CONTROLLER
+                torque_request = self.pid.pid_calc(signal['V_ANZ'], self.art_msg['ART_UEBERSP'])
+
+                # min M_ART is 160 Nm
+                M_ART = max(torque_request, 160)
+
+                # set acceleration moment
+                self.art_msg['M_ART'] = M_ART
+
+                # BRAKING
+                if torque_request < 0:
+                    self.art_msg['MBRE_ART'] = torque_request
+
+                # Todo
+                # ART channels
+                # ART_REG
+                # ART_BRE
+                # BL_UNT
+                # MPAR_ART - parity bit at changes
+
         # GMIN_ART
         # GMAX_ART
         # AKT_R_ART
@@ -560,6 +612,8 @@ class Art:
         self.art_msg['ART_DSPL_LIM'] = 1
         # blink display
         self.art_msg['ART_DSPL_BL'] = 1
+        # set VERUGBAR
+        self.art_msg['ART_VFBR'] = 0
 
     def acc_reset_trigger(self):
         # reset only if a trigger is active
@@ -579,6 +633,8 @@ class Art:
                 self.art_msg['ART_DSPL_EIN'] = 0
                 self.art_msg['ART_DSPL_LIM'] = 0
                 self.art_msg['ART_DSPL_BL'] = 0
+                # is ready again
+                self.art_msg['ART_VFBR'] = 1
                 # clear trigger
                 self.art.dspl_trigger_ts = 0
 
@@ -624,8 +680,10 @@ class Art:
         # save target speed
         target_speed = self.art_msg['V_ART']
 
-        # load default values
+        # load DEFAULT values
         self.art_msg = self.art_default_msg.copy()
+
+        # but remember target speed ;)
         self.art_msg['V_ART'] = target_speed
 
     def set_art_ready(self):

@@ -38,20 +38,20 @@
 # MDF log file
 
 # mdf_log default is False
-mdf_log = True
+#mdf_log = True
 # mdf_log_file default is log/Acc_' + utils.date_time_str() + '.mf4
 #mdf_log_file = log/Acc_log.mf4
 
 # -----------------------------------------------------------------------
 # ACC PID Controller Settings
 # P Proportional factor
-acc_p = 0
+acc_p = 2
 
 # I Integral Factor
-acc_i = 0
+acc_i = 0.03
 
 # D Derivative Factor
-acc_d = 0
+acc_d = 0.02
 
 # Calibration
 # Set I and D to 0

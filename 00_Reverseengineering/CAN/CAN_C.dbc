@@ -498,9 +498,14 @@ CM_ SG_ 600 ART_DSPL_PGB "Anzeige Winterreifenbegrenzung erreicht";
 CM_ SG_ 600 SOLL_ABST "Fahrerwunschabstand";
 CM_ SG_ 600 ABST_R_OBJ "Abstand relevantes Objekt";
 CM_ SG_ 600 V_ART "eingestellte ART-Geschwindigkeit";
-CM_ SG_ 600 ART_ERROR "ART Fehlercode";
-CM_ SG_ 600 ART_INFO "ART Infolampe";
-CM_ SG_ 600 ART_WT "ART Warnton";
+CM_ SG_ 600 ART_ERROR "ART Fehlercode
+1 - 0001 - Distronic momntan nicht vergügbar! Siehe Betriebsanleitung.
+2 - 0010 - Distronic Werkstatt aufsuchen!
+4 - 0100 - Externe Störung! Neu aktivieren!
+8 - 1000 - nothing
+";
+CM_ SG_ 600 ART_INFO "ART Infolampe (Rotes Dreieck)";
+CM_ SG_ 600 ART_WT "ART Warnton BEEEP";
 CM_ SG_ 600 S_OBJ "Erkennung stehendes Objekt";
 CM_ SG_ 600 ART_DSPL_EIN "Display auf ART-Anzeige schalten";
 CM_ SG_ 512 HAS_KL "Handbremse gezogen Kontrollampe

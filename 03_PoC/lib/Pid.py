@@ -47,7 +47,11 @@ class PID:
 
     def init_pid(self, set_speed, current_moment, m_min, m_max):
         self.set_speed = set_speed
-        self.integral = current_moment / self.I
+        # avoid division by 0
+        if self.I > 0:
+            self.integral = current_moment / self.I
+        else:
+            self.integral = 0
         self.m_min = m_min
         self.m_max = m_max
 
@@ -62,6 +66,7 @@ class PID:
         # calc acceleration
         delta_speed = current_speed - self.old_speed
         delta_speed_ms = delta_speed/3.6                # kph to m/s
+
         if dt_s > 0:
             self.acceleration = delta_speed_ms/dt_s
 
