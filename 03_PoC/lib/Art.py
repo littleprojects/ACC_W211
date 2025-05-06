@@ -440,6 +440,7 @@ class Art:
         self.art_msg['M_ART'] = 0
         self.art_msg['ART_BRE'] = 0
         self.art_msg['MBRE_ART'] = 0
+        self.art_msg['BL_UNT'] = 0
 
         if self.art.ready:
 
@@ -483,23 +484,40 @@ class Art:
                 # min M_ART is 160 Nm
                 M_ART = max(torque_request, 160)
 
+                # invert BRAKE Torque and cap at 0
+                MBRE_ART = min(torque_request, 0) * -1
+
                 # set acceleration moment
                 self.art_msg['M_ART'] = M_ART
 
-                # BRAKING
-                if torque_request < 0:
-                    self.art_msg['MBRE_ART'] = torque_request
+                # enable ART_REG acceleration
+                if self.config.art_reg_enabled == True:
+
+                    self.art_msg['ART_REG'] = 1
+
+                # BRAKING is on and its NOT OVERWRITEN BY DRIVER
+                if MBRE_ART > 0 and self.art_msg['ART_UEBERSP'] == 0:
+
+                    # enable ART_BRE deceleration / braking
+                    if self.config.art_bre_enabled == True:
+                        # enable ART BRAKES
+                        self.art_msg['ART_BRE'] = 1
+                        # set BRAKE troque
+                        self.art_msg['MBRE_ART'] = MBRE_ART
+
+                    # todo Braklight suppression details. by deceleration or brake torque?
+                    # between 0 and 15Nm
+                    if MBRE_ART <= 15:
+                        self.art_msg['BL_UNT'] = 1
 
                 # Todo
                 # ART channels
-                # ART_REG
-                # ART_BRE
-                # BL_UNT
-                # MPAR_ART - parity bit at changes
+                # MPAR_ART - parity bit at changes - is always 0 ???
 
-        # GMIN_ART
-        # GMAX_ART
-        # AKT_R_ART
+                # GMIN_ART
+                # GMAX_ART
+                # AKT_R_ART - active downshift request
+
         # ART_ERROR 4 - External Error
 
         # LIM_REG

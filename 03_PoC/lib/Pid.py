@@ -32,8 +32,10 @@ class PID:
         # delta timestamp
         self.dt_ts = 0
 
-        # last speed
+        # last data
         self.old_speed = 0
+        self.old_integral = 0
+        self.old_output = 0
 
         self.acceleration = 0
 
@@ -59,9 +61,9 @@ class PID:
 
     def pid_calc(self, current_speed, overwrite=False):
         now_ts = utils.ts_ms()
+        # delta time in second 0.1 = 10Hz
         dt_s = (now_ts - self.dt_ts) / 1000
 
-        error = self.set_speed - current_speed
 
         # calc acceleration
         delta_speed = current_speed - self.old_speed
@@ -70,34 +72,80 @@ class PID:
         if dt_s > 0:
             self.acceleration = delta_speed_ms/dt_s
 
-        # remember speed
-        self.old_speed = current_speed
-
+        # remember old data
+        integral = self.integral
         old_integral = self.integral
 
-        if not overwrite:
-            self.integral += error * dt_s
+        # P - ERROR
+        error = self.set_speed - current_speed
 
-        # is accelerating too fast
-        if self.acceleration > self.config.acc_max_acceleration:
-            # freeze integral
-            self.integral = old_integral
+        # I - INTEGRAL
+        integral += error * dt_s
 
-        if self.acceleration < (self.config.acc_max_deceleration * -1):
-            # freeze integral
-            self.integral = old_integral
-
+        # D - DERIVATIVE
         derivative = error - self.old_error
-        self.old_error = error
 
-        response = self.P * error + self.I * self.integral + self.D * derivative
+        # OVERWRITE
+        # freeze integral if overwrite is active (clamping)
+        if overwrite:
+            integral = old_integral
+            # todo integrate driver moment request for better adaptation
 
+        # PID CALC
+        output = self.P * error + self.I * self.integral + self.D * derivative
+
+        # Output MIN MAX limit
         # max limitation
-        response = min(self.m_max, response)
+        output = min(self.m_max, output)
         # min limitation
-        response = max(self.m_min, response)
+        #output = max(self.m_min, output)
 
-        return response
+        # ANTI WIND UP method integral limitations
+        if self.config.acc_acceleration_limit:
+            # is accelerating too fast clamp integral
+            if self.acceleration > self.config.acc_max_acceleration:
+                #print('Limit acceleration')
+                # clamp integral
+                integral = old_integral
+                # freeze output
+                output = self.old_output
+
+            if (self.acceleration * -1) > self.config.acc_max_deceleration:
+                #print('Limit deceleration')
+                # clamp integral
+                integral = old_integral
+                # clamp output
+                output = self.old_output
+
+        # Rate Limit by Nm - Anti wind up function - limit output
+        if self.config.acc_rate_limit:
+            # delta output per second
+            delta_output = (output - self.old_output) / dt_s
+            # to high acceleration delta
+            if delta_output > self.config.acc_max_acc_rate:
+                #print('Limit Rate up')
+                # limit output
+                output = self.old_output + self.config.acc_max_acc_rate * dt_s
+
+            # to high deceleration delta
+            if delta_output * -1 > self.config.acc_max_dec_rate:
+                #print('Limit Rate down')
+                # limit output
+                output = self.old_output - self.config.acc_max_dec_rate * dt_s
+
+        # todo
+        # derivate filter
+
+        # remember values
+        self.old_error = error
+        self.old_speed = current_speed
+        self.old_output = output
+        self.integral = round(integral, 2)  # reduce digits
+
+        # reduce digits
+        output = round(output, 2)
+
+        return output
 
 
 if __name__ == "__main__":

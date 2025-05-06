@@ -62,11 +62,21 @@ default_config = {
     'art_trigger_time': 8000,  # [ms] show art display after a trigger
 
     # ACC PID Controller parameter
+    'art_reg_enabled': True,  # enable/disable ART acceleration output
+    'art_bre_enabled': True,  # enable/disable ART deceleration output
     'acc_p': 2,
     'acc_i': 0.03,
     'acc_d': 0.02,
+
+    # Rate Limit by Acc - Anti wind up function - clamp output and integral
+    'acc_acceleration_limit': False,  # enable/disable acceleration limits
     'acc_max_acceleration': 1,  # [m/s²] maximal acceleration
     'acc_max_deceleration': 1,  # [m/s²] maximal deceleration
+
+    # Rate Limit by Nm - Anti wind up function - limit output
+    'acc_rate_limit': False,    # enable/disable Rate Limit
+    'acc_max_acc_rate': 20,     # [Nm/s] maximal acceleration rate
+    'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
 }
 
 needed_msg_id_list = [
@@ -168,15 +178,16 @@ def main_loop():
 
                 # process the CAN msgs
                 can_handler.new_msg()
+                # todo Error handling
 
             # 10Hz Timer Flag
             if F_10Hz.is_set():
                 # reset Flag
                 F_10Hz.clear()
 
-                # Todo Check msgs
-
+                # DO the MAGIC
                 can_handler.send_art_msg()
+                # Todo Error handling
 
                 # break the loop if stop flag was set (Kill the main loop)
                 if event_stop.is_set():
