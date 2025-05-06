@@ -8,7 +8,7 @@ The radar runs on 24GHz and is disrupted by other radar modern radar systems.
 The most new car use radar at 24GHz for BlindSpotWarning (BSW).
 This systems interfere with the W211 radar and the ACC throws an error and stop working.
 
-<img src="00_Reverseengineering/error_msg.jpg">
+<img src="00_Reverseengineering/error_msg_4.jpeg">
 
 The modern radar uses a frequency sweep. So it changes the frequency permanent to be robust.
 
