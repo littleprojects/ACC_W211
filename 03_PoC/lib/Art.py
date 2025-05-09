@@ -175,15 +175,15 @@ class Art:
                     self.lever_off()
 
                 # lever ON/RESUME/+1
-                if self.is_btn_pressed(new_msgs, 'WA'):
+                if self.is_btn_pressed(new_msgs, 'WA', mode=2):
                     self.lever_wa()
 
                 # lever UP/+10
-                if self.is_btn_pressed(new_msgs, 'S_PLUS_B'):
+                if self.is_btn_pressed(new_msgs, 'S_PLUS_B', mode=2):
                     self.lever_up()
 
                 # lever DOWN/-10
-                if self.is_btn_pressed(new_msgs, 'S_MINUS_B'):
+                if self.is_btn_pressed(new_msgs, 'S_MINUS_B', mode=2):
                     self.lever_down()
 
                 # Todo Limiter
@@ -230,6 +230,7 @@ class Art:
                     # but was it pressed before?
                     if self.button_states[signal] == 0:
                         # YES it was not pressed before -> RISING EDGE detected -> action
+                        print('RE')
                         out = True
 
             # MODE 1: Falling Edge - button is not pressed anymore
@@ -241,30 +242,36 @@ class Art:
                     # if self.button_states[signal] == 1:
                     if self.button_states[signal] > 0:  # adaption to handle timestamps in button states
                         # YES it was pressed before -> FALLING EDGE detected -> action
+                        print('FE')
                         out = True
 
             # MODE 2: Holding - Triggers output every x time during long hold
             if mode == 2:
                 # is button pressed now
                 if signal_value == 1:
-                    now = utils.ts_ms
+                    now = utils.ts_ms()
 
-                    # how long is button already pressed
-                    hold_time = now - self.button_states[signal]
+                    hold_time = 0
+
+                    if self.button_states[signal] > 1:
+                        # how long is button already pressed
+                        hold_time = now - self.button_states[signal]
 
                     # is it over the holding time
                     if hold_time >= self.config.lever_hold_time:
                         # reset trigger holding time
                         self.button_states[signal] = now
                         # report
+                        print('HO')
+                        print(hold_time)
                         out = True
 
             # remember the current state to compare it with the next input
-            state = 0
+            state = signal_value
             # set when button was pressed ONYL when the button is pressed, and it was not pressed before
             if signal_value == 1 and self.button_states[signal] == 0:
                 # set timestamp
-                state = utils.ts_ms
+                state = utils.ts_ms()
 
             # safe current state
             self.button_states[signal] = state

@@ -191,7 +191,7 @@ class CanHandler:
 
     def status_log(self):
         art_stats = self.Art.status_log()
-        self.log.info(f"ART: Ready-{art_stats['ready']} \t{art_stats['state']} "
+        self.log.info(f"Ready: {art_stats['ready']} \t{art_stats['state']} "
                       f"\t V_ART: {art_stats['V_ART']} \t M_ART: {art_stats['M_ART']} Nm "
                       f"\tCAN_0: Rx {self.stats['in']} \tTx {self.stats['out']}")
 

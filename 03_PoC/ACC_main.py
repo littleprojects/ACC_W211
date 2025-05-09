@@ -78,6 +78,10 @@ default_config = {
     'acc_rate_limit': False,    # enable/disable Rate Limit
     'acc_max_acc_rate': 20,     # [Nm/s] maximal acceleration rate
     'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
+
+    # Moment Limits - Anti wind up - Limit output - CAN signal limits
+    'max_acc_moment': 300,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
+    'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
 }
 
 needed_msg_id_list = [
@@ -228,4 +232,4 @@ if __name__ == "__main__":
     # write MDF log file
     mdf.write_mdf()
 
-    log.info('STOPPED')
+    log.info('STOPPED - over and out')

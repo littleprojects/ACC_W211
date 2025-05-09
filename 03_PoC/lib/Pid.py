@@ -90,6 +90,8 @@ class PID:
         if overwrite:
             integral = old_integral
             # todo integrate driver moment request for better adaptation
+            # M_ART follows driver moment in overwrite mode
+            # integral = driver moment
 
         # PID CALC
         output = self.P * error + self.I * self.integral + self.D * derivative
@@ -134,7 +136,21 @@ class PID:
                 output = self.old_output - self.config.acc_max_dec_rate * dt_s
 
         # todo
-        # derivate filter
+        # derivative filter
+
+        # MOMENT LIMITER acceleration
+        if output > self.config.max_acc_moment:
+            # limit output
+            output = self.config.max_acc_moment
+            # adapt integral
+            self.integral = self.config.max_acc_moment - error
+
+        # MOMENT LIMITER deceleration
+        if -output > self.config.max_dec_moment:
+            # limit output
+            output = -self.config.max_dec_moment
+            # adapt integral
+            self.integral = -self.config.max_dec_moment + error
 
         # remember values
         self.old_error = error
