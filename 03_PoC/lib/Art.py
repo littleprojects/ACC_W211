@@ -141,6 +141,7 @@ class Art:
 
         self.log.info('INIT ACC - NOT READY')
 
+    # todo LIM and Long press
     def update_input(self, new_msgs, all_data):
 
         # print(new_msgs)
@@ -165,6 +166,7 @@ class Art:
             # check if lever is ok
             self.is_btn_pressed(new_msgs, 'WH_UP')
 
+            # LEVER INPUTS
             # lever is ok
             if self.button_states['WH_UP'] == 0:
 
@@ -184,14 +186,17 @@ class Art:
                 if self.is_btn_pressed(new_msgs, 'S_MINUS_B'):
                     self.lever_down()
 
-            # Todo Limiter
-            """
-            if self.is_btn_pressed(new_msgs, 'VMAX_AKT'):
-                self.lim_activatio()
-                
-            if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=FALLING_EDGE):
-                self.lim_deactivatio()
-            """
+                # Todo Limiter
+                """
+                if self.is_btn_pressed(new_msgs, 'VMAX_AKT'):
+                    self.lim_activatio()
+                    
+                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1): # FALLING_EDGE
+                    self.lim_deactivatio()
+                """
+
+                # todo: long hold button
+                # per sec one button trigger
 
         # update dataset with the newest data
         # self.vehicle_msgs['signals'].update(new_msgs)
@@ -200,35 +205,72 @@ class Art:
         # do the basic ready check
         self.is_ready()
 
-    def is_btn_pressed(self, data, signal, mode=None):
+    # todo Mode holding
+    def is_btn_pressed(self, data, signal, mode=0):
 
-        # todo Modes:
-        # rising edge, falling edge, is ON, is OFF, long hold
+        # Modes
+        # 0 = Rising Edge - button is now pressed - DEFAULT
+        # 1 = Falling Edge - button is not pressed anymore
+        # 2 = Holding - Triggers output every x time during long hold
+        # Modes not needed now:
+        # falling edge, is ON, is OFF
+
+        out = False
 
         # signal_key is in data
         if signal in data:
             # get signal value
             signal_value = data[signal]
 
-            # is button pressed?
-            if signal_value == 1:
-                # YES
+            # MODE 0: RISING EDGE DETECTION
+            if mode == 0 or mode == 2:
+                # is button pressed?
+                if signal_value == 1:
+                    # YES it is pressed now
+                    # but was it pressed before?
+                    if self.button_states[signal] == 0:
+                        # YES it was not pressed before -> RISING EDGE detected -> action
+                        out = True
 
-                # was it pressed before?
-                if self.button_states[signal] == 0:
-                    # not pressed before -> state change -> action
+            # MODE 1: Falling Edge - button is not pressed anymore
+            if mode == 1:
+                # is button NOT pressed now?
+                if signal_value == 0:
+                    # YES it is pressed now
+                    # but was it pressed before?
+                    # if self.button_states[signal] == 1:
+                    if self.button_states[signal] > 0:  # adaption to handle timestamps in button states
+                        # YES it was pressed before -> FALLING EDGE detected -> action
+                        out = True
 
-                    # remember it is pressed
-                    # self.art.lever_off_pressed = 1
-                    self.button_states[signal] = 1
+            # MODE 2: Holding - Triggers output every x time during long hold
+            if mode == 2:
+                # is button pressed now
+                if signal_value == 1:
+                    now = utils.ts_ms
 
-                    return True
-            else:
-                # is not pressed now -> remember this state
-                self.button_states[signal] = 0
+                    # how long is button already pressed
+                    hold_time = now - self.button_states[signal]
 
+                    # is it over the holding time
+                    if hold_time >= self.config.lever_hold_time:
+                        # reset trigger holding time
+                        self.button_states[signal] = now
+                        # report
+                        out = True
 
-        return False
+            # remember the current state to compare it with the next input
+            state = 0
+            # set when button was pressed ONYL when the button is pressed, and it was not pressed before
+            if signal_value == 1 and self.button_states[signal] == 0:
+                # set timestamp
+                state = utils.ts_ms
+
+            # safe current state
+            self.button_states[signal] = state
+
+        # report result
+        return out
 
     def art_warning_button(self):
         self.log.info('Warning Button pressed')
@@ -418,15 +460,6 @@ class Art:
         # get signals
         signal = self.vehicle_msgs['signals']
 
-        # basic ready check also after some time
-        self.is_ready()
-
-        # TM_EIN_ART - ART is ready
-        if self.art.ready:
-            self.art_msg['TM_EIN_ART'] = 1
-        else:
-            self.art_msg['TM_EIN_ART'] = 0
-
         # set/update V_ZIEL or in radar calc (rounded up)
         # Todo in radar calc
         self.art_msg['V_ZIEL'] = math.ceil(self.art_msg['V_ART'])
@@ -442,6 +475,7 @@ class Art:
         self.art_msg['MBRE_ART'] = 0
         self.art_msg['BL_UNT'] = 0
 
+        # is ready
         if self.art.ready:
 
             # ACC is ACTIVE
@@ -516,17 +550,14 @@ class Art:
 
                 # GMIN_ART
                 # GMAX_ART
+                # SLV_ART
                 # AKT_R_ART - active downshift request
+                # DYN_UNT
+
+        # AAS_LED_BL ??? always 0
+        # ART_REAKT ??? always 0
 
         # ART_ERROR 4 - External Error
-
-        # LIM_REG
-
-        # update safety distance
-        self.acc_calc_distance()
-
-        # general warnings
-        self.acc_calc_warnings()
 
         # calc only when acc is ready
         if self.art.state == ArtState.ACC_active:
@@ -546,7 +577,7 @@ class Art:
         # reset trigger
         self.acc_reset_trigger()
 
-    # todo
+    # disable the acc and reset outputs
     def acc_deactivation(self):
 
         # disable segment display
@@ -554,10 +585,19 @@ class Art:
 
         self.log.info('ACC deactivation')
 
+        # reset outputs
+        self.art_msg['ART_REG'] = 0
+        self.art_msg['M_ART'] = 0
+        self.art_msg['ART_BRE'] = 0
+        self.art_msg['MBRE_ART'] = 0
+        self.art_msg['BL_UNT'] = 0
+
         # switch to state ACC ready
+        # todo: switch state here or in caller function?
         self.art.state = ArtState.ACC
 
-        # todo reset outputs
+        # display trigger
+        # self.acc_set_dspl_trigger()
 
     # todo calc warnings only with radar input
     def acc_calc_warnings(self):
@@ -656,15 +696,35 @@ class Art:
                 # clear trigger
                 self.art.dspl_trigger_ts = 0
 
-    def get_can_data(self):
-        # requestes can output
-        # 10Hz timmer
+    # 10 hz tricked tick for calc update
+    def tick_10hz(self):
+        # 10Hz timed
+        # to requestes can output
 
-        self.log.debug('request CAN data')
+        self.log.debug('10Hz tick')
 
-        # do the magic
-        self.acc_calc()
-        # todo self.lim_calc()
+        # basic ready check also after some time
+        self.is_ready()
+
+        # TM_EIN_ART - ART is ready
+        if self.art.ready:
+            self.art_msg['TM_EIN_ART'] = 1
+        else:
+            self.art_msg['TM_EIN_ART'] = 0
+
+        # update safety distance
+        self.acc_calc_distance()
+
+        # general warnings
+        self.acc_calc_warnings()
+
+        if self.art.ready:
+            # do the magic
+            self.acc_calc()
+            # todo self.lim_calc()
+        else:
+            # todo reset
+            pass
 
         # increment can msg counter (BZ - BotschaftsZähler 0-15)
         self.update_bz()

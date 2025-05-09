@@ -112,9 +112,11 @@ class CanHandler:
             # Todo?: instant update needed for quick changes -> request quick CAN response
             # maybe with a response to the update process or external event
 
+    # 10 Hz triggered
     def create_out_msgs(self):
 
-        art_data = self.Art.get_can_data()
+        # triggers output calculation
+        art_data = self.Art.tick_10hz()
 
         # create ART_250 msg data
         self.art_250_data = self.db_0.encode_message(0x250, {

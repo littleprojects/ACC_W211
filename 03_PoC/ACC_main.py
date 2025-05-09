@@ -58,8 +58,9 @@ default_config = {
     'acc_max_speed': 180,       # [kph] max speed for acc activation
     'acc_off_speed': 20,        # [kph] switch off acc at this speed
 
-    # Display
-    'art_trigger_time': 8000,  # [ms] show art display after a trigger
+    # Display HMI
+    'art_trigger_time': 8000,   # [ms] show art display after a trigger
+    'lever_hold_time': 1000,    # [ms] button holding time to re-trigger action
 
     # ACC PID Controller parameter
     'art_reg_enabled': True,  # enable/disable ART acceleration output
