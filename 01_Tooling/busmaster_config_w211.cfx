@@ -2,7 +2,7 @@
 <BUSMASTER_CONFIGURATION>
   <Global_Configuration>
     <BUSMASTER_Version>3.2.2</BUSMASTER_Version>
-    <IsMsgFilterEnabled>FALSE</IsMsgFilterEnabled>
+    <IsMsgFilterEnabled>TRUE</IsMsgFilterEnabled>
     <IsMsgFilterEnabledLin>FALSE</IsMsgFilterEnabledLin>
     <IsReplayFilterEnabled>FALSE</IsReplayFilterEnabled>
     <IsLogFilterEnabled>FALSE</IsLogFilterEnabled>
@@ -17,17 +17,55 @@
     <LogOnConnect_LIN>FALSE</LogOnConnect_LIN>
     <Window_Position>
       <Visibility>SHOWNORMAL</Visibility>
-      <WindowPlacement>HIDE</WindowPlacement>
-      <Top>501</Top>
-      <Left>0</Left>
-      <Bottom>668</Bottom>
-      <Right>1225</Right>
+      <WindowPlacement>SHOWNORMAL</WindowPlacement>
+      <Top>266</Top>
+      <Left>49</Left>
+      <Bottom>433</Bottom>
+      <Right>1274</Right>
     </Window_Position>
   </Global_Configuration>
   <Module_Configuration>
     <CAN_Database_Files>
       <FilePath>..\00_Reverseengineering\CAN\CAN_C.dbf</FilePath>
     </CAN_Database_Files>
+    <Bus_Statistics>
+      <CAN_Statistics>
+        <COLUMN>
+          <ID>Parameter</ID>
+          <Order>1</Order>
+          <Width>200</Width>
+          <IsVisible>1</IsVisible>
+        </COLUMN>
+        <COLUMN>
+          <ID>Channel 1</ID>
+          <Order>2</Order>
+          <Width>90</Width>
+          <IsVisible>1</IsVisible>
+        </COLUMN>
+      </CAN_Statistics>
+      <LIN_Statistics>
+        <COLUMN>
+          <ID>Parameter</ID>
+          <Order>1</Order>
+          <Width>200</Width>
+          <IsVisible>1</IsVisible>
+        </COLUMN>
+        <COLUMN>
+          <ID>Channel 1</ID>
+          <Order>2</Order>
+          <Width>90</Width>
+          <IsVisible>1</IsVisible>
+        </COLUMN>
+      </LIN_Statistics>
+      <Window_Position>
+        <Visibility>SHOWNORMAL</Visibility>
+        <WindowPlacement>RESTORETOMAXIMIZED</WindowPlacement>
+        <Top>149</Top>
+        <Left>305</Left>
+        <Bottom>813</Bottom>
+        <Right>727</Right>
+      </Window_Position>
+    </Bus_Statistics>
     <J1939_Database_Files/>
     <CAN_DIL_Section>
       <DriverName>Vector XL</DriverName>
@@ -63,7 +101,7 @@
           <AccMaskByte3_1>FF</AccMaskByte3_1>
           <AccMaskByte4_0>FF</AccMaskByte4_0>
           <AccMaskByte4_1>FF</AccMaskByte4_1>
-          <HardwareDesc>Vector - Virtual Channel 1 SN - 100</HardwareDesc>
+          <HardwareDesc>Vector - VN1610 Channel 1 SN - 553</HardwareDesc>
           <ItemUnderFocus>64</ItemUnderFocus>
           <BTR0BTR1>49210</BTR0BTR1>
           <AccFilterMode>0</AccFilterMode>
@@ -85,10 +123,44 @@
         </Channel>
       </ControllerSettings>
     </CAN_DIL_Section>
+    <CAN_Filters>
+      <Filter>
+        <Name>block_ACC_send</Name>
+        <Type>STOP</Type>
+        <FilterMessage>
+          <IdFrom>592</IdFrom>
+          <IdTo>600</IdTo>
+          <Direction>Tx</Direction>
+          <IDType>STD</IDType>
+          <MsgType>ALL</MsgType>
+          <Channel>0</Channel>
+        </FilterMessage>
+        <FilterMessage>
+          <IdFrom>600</IdFrom>
+          <IdTo>600</IdTo>
+          <Direction>Tx</Direction>
+          <IDType>STD</IDType>
+          <MsgType>ALL</MsgType>
+          <Channel>0</Channel>
+        </FilterMessage>
+        <FilterMessage>
+          <IdFrom>592</IdFrom>
+          <IdTo>600</IdTo>
+          <Direction>Tx</Direction>
+          <IDType>STD</IDType>
+          <MsgType>ALL</MsgType>
+          <Channel>0</Channel>
+        </FilterMessage>
+      </Filter>
+    </CAN_Filters>
     <CAN_Signal_Watch>
       <Message>
         <Id>592</Id>
+        <Signal>CAS_REG</Signal>
         <Signal>ART_REG</Signal>
+        <Signal>M_ART</Signal>
+        <Signal>MBRE_ART</Signal>
+        <Signal>ART_BRE</Signal>
       </Message>
       <Message>
         <Id>1042</Id>
@@ -96,20 +168,22 @@
       </Message>
       <Message>
         <Id>600</Id>
+        <Signal>ART_ERROR</Signal>
         <Signal>V_ART</Signal>
+        <Signal>ART_UEBERSP</Signal>
       </Message>
       <Window_Position>
         <Visibility>SHOWNORMAL</Visibility>
         <WindowPlacement>HIDE</WindowPlacement>
-        <Top>249</Top>
-        <Left>657</Left>
-        <Right>1147</Right>
-        <Bottom>479</Bottom>
+        <Top>380</Top>
+        <Left>1013</Left>
+        <Right>1500</Right>
+        <Bottom>682</Bottom>
       </Window_Position>
       <COLUMN_WIDTH>
         <MESSAGE_COLUMN>94</MESSAGE_COLUMN>
         <Raw_Val_Column>94</Raw_Val_Column>
-        <Physical_Val_Column>189</Physical_Val_Column>
+        <Physical_Val_Column>188</Physical_Val_Column>
         <Signal_Column>94</Signal_Column>
       </COLUMN_WIDTH>
     </CAN_Signal_Watch>
@@ -156,33 +230,131 @@
         <Axis_Color>255</Axis_Color>
         <X_Grid_Lines>10</X_Grid_Lines>
         <Y_Grid_Lines>5</Y_Grid_Lines>
-        <Active_Axis>2</Active_Axis>
+        <Active_Axis>0</Active_Axis>
         <Selected_Action>0</Selected_Action>
         <Show_Grid>TRUE</Show_Grid>
         <Display_Type>NORMAL</Display_Type>
       </GRAPH_PARAMETERS>
+      <GRAPH_ELEMENT>
+        <Message_ID>592</Message_ID>
+        <Message_Name>ART_250h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>ART_REG</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>16711680</Line_Color>
+        <Point_Type>1</Point_Type>
+        <Point_Color>8388736</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
+      <GRAPH_ELEMENT>
+        <Message_ID>592</Message_ID>
+        <Message_Name>ART_250h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>M_ART</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>65280</Line_Color>
+        <Point_Type>2</Point_Type>
+        <Point_Color>8421376</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
+      <GRAPH_ELEMENT>
+        <Message_ID>592</Message_ID>
+        <Message_Name>ART_250h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>MBRE_ART</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>16776960</Line_Color>
+        <Point_Type>3</Point_Type>
+        <Point_Color>32896</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
+      <GRAPH_ELEMENT>
+        <Message_ID>592</Message_ID>
+        <Message_Name>ART_250h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>ART_BRE</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>255</Line_Color>
+        <Point_Type>4</Point_Type>
+        <Point_Color>8454016</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
+      <GRAPH_ELEMENT>
+        <Message_ID>600</Message_ID>
+        <Message_Name>ART_258h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>V_ART</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>16711935</Line_Color>
+        <Point_Type>5</Point_Type>
+        <Point_Color>65535</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
+      <GRAPH_ELEMENT>
+        <Message_ID>600</Message_ID>
+        <Message_Name>ART_258h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>V_ZIEL</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>65535</Line_Color>
+        <Point_Type>6</Point_Type>
+        <Point_Color>16711935</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
+      <GRAPH_ELEMENT>
+        <Message_ID>1042</Message_ID>
+        <Message_Name>KOMBI_412h</Message_Name>
+        <Frame_Format/>
+        <Element_Name>V_ANZ</Element_Name>
+        <Value_Type>Physical</Value_Type>
+        <Line_Type>SOLID</Line_Type>
+        <Line_Color>8454016</Line_Color>
+        <Point_Type>7</Point_Type>
+        <Point_Color>255</Point_Color>
+        <Visibility>TRUE</Visibility>
+        <Enable>TRUE</Enable>
+        <Display_Type>NORMAL</Display_Type>
+      </GRAPH_ELEMENT>
       <Window_Position>
-        <Visibility>HIDE</Visibility>
+        <Visibility>SHOWNORMAL</Visibility>
         <Window_Position>HIDE</Window_Position>
-        <Top>-1</Top>
+        <Top>0</Top>
         <Left>0</Left>
-        <Bottom>0</Bottom>
-        <Right>0</Right>
+        <Bottom>618</Bottom>
+        <Right>1534</Right>
       </Window_Position>
       <Splitter_Window_Col_0>
-        <CxIdeal>-1</CxIdeal>
+        <CxIdeal>383</CxIdeal>
         <CxMin>0</CxMin>
       </Splitter_Window_Col_0>
       <Splitter_Window_Col_1>
-        <CxIdeal>0</CxIdeal>
+        <CxIdeal>1124</CxIdeal>
         <CxMin>0</CxMin>
       </Splitter_Window_Col_1>
       <Splitter_Window_Row_0>
-        <CxIdeal>0</CxIdeal>
+        <CxIdeal>412</CxIdeal>
         <CxMin>0</CxMin>
       </Splitter_Window_Row_0>
       <Splitter_Window_Row_1>
-        <CxIdeal>0</CxIdeal>
+        <CxIdeal>156</CxIdeal>
         <CxMin>0</CxMin>
       </Splitter_Window_Row_1>
     </CAN_Signal_Graph>
@@ -195,7 +367,7 @@
         <IsAppendLog_Enabled>FALSE</IsAppendLog_Enabled>
         <Reset_Absolute_Time>FALSE</Reset_Absolute_Time>
         <Channel>0</Channel>
-        <File_Path>can_log_M4.log</File_Path>
+        <File_Path>..\..\..\..\Documents\AVL_Projects\GIT\w211\can_log__M8.log</File_Path>
         <Trigger_Start_ID>-1</Trigger_Start_ID>
         <Trigger_Stop_ID>-1</Trigger_Stop_ID>
         <IsLogOnTransmission>TRUE</IsLogOnTransmission>
@@ -215,12 +387,12 @@
     </LIN_Log>
     <CAN_Simulated_Systems>
       <Window_Position>
-        <Visibility>HIDE</Visibility>
+        <Visibility>SHOWNORMAL</Visibility>
         <WindowPlacement>RESTORETOMAXIMIZED</WindowPlacement>
         <Top>0</Top>
         <Left>0</Left>
-        <Bottom>0</Bottom>
-        <Right>0</Right>
+        <Bottom>454</Bottom>
+        <Right>338</Right>
       </Window_Position>
     </CAN_Simulated_Systems>
     <J1939_Simulated_Systems>
@@ -243,8 +415,9 @@
         <Session_Delay>1</Session_Delay>
         <Is_Cyclic_Mode>0</Is_Cyclic_Mode>
         <Cyclic_Delay>1</Cyclic_Delay>
-        <IsInteractive>0</IsInteractive>
-        <Replay_Message_Direction>ALL</Replay_Message_Direction>
+        <IsInteractive>1</IsInteractive>
+        <Replay_Message_Direction>TX</Replay_Message_Direction>
+        <Filter>block_ACC_send</Filter>
       </Replay>
       <Replay>
         <Log_File_Path>..\..\..\..\Documents\BUSMASTER\3.2.2\Log_CAN_C_raw_05_ACC_Lasnitz_down.log</Log_File_Path>
@@ -257,6 +430,7 @@
         <Cyclic_Delay>1</Cyclic_Delay>
         <IsInteractive>0</IsInteractive>
         <Replay_Message_Direction>ALL</Replay_Message_Direction>
+        <Filter>block_ACC_send</Filter>
       </Replay>
       <Replay>
         <Log_File_Path>can_log_M0.log</Log_File_Path>
@@ -269,10 +443,11 @@
         <Cyclic_Delay>1</Cyclic_Delay>
         <IsInteractive>0</IsInteractive>
         <Replay_Message_Direction>ALL</Replay_Message_Direction>
+        <Filter>block_ACC_send</Filter>
       </Replay>
       <Replay>
         <Log_File_Path>..\..\..\..\Documents\AVL_Projects\GIT\w211\can_log_REdbullring_back.log</Log_File_Path>
-        <IsEnabled>1</IsEnabled>
+        <IsEnabled>0</IsEnabled>
         <Retain_Recored_Time>0</Retain_Recored_Time>
         <Message_Delay>1</Message_Delay>
         <Retain_Recorded_Session>0</Retain_Recorded_Session>
@@ -281,12 +456,40 @@
         <Cyclic_Delay>1</Cyclic_Delay>
         <IsInteractive>0</IsInteractive>
         <Replay_Message_Direction>ALL</Replay_Message_Direction>
+        <Filter>block_ACC_send</Filter>
+      </Replay>
+      <Replay>
+        <Log_File_Path>..\..\..\..\Documents\AVL_Projects\GIT\w211\can_log_Gratkorn_lim_sbc.log</Log_File_Path>
+        <IsEnabled>0</IsEnabled>
+        <Retain_Recored_Time>0</Retain_Recored_Time>
+        <Message_Delay>1</Message_Delay>
+        <Retain_Recorded_Session>0</Retain_Recorded_Session>
+        <Session_Delay>1</Session_Delay>
+        <Is_Cyclic_Mode>0</Is_Cyclic_Mode>
+        <Cyclic_Delay>1</Cyclic_Delay>
+        <IsInteractive>0</IsInteractive>
+        <Replay_Message_Direction>ALL</Replay_Message_Direction>
+        <Filter>block_ACC_send</Filter>
+      </Replay>
+      <Replay>
+        <Log_File_Path>..\..\..\..\Documents\AVL_Projects\GIT\w211\can_log_Gratkorn_Arti_Lim.log</Log_File_Path>
+        <IsEnabled>0</IsEnabled>
+        <Retain_Recored_Time>0</Retain_Recored_Time>
+        <Message_Delay>1</Message_Delay>
+        <Retain_Recorded_Session>0</Retain_Recorded_Session>
+        <Session_Delay>1</Session_Delay>
+        <Is_Cyclic_Mode>0</Is_Cyclic_Mode>
+        <Cyclic_Delay>1</Cyclic_Delay>
+        <IsInteractive>0</IsInteractive>
+        <Replay_Message_Direction>ALL</Replay_Message_Direction>
+        <Filter>block_ACC_send</Filter>
       </Replay>
     </CAN_Replay>
     <CAN_Message_Window>
-      <Append_Buffer_Size>5000</Append_Buffer_Size>
-      <Overwrite_Buffer_Size>2000</Overwrite_Buffer_Size>
-      <Display_Update_Time>100</Display_Update_Time>
+      <Append_Buffer_Size>2081909552</Append_Buffer_Size>
+      <Overwrite_Buffer_Size>2008886281</Overwrite_Buffer_Size>
+      <Display_Update_Time>2081909552</Display_Update_Time>
+      <Filter IsEnabled="1">block_ACC_send</Filter>
       <COLUMN>
         <ID/>
         <Order>1</Order>
@@ -339,7 +542,7 @@
         <ID>Data Byte(s)</ID>
         <Order>9</Order>
         <IsVisible>1</IsVisible>
-        <Width>677</Width>
+        <Width>548</Width>
       </COLUMN>
       <IsHex>1</IsHex>
       <IsAppend>0</IsAppend>
@@ -350,16 +553,16 @@
         <WindowPlacement>SETMINPOSITION</WindowPlacement>
         <Top>0</Top>
         <Left>0</Left>
-        <Bottom>550</Bottom>
+        <Bottom>595</Bottom>
         <Right>1308</Right>
       </Window_Position>
       <Interpretation_Window_Position>
         <Visibility>SHOWNORMAL</Visibility>
         <WindowPlacement>RESTORETOMAXIMIZED</WindowPlacement>
-        <Top>184</Top>
-        <Left>15</Left>
-        <Bottom>462</Bottom>
-        <Right>364</Right>
+        <Top>181</Top>
+        <Left>18</Left>
+        <Bottom>459</Bottom>
+        <Right>367</Right>
       </Interpretation_Window_Position>
     </CAN_Message_Window>
     <J1939_Message_Window>
@@ -456,10 +659,10 @@
       <Interpretation_Window_Position>
         <Visibility>SHOWNORMAL</Visibility>
         <WindowPlacement>RESTORETOMAXIMIZED</WindowPlacement>
-        <Top>184</Top>
-        <Left>15</Left>
-        <Bottom>462</Bottom>
-        <Right>364</Right>
+        <Top>181</Top>
+        <Left>18</Left>
+        <Bottom>459</Bottom>
+        <Right>367</Right>
       </Interpretation_Window_Position>
     </J1939_Message_Window>
     <LIN_Message_Window>
@@ -541,20 +744,20 @@
       <Interpretation_Window_Position>
         <Visibility>SHOWNORMAL</Visibility>
         <WindowPlacement>RESTORETOMAXIMIZED</WindowPlacement>
-        <Top>184</Top>
-        <Left>15</Left>
-        <Bottom>462</Bottom>
-        <Right>364</Right>
+        <Top>181</Top>
+        <Left>18</Left>
+        <Bottom>459</Bottom>
+        <Right>367</Right>
       </Interpretation_Window_Position>
     </LIN_Message_Window>
     <CAN_Tx_Window>
       <Window_Position>
         <Visibility>SHOWNORMAL</Visibility>
         <WindowPlacement>SETMINPOSITION</WindowPlacement>
-        <Top>1</Top>
-        <Left>4</Left>
-        <Bottom>656</Bottom>
-        <Right>864</Right>
+        <Top>34</Top>
+        <Left>256</Left>
+        <Bottom>689</Bottom>
+        <Right>1116</Right>
       </Window_Position>
       <Message_List>
         <Message>
@@ -563,11 +766,11 @@
           <IsExtended>FALSE</IsExtended>
           <IsRtr>FALSE</IsRtr>
           <DLC>8</DLC>
-          <DataBytes>128,0,0,0,0,0,0,0</DataBytes>
+          <DataBytes>128,0,0,0,0,0,32,0</DataBytes>
           <Repetion>10</Repetion>
           <Repetition_Enabled>FALSE</Repetition_Enabled>
           <Key_Value>a</Key_Value>
-          <Key_Enabled>FALSE</Key_Enabled>
+          <Key_Enabled>TRUE</Key_Enabled>
         </Message>
         <Message>
           <Channel>1</Channel>
@@ -575,11 +778,35 @@
           <IsExtended>FALSE</IsExtended>
           <IsRtr>FALSE</IsRtr>
           <DLC>8</DLC>
-          <DataBytes>0,0,0,0,0,0,32,0</DataBytes>
+          <DataBytes>16,0,0,0,0,0,36,0</DataBytes>
           <Repetion>10</Repetion>
           <Repetition_Enabled>FALSE</Repetition_Enabled>
           <Key_Value>r</Key_Value>
-          <Key_Enabled>FALSE</Key_Enabled>
+          <Key_Enabled>TRUE</Key_Enabled>
+        </Message>
+        <Message>
+          <Channel>1</Channel>
+          <Message_ID>568</Message_ID>
+          <IsExtended>FALSE</IsExtended>
+          <IsRtr>FALSE</IsRtr>
+          <DLC>4</DLC>
+          <DataBytes>2,0,0,0</DataBytes>
+          <Repetion>10</Repetion>
+          <Repetition_Enabled>FALSE</Repetition_Enabled>
+          <Key_Value>u</Key_Value>
+          <Key_Enabled>TRUE</Key_Enabled>
+        </Message>
+        <Message>
+          <Channel>1</Channel>
+          <Message_ID>568</Message_ID>
+          <IsExtended>FALSE</IsExtended>
+          <IsRtr>FALSE</IsRtr>
+          <DLC>4</DLC>
+          <DataBytes>2,0,0,0</DataBytes>
+          <Repetion>10</Repetion>
+          <Repetition_Enabled>FALSE</Repetition_Enabled>
+          <Key_Value>a</Key_Value>
+          <Key_Enabled>TRUE</Key_Enabled>
         </Message>
       </Message_List>
     </CAN_Tx_Window>

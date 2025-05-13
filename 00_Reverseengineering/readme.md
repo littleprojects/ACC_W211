@@ -242,14 +242,14 @@ Ready
 Activ
 * Ready Checker (No -> NotReady, Yes -> go on)
 * warning calc
-* Diable condition (No -> Active, Yes -> Ready)
+* Disable condition (No -> Active, Yes -> Ready)
 
 Ready_checker
 * timeout check: collect all needed CAN messages to fill info storage
     * BS_200
     * ...
 * Check Vehicle and Sensor signals
-    * no Errors (Vehcile, Radar)
+    * no Errors (Vehicle, Radar)
     * other ready conditions (Vehicle, Radar)
     * speed to high >180
 
@@ -259,11 +259,11 @@ Enable Condition
 * No Reverse
 * Set Speed (Up, Down, resume)
 
-Diable Condition
+Disable Condition
 * cruise control switch push forward
 * break manually
 * speed is below 30 kph
-* Ready Check negativ
+* Ready Check negative
 * to hard breaking
 * to fast steering
 * to big Steering angle
