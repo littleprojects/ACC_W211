@@ -63,7 +63,7 @@ class Mdf:
         self.data.update(new_signal)
         self.log.debug('add: ' + str(new_signal))
 
-    def add_signal(self, name, data, ts_now=None):
+    def add_signal(self, name, data, ts_now=None, unit='', comment=''):
 
         if ts_now is None:
             ts_now = time.time() - self.ts_start
@@ -73,8 +73,8 @@ class Mdf:
         # add signal if not exist
         if not (name in self.data.keys()):
 
-            unit = ''
-            comm = ''
+            # unit = ''
+            # comm = ''
 
             # search for unit and comments
             if self.dbc is not None:
@@ -84,9 +84,9 @@ class Mdf:
                     if sig.unit is not None:
                         unit = sig.unit
                     if sig.comments[None] is not None:
-                        comm = sig.comments[None]
+                        comment = sig.comments[None]
 
-            self.new_signal(name, unit, comm)
+            self.new_signal(name, unit, comment)
 
 
 

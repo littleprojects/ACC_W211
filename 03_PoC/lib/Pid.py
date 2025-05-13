@@ -59,11 +59,12 @@ class PID:
 
         self.dt_ts = utils.ts_ms()
 
-    def pid_calc(self, current_speed, overwrite=False):
+    def pid_calc(self, current_speed, overwrite=False, m_fv=0):
         now_ts = utils.ts_ms()
         # delta time in second 0.1 = 10Hz
         dt_s = (now_ts - self.dt_ts) / 1000
 
+        self.dt_ts = now_ts
 
         # calc acceleration
         delta_speed = current_speed - self.old_speed
@@ -88,8 +89,11 @@ class PID:
         # OVERWRITE
         # freeze integral if overwrite is active (clamping)
         if overwrite:
-            integral = old_integral
-            # todo integrate driver moment request for better adaptation
+            # freez integral
+            # integral = old_integral
+
+            # integrate driver moment request for better adaptation
+            integral = m_fv
             # M_ART follows driver moment in overwrite mode
             # integral = driver moment
 

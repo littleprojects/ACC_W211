@@ -38,7 +38,7 @@
 # MDF log file
 
 # mdf_log default is False
-#mdf_log = True
+mdf_log = True
 # mdf_log_file default is log/Acc_' + utils.date_time_str() + '.mf4
 #mdf_log_file = log/Acc_log.mf4
 

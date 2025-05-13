@@ -190,9 +190,13 @@ class CanHandler:
             self.stats['out'] += 2
 
     def status_log(self):
+        # get signals from
         art_stats = self.Art.status_log()
+
+        # status log output
         self.log.info(f"Ready: {art_stats['ready']} \t{art_stats['state']} "
-                      f"\t V_ART: {art_stats['V_ART']} \t M_ART: {art_stats['M_ART']} Nm "
-                      f"\tCAN_0: Rx {self.stats['in']} \tTx {self.stats['out']}")
+                      f"\t V_ANZ/ART: {round(self.vehicle_msg['signals']['V_ANZ'],1)}/{art_stats['V_ART']} "
+                      f"\t M(BRE)_ART: {art_stats['M_ART']}/{art_stats['MBRE_ART']} Nm "
+                      f"\tCAN_0: {self.stats['in']}/{self.stats['out']}")
 
 
