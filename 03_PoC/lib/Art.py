@@ -38,15 +38,15 @@ class ArtObj:
         self.ready = False          # is not ready
         self.state = ArtState.ACC   # statemachine
         self.dspl_trigger_ts = 0    # timestamp of display trigger
-        # inputs
 
-        self.braking = 0            # is driver braking
-        self.lever_wa_pressed = 0   # is WA pressed
-        self.lever_up_pressed = 0   # is UP pressed
-        self.lever_dw_pressed = 0   # is DOWN pressed
-        self.lever_off_pressed = 0  # is OFF pressed
-        self.level_lim_pressed = 0  # is LIMITER pressed
-        self.warn_bt_pressed = 0    # is Warning ON/OFF button pressed
+        # inputs
+        #self.braking = 0            # is driver braking
+        #self.lever_wa_pressed = 0   # is WA pressed
+        #self.lever_up_pressed = 0   # is UP pressed
+        #self.lever_dw_pressed = 0   # is DOWN pressed
+        #self.lever_off_pressed = 0  # is OFF pressed
+        #self.level_lim_pressed = 0  # is LIMITER pressed
+        #self.warn_bt_pressed = 0    # is Warning ON/OFF button pressed
 
 
 class Art:
@@ -139,23 +139,28 @@ class Art:
             'VMAX_AKT': 0,          # Limiter
         }
 
+        self.ready_error = 0
+
+        self.speed_mps = 0  # [m/s]
+        self.long_acceleration = 0
+        self.lat_acceleration = 0
+        self.corner_radius = 0       # 0 = absolute straight
+
+        self.info_light_duration = 0
+        self.warn_beep_duration = 0
+
         # delta timestamp
         self.last_ts = utils.ts_ms()
         self.dt_ms = 0
 
         # last data
-        self.old_speed = 0
-
-        self.speed_mps = 0  # [m/s]
-        self.long_acceleration = 0
-        self.lat_acceleration = 0
-
-        self.info_light_duration = 0
-        self.warn_beep_duration = 0
+        self.last_speed = 0
+        self.last_speed_ts = utils.ts_ms()
+        self.dt_speed = 0
 
         self.log.info('INIT ACC - NOT READY')
 
-    # todo LIM and Long press
+    # todo LIM
     def update_input(self, new_msgs, all_data):
 
         # print(new_msgs)
@@ -212,12 +217,24 @@ class Art:
                 # todo: long hold button
                 # per sec one button trigger
 
+        # update speed only if an update is available
+        if 'V_ANZ' in new_msgs:
+            current_speed = new_msgs['V_ANZ']
+
+            if 'V_ANZ' in self.vehicle_msgs['signals']:
+                #old_speed = self.vehicle_msgs['signals']['V_ANZ']
+
+                self.calc_acceleration(current_speed, self.last_speed)
+
+            self.last_speed = current_speed
+
         # update dataset with the newest data
         # self.vehicle_msgs['signals'].update(new_msgs)
         self.vehicle_msgs.update(all_data)
 
         # do the basic ready check
-        self.is_ready()
+        # self.is_ready()
+        # is done at the 1o Hz tick to reduce load
 
     # todo Mode holding
     def is_btn_pressed(self, data, signal, mode=0):
@@ -414,6 +431,54 @@ class Art:
 
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
 
+    def calc_acceleration(self, current_speed, last_speed):
+        # current timestamp
+        now_ts = utils.ts_ms()
+
+        # delta time in ms; 100 = 10Hz
+        dt = (now_ts - self.last_speed_ts) / 1000
+
+        # calc acceleration
+        delta_speed = current_speed - last_speed
+        delta_speed_mps = delta_speed / 3.6  # kph to m/s
+
+        # speed in m/s
+        self.speed_mps = round(current_speed / 3.6, 2)  # kph to m/s
+
+        # should not be zero and lower than 1 sec
+        if 0 < dt < 1:
+            # a = m/s /s
+            long_acc = delta_speed_mps / dt  #
+
+            self.long_acceleration = round(long_acc, 2)
+        else:
+            self.log.warning('ACC CALC: dt out ov scope: ' + str(dt))
+            self.long_acceleration = 0
+
+        # safe values
+        self.last_speed_ts = now_ts
+        self.dt_speed = dt
+        self.last_speed = current_speed
+        # print(str(current_speed) + ' - ' + str(last_speed) + ' = ' + str(delta_speed) + ' -> ' + str(self.long_acceleration))
+
+    # Todo calc lat (side) acceleration
+    def calc_lat_acceleration(self):
+
+        current_rotation = self.vehicle_msgs['signals']['GIER_ROH']
+
+        # Radius R = speed in m/s * angular velocity (rad/s) = v * ψ
+        # Todo is it in RAD or DEG???
+        r = self.speed_mps * current_rotation * 0.0174533   # = math.pi/180 for Deg to RAD
+
+        if r > 0:
+            # a_lat = speed^2 / radius
+            a_lat = self.speed_mps ** self.speed_mps / r
+        else:
+            a_lat = 0
+
+        self.lat_acceleration = round(a_lat, 2)
+        self.corner_radius = round(r, 1)
+
     def acc_activation(self, target_speed):
 
         ready_to_activate = True
@@ -474,7 +539,7 @@ class Art:
             # just to be sure
             self.art.state = ArtState.ACC
 
-    # todo
+    # todo Adaptive Cruise Control calc
     def acc_calc(self):
         # self.log.debug('ACC calc')
         # get signals
@@ -545,6 +610,7 @@ class Art:
                     # Todo - check and enable
                     # self.acc_deactivation()
 
+                """ Todo - lat acceleration calc is wrong
                 # OFF by too fast cornering
                 if abs(self.lat_acceleration) >= self.config.acc_off_lat_acc:
                     self.log.warning('Too much (corner) lat acc - deactivation - lat_acc >= acc_off_lat_acc ' +
@@ -556,52 +622,66 @@ class Art:
                     # acc off
                     # Todo - check and enable
                     # self.acc_deactivation()
+                """
+
+            # ACC is ACTIVE - after safety checks
+            if self.art.state == ArtState.ACC_active:
 
                 # ART overwrite by driver
                 # ART_UBERSP
                 # M_FV (Fahrervorgabe) is bigger then the M_MIN (in case of decelerating) AND
                 # M_FV is xNm bigger the ACC Moment
                 if signal['M_FV'] > (self.art_msg['M_ART'] + self.config.acc_pause_nm_delta) \
-                        and signal['M_FV'] > signal['M_MIN'] \
-                        and self.art_msg['ART_REG'] == 1:
+                        and signal['M_FV'] > signal['M_MIN']:
+                        # and self.art_msg['ART_REG'] == 1\
 
                     # if was not overwriten before
                     if self.art_msg['ART_UEBERSP'] == 0:
                         self.log.info('OVERWRITE active by driver')
 
-                    # is overwritten now
+                    # then it's overwritten now
                     self.art_msg['ART_UEBERSP'] = 1
 
-                # OVERWRITE / PAUSE at high lateral acceleration (corner speed)
-                elif self.lat_acceleration >= self.config.acc_pause_lat_acc \
-                        and self.art_msg['ART_REG'] == 1:
-
-                    # if was not overwritten before
-                    if self.art_msg['ART_UEBERSP'] == 0:
-                        self.log.info('OVERWRITE active by corner speed')
-
-                    # is overwritten now
-                    self.art_msg['ART_UEBERSP'] = 1
+                    # OVERWRITE / PAUSE at high lateral acceleration (corner speed)
+                    """
+                    elif abs(self.lat_acceleration) >= self.config.acc_pause_lat_acc:
+                            #and self.art_msg['ART_REG'] == 1:
+    
+                        # if was not overwritten before
+                        if self.art_msg['ART_UEBERSP'] == 0:
+                            self.log.info('OVERWRITE active by corner speed')
+    
+                        # is overwritten now
+                        self.art_msg['ART_UEBERSP'] = 1
+                    """
 
                 # no overwrite active
                 else:
                     # if it was overwriten before
                     if self.art_msg['ART_UEBERSP'] == 1:
-                        self.log.info('Overwrite deactive')
+                        self.log.info('Overwrite off')
+
                     # it's not overwriten now
                     self.art_msg['ART_UEBERSP'] = 0
 
-            # ACC is ACTIVE after safety checks
-            if self.art.state == ArtState.ACC_active:
-
                 # DO YOUR MAGIC PID-CONTROLLER
-                torque_request = self.pid.pid_calc(signal['V_ANZ'], self.art_msg['ART_UEBERSP'], signal['M_FV'])
+                torque_request = self.pid.pid_calc(signal['V_ANZ'],             # current_speed
+                                                   self.art_msg['V_ZIEL'],      # set_speed
+                                                   self.art_msg['ART_UEBERSP'],  # overwrite
+                                                   signal['M_FV'],              # driver moment
+                                                   signal['M_MIN'],             # min moment
+                                                   signal['M_MAX']              # max moment
+                                                   )
 
                 # min M_ART is 160 Nm
                 M_ART = max(torque_request, 160)
 
+                # eliminate the toque "dead zone" between 0 to 160 Nm
+                if torque_request < 160:
+                    torque_request -= 160
+
                 # invert BRAKE Torque and cap at 0
-                MBRE_ART = min(torque_request, 0) * -1
+                MBRE_ART = min(-torque_request, 0)
 
                 # set acceleration moment
                 self.art_msg['M_ART'] = M_ART
@@ -806,41 +886,6 @@ class Art:
                 # clear trigger
                 self.art.dspl_trigger_ts = 0
 
-    # calc long and lat (side) acceleration
-    def calc_long_lat_acceleration(self):
-
-        # current timestamp
-        now_ts = utils.ts_ms()
-
-        # delta time in ms; 100 = 10Hz
-        dt_ms = (now_ts - self.last_ts)
-
-        # error protection - should be 0.1
-        if dt_ms > 1:
-            dt_ms = 0
-
-        # current speed in kph
-        current_speed = self.vehicle_msgs['signals']['V_ANZ']
-        current_rotation = self.vehicle_msgs['signals']['GIER_ROH']
-
-        # calc acceleration
-        delta_speed = current_speed - self.old_speed
-        delta_speed_ms = delta_speed / 3.6  # kph to m/s
-
-        self.speed_mps = current_speed / 3.6  # kph to m/s
-
-        if dt_ms > 0:
-            long_acc = delta_speed_ms / dt_ms / 1000  # a = m/s /s
-            # Todo lat_acc calc
-            #lat_acc = self.speed_mps * current_rotation  # a = v * ψ
-
-            self.long_acceleration = round(long_acc, 2)
-            #self.lat_acceleration = round(lat_acc, 2)
-
-        self.last_ts = now_ts
-        self.dt_ms = dt_ms
-        self.old_speed = current_speed
-
     # 10 hz tricked tick for calc update
     def tick_10hz(self):
         # 10Hz timed
@@ -848,18 +893,18 @@ class Art:
 
         self.log.debug('10Hz tick')
 
-        # clean inputs
-        self.vehicle_msgs['signals']['V_ANZ'] = round(self.vehicle_msgs['signals']['V_ANZ'], 1)
-
         # basic ready check also after some time
         self.is_ready()
 
         if self.art.ready:
             # TM_EIN_ART - ART is ready
-            self.art_msg['TM_EIN_ART'] = 1
+            # self.art_msg['TM_EIN_ART'] = 1
+
+            # clean inputs
+            self.vehicle_msgs['signals']['V_ANZ'] = round(self.vehicle_msgs['signals']['V_ANZ'], 1)
 
             # calc long and lat (side) acceleration
-            self.calc_long_lat_acceleration()
+            self.calc_lat_acceleration()
 
             # update safety distance
             self.acc_calc_distance()
@@ -872,7 +917,7 @@ class Art:
             self.warnings()
         else:
             # TM_EIN_ART - ART is NOT ready
-            self.art_msg['TM_EIN_ART'] = 0
+            # self.art_msg['TM_EIN_ART'] = 0
             # todo reset
             pass
 
@@ -925,7 +970,7 @@ class Art:
             self.art_msg['TM_EIN_ART'] = 1
             self.art_msg['ART_VFBR'] = 1
 
-            # if no chancel condition quit - we a are save to go
+            # if no chancel condition quit - we a are ready to go
             self.art.ready = True
 
     def is_ready(self):
@@ -979,6 +1024,7 @@ class Art:
                 # reset default output values
                 self.reset_to_default()
 
+            self.ready_error = 1
             return False
 
         # no MSG ts is too old
@@ -1008,9 +1054,11 @@ class Art:
                 self.log.warning('Checker: Msgs to old')
                 # load default output values
                 self.reset_to_default()
+
+            self.ready_error = 2
             return False
 
-        # Todo: needed Signals are in range check
+        # Todo: check if signals are in range
         # signals = self.vehicle_msgs['signals']
 
         # Gear is in D
@@ -1021,13 +1069,34 @@ class Art:
                     # load default output values
                     self.reset_to_default()
                     self.log.info('Checker: Gear is NOT in D')
+                self.ready_error = 3
                 return False
         else:
             # Dataset incomplete
+            self.ready_error = 4
             return False
+
+        """
+        # is SBC Hold active
+        if 'SBCSH_AKT' in self.vehicle_msgs['signals']:
+            if self.vehicle_msgs['signals']['SBCSH_AKT'] == 1:
+                if self.art.ready:
+                    self.art.ready = False
+                    # load default output values
+                    self.reset_to_default()
+                    self.log.info('Checker: SBCSH is active')
+                self.ready_error = 5
+                return False
+        else:
+            # Dataset incomplete
+            self.ready_error = 6
+            return False
+        """
 
         # set ready values
         self.set_art_ready()
+
+        self.ready_error = 0
 
         return True
 
@@ -1038,6 +1107,7 @@ class Art:
             **self.art_msg,
             'ready': self.art.ready,
             'state': self.art.state,
+            'ready_error': self.ready_error
         }
 
     def signal_log(self):
@@ -1046,15 +1116,16 @@ class Art:
         self.mdf.add_signal('art_state', self.art.state.value)
 
         # add values
-        self.mdf.add_signal('art_dt_ms', self.dt_ms, unit='ms')
+        self.mdf.add_signal('art_dt', self.dt_speed, unit='sec')
         self.mdf.add_signal('art_last_ts', self.last_ts, unit='ms')
         self.mdf.add_signal('art_speed_ms', self.speed_mps, unit='m/s')
-        self.mdf.add_signal('art_old_speed', self.old_speed, unit='km/h')
+        self.mdf.add_signal('art_last_speed', self.last_speed, unit='km/h')
         self.mdf.add_signal('art_acc_long', self.long_acceleration, unit='m/s²')
         self.mdf.add_signal('art_acc_lat', self.lat_acceleration, unit='m/s²')
+        self.mdf.add_signal('art_corner_radius', self.corner_radius, unit='m')
         self.mdf.add_signal('art_info_light_duration', self.info_light_duration, unit='ms')
         self.mdf.add_signal('art_warn_beep_duration', self.warn_beep_duration, unit='ms')
-
+        self.mdf.add_signal('art_ready_error', self.ready_error)
 
         # pid signals
         self.mdf.add_signal('pid_P', self.pid.P)
@@ -1065,6 +1136,7 @@ class Art:
         self.mdf.add_signal('pid_set_speed', self.pid.set_speed, unit='km/h')
         self.mdf.add_signal('pid_m_min', self.pid.m_min, unit='Nm')
         self.mdf.add_signal('pid_m_max', self.pid.m_max, unit='Nm')
+        self.mdf.add_signal('pid_output', self.pid.old_output, unit='Nm')
 
         # CAN data sre logged by the CAN_handler
 # end class ART

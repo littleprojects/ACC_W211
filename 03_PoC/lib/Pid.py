@@ -39,7 +39,6 @@ class PID:
 
         self.acceleration = 0
 
-
     def set_target_speed(self, set_speed):
         self.set_speed = set_speed
 
@@ -59,12 +58,24 @@ class PID:
 
         self.dt_ts = utils.ts_ms()
 
-    def pid_calc(self, current_speed, overwrite=False, m_fv=0):
+    def pid_calc(self,
+                 current_speed,
+                 set_speed,
+                 overwrite,
+                 m_fv,
+                 m_min,
+                 m_max
+                 ):
         now_ts = utils.ts_ms()
         # delta time in second 0.1 = 10Hz
         dt_s = (now_ts - self.dt_ts) / 1000
 
         self.dt_ts = now_ts
+
+        # set current settings
+        self.set_speed = set_speed
+        self.m_max = m_max
+        self.m_min = m_min
 
         # calc acceleration
         delta_speed = current_speed - self.old_speed
@@ -89,22 +100,27 @@ class PID:
         # OVERWRITE
         # freeze integral if overwrite is active (clamping)
         if overwrite:
-            # freez integral
-            # integral = old_integral
+            if m_fv > self.m_min:
+                integral = m_fv
+            else:
+                # freez integral
+                integral = old_integral
 
             # integrate driver moment request for better adaptation
-            integral = m_fv
+            # integral = m_fv
             # M_ART follows driver moment in overwrite mode
             # integral = driver moment
 
         # PID CALC
-        output = self.P * error + self.I * self.integral + self.D * derivative
+        output = self.P * error + self.I * integral + self.D * derivative
 
         # Output MIN MAX limit
-        # max limitation
-        output = min(self.m_max, output)
-        # min limitation
-        #output = max(self.m_min, output)
+        # M_MAX limitation
+        if self.m_max > 0:
+            output = min(self.m_max, output)
+
+        # todo M_MIN limitation
+        # output = max(self.m_min, output)
 
         # ANTI WIND UP method integral limitations
         if self.config.acc_acceleration_limit:
