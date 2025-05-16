@@ -41,6 +41,9 @@ class PID:
 
         self.acceleration = 0
 
+        # limitation active
+        self.limitation = 0
+
     def set_target_speed(self, set_speed):
         self.set_speed = set_speed
 
@@ -78,9 +81,11 @@ class PID:
         self.old_m_fv = 0
         self.old_output = 0
         self.acceleration = 0
+        self.limitation = 0
 
     def pid_calc(self,
                  current_speed,
+                 acc_long,
                  set_speed,
                  overwrite,
                  m_fv,
@@ -100,12 +105,16 @@ class PID:
 
         current_speed = round(current_speed, 1)
 
-        # calc acceleration
-        delta_speed = current_speed - self.old_speed
-        delta_speed_ms = delta_speed/3.6                # kph to m/s
+        self.acceleration = acc_long
 
-        if dt_s > 0:
-            self.acceleration = delta_speed_ms/dt_s
+        self.limitation = 0
+
+        # calc acceleration
+        #delta_speed = current_speed - self.old_speed
+        #delta_speed_ms = delta_speed/3.6                # kph to m/s
+
+        #if dt_s > 0:
+        #    self.acceleration = delta_speed_ms/dt_s
 
         # remember old data
         integral = self.integral
@@ -118,7 +127,7 @@ class PID:
         integral += error * dt_s * self.I
 
         # D - DERIVATIVE
-        derivative = (error - self.old_error) / dt_s
+        derivative = round(((error - self.old_error) / dt_s), 2)
 
         # Integral limiter to m_max
         if integral > self.m_max:       # (integral * self.I)
@@ -139,6 +148,7 @@ class PID:
             # follow only on rising torque
             if m_fv > self.old_m_fv:
                 self.set_integral(m_fv)
+                self.limitation = 10
 
             # integrate driver moment request for better adaptation
             # integral = m_fv
@@ -163,14 +173,14 @@ class PID:
         if self.config.acc_acceleration_limit:
             # is accelerating too fast clamp integral
             if self.acceleration > self.config.acc_max_acceleration:
-                print('Limit acceleration: ' + str(self.acceleration) + ' >' + str(self.config.acc_max_acceleration))
+                self.limitation = 1
                 # clamp integral
                 integral = old_integral
                 # clamp output
                 output = self.old_output
 
             if (self.acceleration * -1) > self.config.acc_max_deceleration:
-                #print('Limit deceleration')
+                self.limitation = 2
                 # clamp integral
                 integral = old_integral
                 # clamp output
@@ -182,13 +192,13 @@ class PID:
             delta_output = (output - self.old_output) / dt_s
             # to high acceleration delta
             if delta_output > self.config.acc_max_acc_rate:
-                print('Limit Rate up: ' + str(delta_output) + ' > ' + str(self.config.acc_max_acc_rate))
+                self.limitation = 3
                 # limit output
                 output = self.old_output + self.config.acc_max_acc_rate * dt_s
 
             # to high deceleration delta
-            if delta_output * -1 > self.config.acc_max_dec_rate:
-                #print('Limit Rate down')
+            if -delta_output > self.config.acc_max_dec_rate:
+                self.limitation = 4
                 # limit output
                 output = self.old_output - self.config.acc_max_dec_rate * dt_s
 
@@ -197,6 +207,7 @@ class PID:
 
         # MOMENT LIMITER acceleration
         if output > self.config.max_acc_moment:
+            self.limitation = 5
             # limit output
             output = self.config.max_acc_moment
             # adapt integral
@@ -204,10 +215,11 @@ class PID:
 
         # MOMENT LIMITER deceleration
         if -output > self.config.max_dec_moment:
+            self.limitation = 6
             # limit output
             output = -self.config.max_dec_moment
             # adapt integral
-            self.integral = -self.config.max_dec_moment + error
+            self.integral = -(self.config.max_dec_moment - error)
 
         # remember values
         self.old_speed = current_speed

@@ -42,6 +42,9 @@ mdf_log = True
 # mdf_log_file default is log/Acc_' + utils.date_time_str() + '.mf4
 #mdf_log_file = log/Acc_log.mf4
 
+# saves data after each ACC deactivation -> just use during debugging, needs resources
+mdf_auto_save = True
+
 # -----------------------------------------------------------------------
 # ACC PID Controller Settings
 # P Proportional factor

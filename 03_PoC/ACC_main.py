@@ -51,12 +51,13 @@ default_config = {
     # MDF Log
     'mdf_log': False,
     'mdf_log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
+    'mdf_auto_save': False,     # save MDF after ACC deactivation
 
     # ACC Settings & Limits
     'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
-    'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
+    'acc_min_speed': 20,        # [kph] minimum speed for ACC activation
     'acc_max_speed': 180,       # [kph] max speed for ACC activation
-    'acc_off_speed': 20,        # [kph] switch off ACC at this speed
+    'acc_off_speed': 10,        # [kph] switch off ACC at this speed
     'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
     'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
     'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta
@@ -188,8 +189,10 @@ def main_loop():
                 flag_new_msg.clear()
 
                 # process the CAN msgs
-                can_handler.new_msg()
-                # todo Error handling
+                try:
+                    can_handler.new_msg()
+                except Exception as ex:
+                    log.error(ex)
 
             # 10Hz Timer Flag
             if F_10Hz.is_set():
@@ -197,8 +200,10 @@ def main_loop():
                 F_10Hz.clear()
 
                 # DO the MAGIC
-                can_handler.send_art_msg()
-                # Todo Error handling
+                try:
+                    can_handler.send_art_msg()
+                except Exception as ex:
+                    log.error(ex)
 
                 # break the loop if stop flag was set (Kill the main loop)
                 if event_stop.is_set():
@@ -222,7 +227,10 @@ def main_loop():
 
 if __name__ == "__main__":
     # do the magic
-    main_loop()
+    try:
+        main_loop()
+    except Exception as ex:
+        log.error(ex)
 
     # shutdown
     log.info('stop threads')
