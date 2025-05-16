@@ -43,18 +43,18 @@ mdf_log = True
 #mdf_log_file = log/Acc_log.mf4
 
 # saves data after each ACC deactivation -> just use during debugging, needs resources
-mdf_auto_save = True
+#mdf_auto_save = True
 
 # -----------------------------------------------------------------------
 # ACC PID Controller Settings
 # P Proportional factor
-acc_p = 2
+acc_p = 3
 
 # I Integral Factor
-acc_i = 0.5
+acc_i = 0.7
 
 # D Derivative Factor
-acc_d = 0.2
+acc_d = 0.3
 
 # Calibration
 # Set I and D to 0
@@ -75,7 +75,7 @@ acc_d = 0.2
 # can be disabled with 0
 stats_update_time = 10
 
-can_0_app_name = vCAN
+#can_0_app_name = vCAN
 
 # disables sending CAN MSGS
 # default is True

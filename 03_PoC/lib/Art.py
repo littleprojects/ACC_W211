@@ -37,6 +37,7 @@ class ArtObj:
         # ART init values
         self.ready = False          # is not ready
         self.state = ArtState.ACC   # statemachine
+        self.last_state = ArtState.Acc
         self.dspl_trigger_ts = 0    # timestamp of display trigger
 
         # inputs
@@ -151,7 +152,7 @@ class Art:
 
         # delta timestamp
         self.last_ts = utils.ts_ms()
-        self.dt_ms = 0
+        self.dt_ms = 100    # 10 Hz
 
         # last data
         self.last_speed = 0
@@ -556,9 +557,7 @@ class Art:
         # get signals
         signal = self.vehicle_msgs['signals']
 
-        # set/update V_ZIEL or in radar calc (rounded up)
-        # Todo in radar calc
-        self.art_msg['V_ZIEL'] = math.ceil(self.art_msg['V_ART'])
+        # V_ZIEL/V_Target is calc in RADAR function
 
         # todo ART_VFBR (VerFügBaR - available)
         # goes off [0] if speed it too slow (trigger dspy), recover [1] after trigger time
@@ -591,7 +590,8 @@ class Art:
                                      str(signal['V_ANZ']) + ' < ' + str(self.config.acc_min_speed))
 
                     # beep
-                    self.set_warning(beep=1, duration=self.config.warning_time)
+                    # self.set_warning(beep=1, duration=self.config.warning_time)
+                    self.art_msg['ART_WT'] = 1
 
                     # acc off
                     self.acc_deactivation()
@@ -693,7 +693,8 @@ class Art:
                 # M_FV (Fahrervorgabe) is bigger then the M_MIN (in case of decelerating) AND
                 # M_FV is xNm bigger the ACC Moment
                 # print(str(signal['M_FV']) + ' > ' + str(self.art_msg['M_ART']) + ' = ' + str(signal['M_FV'] > self.art_msg['M_ART'] > 0))
-                if signal['M_FV'] > self.art_msg['M_ART'] \
+                if (signal['M_FV'] + self.config.acc_pause_nm_delta) > self.art_msg['M_ART'] \
+                        and (   signal['M_FV'] + self.config.acc_pause_nm_delta)  > signal['M_MIN'] \
                         and self.art_msg['M_ART'] > 0:
                     # and self.art_msg['ART_REG'] == 1:
                     # self.config.acc_pause_nm_delta
@@ -759,6 +760,10 @@ class Art:
 
         # disable segment display
         self.art_msg['ART_SEG_EIN'] = 0
+
+        # ART AUS in Display
+        self.art_msg['TM_EIN_ART'] = 0
+        # will not work here,because it's not triggered by 10Hz function
 
         self.log.info('ACC deactivation')
 
@@ -844,6 +849,10 @@ class Art:
         # ABST_R_OBJ - distance to relevant object [m]
         # OBJ_ERK - object detected
         # V_ZIEL - target vehicle speed [kph]
+
+        # set/update V_ZIEL / Targetspeed for ACC (rounded up)
+        self.art_msg['V_ZIEL'] = math.ceil(self.art_msg['V_ART'])
+
         # OBJ_AGB - Object offer acc ? -> check
         # ART_REAKT - show reaktivation after error -> check/test
         pass
@@ -936,6 +945,10 @@ class Art:
         # basic ready check also after some time
         self.is_ready()
 
+        # clear warnings - will be overwritten if something is wrong
+        self.art_msg['ART_WT'] = 0
+        self.art_msg['ART_INFO'] = 0
+
         if self.art.ready:
             # TM_EIN_ART - ART is ready
             # self.art_msg['TM_EIN_ART'] = 1
@@ -969,6 +982,12 @@ class Art:
 
         # safe signals to MDF
         self.signal_log()
+
+        # is ACC is not active anymore - set TM_EIN_ART off to trigger ACC OFF on display
+        if self.art.last_state == ArtState.ACC_active and self.art.state != ArtState.ACC_active:
+            self.art_msg['TM_EIN_ART'] = 0
+
+        self.art.last_state = self.art.state
 
         return self.art_msg
 

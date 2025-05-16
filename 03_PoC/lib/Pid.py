@@ -127,7 +127,7 @@ class PID:
         integral += error * dt_s * self.I
 
         # D - DERIVATIVE
-        derivative = round(((error - self.old_error) / dt_s), 2)
+        derivative = round(((self.old_error - error) / dt_s), 2)
 
         # Integral limiter to m_max
         if integral > self.m_max:       # (integral * self.I)

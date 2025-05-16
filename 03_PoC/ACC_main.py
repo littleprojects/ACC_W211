@@ -78,8 +78,8 @@ default_config = {
 
     # Rate Limit by Acc - Anti wind up function - clamp output and integral
     'acc_acceleration_limit': False,  # enable/disable acceleration limits
-    'acc_max_acceleration': 1,  # [m/s²] maximal acceleration
-    'acc_max_deceleration': 1,  # [m/s²] maximal deceleration
+    'acc_max_acceleration': 2,  # [m/s²] maximal acceleration
+    'acc_max_deceleration': 2,  # [m/s²] maximal deceleration
 
     # Rate Limit by Nm - Anti wind up function - limit output
     'acc_rate_limit': False,    # enable/disable Rate Limit
