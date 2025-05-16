@@ -134,6 +134,9 @@ Needes Signals:
 - Vehicle moving direction (0 stanstill, 1 forward, 2 reverse) -> Available
 - Vehicle Speed in m/s -> available, calc needed
 - vehicle Yaw rate (°/s) -> available
+  - 300 = 180°
+  - 600 = 360°
+> GIER_ROH / 1.6666 = °
 
 - check mounting position to be sure. But should be in rage
 - dimensions and cable connector
