@@ -26,8 +26,9 @@ class PID:
         self.m_min = 0
         self.m_max = 0
 
-        self.integral = 0
         self.old_error = 0
+        self.integral = 0
+        self.derivative = 0
 
         # delta timestamp
         self.dt_ts = 0
@@ -36,6 +37,7 @@ class PID:
         self.old_speed = 0
         self.old_integral = 0
         self.old_output = 0
+        self.old_m_fv = 0
 
         self.acceleration = 0
 
@@ -44,19 +46,38 @@ class PID:
 
     def set_integral(self, integral):
         # set current moment as integral as init value
-        self.integral = integral / self.I
+        if self.I != 0:
+            self.integral = integral  # / self.I
+        else:
+            self.integral = 0
+
+        # dont forget to set also the old_integral, otherwise the limiting function jump in
+        self.old_integral = self.integral
 
     def init_pid(self, set_speed, current_moment, m_min, m_max):
         self.set_speed = set_speed
+
+        self.old_output = current_moment
+
         # avoid division by 0
         if self.I > 0:
-            self.integral = current_moment / self.I
+            self.integral = current_moment  # / self.I
         else:
             self.integral = 0
         self.m_min = m_min
         self.m_max = m_max
 
         self.dt_ts = utils.ts_ms()
+
+    def reset(self):
+        self.old_error = 0
+        self.integral = 0
+        self.derivative = 0
+
+        self.set_speed = 0
+        self.old_m_fv = 0
+        self.old_output = 0
+        self.acceleration = 0
 
     def pid_calc(self,
                  current_speed,
@@ -77,6 +98,8 @@ class PID:
         self.m_max = m_max
         self.m_min = m_min
 
+        current_speed = round(current_speed, 1)
+
         # calc acceleration
         delta_speed = current_speed - self.old_speed
         delta_speed_ms = delta_speed/3.6                # kph to m/s
@@ -92,32 +115,46 @@ class PID:
         error = self.set_speed - current_speed
 
         # I - INTEGRAL
-        integral += error * dt_s
+        integral += error * dt_s * self.I
 
         # D - DERIVATIVE
-        derivative = error - self.old_error
+        derivative = (error - self.old_error) / dt_s
+
+        # Integral limiter to m_max
+        if integral > self.m_max:       # (integral * self.I)
+            self.set_integral(m_max)
 
         # OVERWRITE
         # freeze integral if overwrite is active (clamping)
         if overwrite:
-            if m_fv > self.m_min:
-                integral = m_fv
+            """
+            if m_fv > self.m_min + 15:
+                # M_ART follows driver moment in overwrite mode
+                integral = m_fv / self.I
             else:
-                # freez integral
-                integral = old_integral
+            """
+            # freez integral
+            integral = old_integral
+
+            # follow only on rising torque
+            if m_fv > self.old_m_fv:
+                self.set_integral(m_fv)
 
             # integrate driver moment request for better adaptation
             # integral = m_fv
-            # M_ART follows driver moment in overwrite mode
+
             # integral = driver moment
 
         # PID CALC
-        output = self.P * error + self.I * integral + self.D * derivative
+        output = (self.P * error) + integral + (self.D * derivative)
+        # I-factor is added to integral already ( integral += error * dt_s * self.I)
+        # to have an realistic integral value
 
         # Output MIN MAX limit
         # M_MAX limitation
         if self.m_max > 0:
             output = min(self.m_max, output)
+            integral = min(self.m_max, integral)
 
         # todo M_MIN limitation
         # output = max(self.m_min, output)
@@ -126,10 +163,10 @@ class PID:
         if self.config.acc_acceleration_limit:
             # is accelerating too fast clamp integral
             if self.acceleration > self.config.acc_max_acceleration:
-                #print('Limit acceleration')
+                print('Limit acceleration: ' + str(self.acceleration) + ' >' + str(self.config.acc_max_acceleration))
                 # clamp integral
                 integral = old_integral
-                # freeze output
+                # clamp output
                 output = self.old_output
 
             if (self.acceleration * -1) > self.config.acc_max_deceleration:
@@ -145,7 +182,7 @@ class PID:
             delta_output = (output - self.old_output) / dt_s
             # to high acceleration delta
             if delta_output > self.config.acc_max_acc_rate:
-                #print('Limit Rate up')
+                print('Limit Rate up: ' + str(delta_output) + ' > ' + str(self.config.acc_max_acc_rate))
                 # limit output
                 output = self.old_output + self.config.acc_max_acc_rate * dt_s
 
@@ -173,17 +210,19 @@ class PID:
             self.integral = -self.config.max_dec_moment + error
 
         # remember values
-        self.old_error = error
         self.old_speed = current_speed
         self.old_output = output
+        self.old_m_fv = m_fv
+        self.old_error = error
         self.integral = round(integral, 2)  # reduce digits
+        self.derivative = derivative
 
         # reduce digits
         output = round(output, 2)
 
         return output
 
-
+"""
 if __name__ == "__main__":
     class Config:
         def __init__(self, P, I, D):
@@ -230,3 +269,5 @@ if __name__ == "__main__":
 
 
         time.sleep(1)
+
+"""

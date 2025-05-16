@@ -48,10 +48,10 @@ mdf_log = True
 acc_p = 2
 
 # I Integral Factor
-acc_i = 0.03
+acc_i = 0.5
 
 # D Derivative Factor
-acc_d = 0.02
+acc_d = 0.2
 
 # Calibration
 # Set I and D to 0

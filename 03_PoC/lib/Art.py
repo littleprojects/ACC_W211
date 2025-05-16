@@ -155,7 +155,7 @@ class Art:
 
         # last data
         self.last_speed = 0
-        self.last_speed_ts = utils.ts_ms()
+        self.last_speed_ts = 0
         self.dt_speed = 0
 
         self.log.info('INIT ACC - NOT READY')
@@ -344,7 +344,7 @@ class Art:
 
     # level_resume pressed
     def lever_wa(self):
-        self.log.info('Lever WA pressed')
+        self.log.info('Lever WA/Resume pressed')
 
         # display trigger
         self.acc_set_dspl_trigger()
@@ -432,8 +432,14 @@ class Art:
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
 
     def calc_acceleration(self, current_speed, last_speed):
+
         # current timestamp
         now_ts = utils.ts_ms()
+
+        # init ts with first msg
+        if self.last_speed_ts == 0:
+            self.last_speed_ts = now_ts
+            return
 
         # delta time in ms; 100 = 10Hz
         dt = (now_ts - self.last_speed_ts) / 1000
@@ -452,7 +458,7 @@ class Art:
 
             self.long_acceleration = round(long_acc, 2)
         else:
-            self.log.warning('ACC CALC: dt out ov scope: ' + str(dt))
+            self.log.warning('ACC CALC: dt out of scope: ' + str(dt))
             self.long_acceleration = 0
 
         # safe values
@@ -492,7 +498,11 @@ class Art:
         # is driver BRAKING currently
         if self.button_states['SFB'] == 1:
             self.log.warning('Cant enable ACC: Driver is braking - SFB = 1')
+            ready_to_activate = False
 
+        # gear is NOT in D
+        if signal['DRTGTM'] != 1:
+            self.log.warning('Cant enable ACC: Gear is NOT in D')
             ready_to_activate = False
 
         # check for MIN speed
@@ -531,6 +541,7 @@ class Art:
 
             # init PID Controller
             self.pid.init_pid(target_speed, signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
+
 
             # set distance
             self.acc_calc_distance()
@@ -631,16 +642,22 @@ class Art:
                 # ART_UBERSP
                 # M_FV (Fahrervorgabe) is bigger then the M_MIN (in case of decelerating) AND
                 # M_FV is xNm bigger the ACC Moment
-                if signal['M_FV'] > (self.art_msg['M_ART'] + self.config.acc_pause_nm_delta) \
-                        and signal['M_FV'] > signal['M_MIN']:
-                        # and self.art_msg['ART_REG'] == 1\
+                if signal['M_FV'] > self.art_msg['M_ART'] \
+                        and self.art_msg['ART_REG'] == 1:
+                    # self.config.acc_pause_nm_delta
+                    # and signal['M_FV'] > signal['M_MIN'] \
+                    # and self.art_msg['M_ART'] > 0:
 
-                    # if was not overwriten before
+                    # if was not overwritten before
                     if self.art_msg['ART_UEBERSP'] == 0:
+                        # make a note
                         self.log.info('OVERWRITE active by driver')
 
-                    # then it's overwritten now
+                    # and it's overwritten now
                     self.art_msg['ART_UEBERSP'] = 1
+
+                    # Follow driver torque request at overwrite
+                    # self.pid.set_integral(signal['M_FV'])
 
                     # OVERWRITE / PAUSE at high lateral acceleration (corner speed)
                     """
@@ -656,7 +673,9 @@ class Art:
                     """
 
                 # no overwrite active
-                else:
+                #else:
+                if signal['M_FV'] < self.art_msg['M_ART']:
+
                     # if it was overwriten before
                     if self.art_msg['ART_UEBERSP'] == 1:
                         self.log.info('Overwrite off')
@@ -674,14 +693,21 @@ class Art:
                                                    )
 
                 # min M_ART is 160 Nm
-                M_ART = max(torque_request, 160)
+                M_ART_min_torque = 160
 
-                # eliminate the toque "dead zone" between 0 to 160 Nm
-                if torque_request < 160:
-                    torque_request -= 160
+                # min limit M_ART
+                M_ART = max(torque_request, M_ART_min_torque)
 
-                # invert BRAKE Torque and cap at 0
+                # eliminate the toque "dead zone" between 0 to min torque
+                if torque_request < M_ART_min_torque:
+                    torque_request -= M_ART_min_torque
+
+                # invert negative torque to BRAKE torque and cap at 0
                 MBRE_ART = min(-torque_request, 0)
+
+                # if braking - NO acceleration
+                if MBRE_ART > 0:
+                    M_ART = M_ART_min_torque
 
                 # set acceleration moment
                 self.art_msg['M_ART'] = M_ART
@@ -738,10 +764,15 @@ class Art:
         self.art_msg['ART_BRE'] = 0
         self.art_msg['MBRE_ART'] = 0
         self.art_msg['BL_UNT'] = 0
+        self.art_msg['ART_UEBERSP'] = 0
 
         # switch to state ACC ready
         # todo: switch state here or in caller function?
         self.art.state = ArtState.ACC
+
+        # reset integral
+        # self.pid.set_integral(0)
+        self.pid.reset()
 
         # display trigger
         # self.acc_set_dspl_trigger()
@@ -754,10 +785,12 @@ class Art:
         if light > 0:
             # set light on timer
             self.info_light_duration = duration
+            self.log.info('INFO LIGHT')
 
         if beep > 0:
             # set beep on timer
             self.warn_beep_duration = duration
+            self.log.info('BEEP')
 
     # todo calc warnings only with radar input
     def warnings(self):
@@ -1061,6 +1094,7 @@ class Art:
         # Todo: check if signals are in range
         # signals = self.vehicle_msgs['signals']
 
+        """ moved to acc activation
         # Gear is in D
         if 'DRTGTM' in self.vehicle_msgs['signals']:
             if self.vehicle_msgs['signals']['DRTGTM'] != 1:
@@ -1075,8 +1109,9 @@ class Art:
             # Dataset incomplete
             self.ready_error = 4
             return False
-
         """
+
+        """ seems, this is the wrong channel
         # is SBC Hold active
         if 'SBCSH_AKT' in self.vehicle_msgs['signals']:
             if self.vehicle_msgs['signals']['SBCSH_AKT'] == 1:
@@ -1107,7 +1142,10 @@ class Art:
             **self.art_msg,
             'ready': self.art.ready,
             'state': self.art.state,
-            'ready_error': self.ready_error
+            'ready_error': self.ready_error,
+            'pid_p': self.pid.old_error,
+            'pid_i': self.pid.integral,
+            'pid_d': self.pid.derivative
         }
 
     def signal_log(self):
@@ -1131,7 +1169,11 @@ class Art:
         self.mdf.add_signal('pid_P', self.pid.P)
         self.mdf.add_signal('pid_I', self.pid.I)
         self.mdf.add_signal('pid_D', self.pid.D)
+
+        self.mdf.add_signal('pid_error', self.pid.old_error)
         self.mdf.add_signal('pid_integral', self.pid.integral)
+        self.mdf.add_signal('pid_derivative', self.pid.derivative)
+
         self.mdf.add_signal('pid_acceleration', self.pid.acceleration, unit='m/s')
         self.mdf.add_signal('pid_set_speed', self.pid.set_speed, unit='km/h')
         self.mdf.add_signal('pid_m_min', self.pid.m_min, unit='Nm')

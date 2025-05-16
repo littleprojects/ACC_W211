@@ -118,6 +118,8 @@ class CanHandler:
         # triggers output calculation
         art_data = self.Art.tick_10hz()
 
+        # todo CAN msg value check -> value have to fit to can msg
+
         # create ART_250 msg data
         self.art_250_data = self.db_0.encode_message(0x250, {
                 'DYN_UNT':  art_data['DYN_UNT'],    # dynamic downshift suppression
@@ -195,8 +197,9 @@ class CanHandler:
 
         # status log output
         self.log.info(f"Ready: {art_stats['ready']}({art_stats['ready_error']}) \t{art_stats['state']} "
-                      f"\t V_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
-                      f"\t M(BRE)_ART: {art_stats['M_ART']}/{art_stats['MBRE_ART']} Nm "
-                      f"\tCAN_0: {self.stats['in']}/{self.stats['out']}")
+                      f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
+                      f"\tM_FV/M_ART/MBRE_ART: {round(self.vehicle_msg['signals']['M_FV'], 1)}/{art_stats['M_ART']}/{art_stats['MBRE_ART']} Nm "
+                      f"\tP,I,D {art_stats['pid_p']}, {art_stats['pid_i']}, {art_stats['pid_d']} "
+                      f"\tCAN_0: {self.stats['in']}/{self.stats['out']} ")
 
 
