@@ -159,6 +159,13 @@ class Art:
         self.last_speed_ts = 0
         self.dt_speed = 0
 
+        # CAS - CityAssist (assumed status by activation and deactivation tirgger)
+        # because I cant find a CAN msg about the CAS status
+        self.cas_active = 0
+        # Todo check CAS
+        # activation only at stand still WA, UP, DW? on LIM Mode?
+        # deactivation OFF or > 50Kph
+
         self.log.info('INIT ACC - NOT READY')
 
     # todo LIM
@@ -223,7 +230,7 @@ class Art:
             current_speed = new_msgs['V_ANZ']
 
             if 'V_ANZ' in self.vehicle_msgs['signals']:
-                #old_speed = self.vehicle_msgs['signals']['V_ANZ']
+                # old_speed = self.vehicle_msgs['signals']['V_ANZ']
 
                 self.calc_acceleration(current_speed, self.last_speed)
 
@@ -335,6 +342,11 @@ class Art:
     def lever_off(self):
         self.log.info('Lever OFF pressed')
 
+        # CAS deactivation
+        if self.cas_active == 1:
+            self.cas_active = 0
+            self.log.info('CAS off')
+
         if self.art.state == ArtState.ACC_active:
             # display trigger
             self.acc_set_dspl_trigger()
@@ -354,6 +366,11 @@ class Art:
 
         # ACC ready -> activation
         if self.art.state == ArtState.ACC:
+
+            # CAS activation only on stand still
+            if self.vehicle_msgs['signals']['V_ANZ'] == 0:
+                self.cas_active = 1
+                self.log.info('CAS on')
 
             # RESUME Speed
             v_set = self.art_msg['V_ART']
@@ -498,31 +515,36 @@ class Art:
 
         # is driver BRAKING currently
         if self.button_states['SFB'] == 1:
-            self.log.warning('Cant enable ACC: Driver is braking - SFB = 1')
+            self.log.info('Cant enable ACC: Driver is braking - SFB = 1')
             ready_to_activate = False
 
-        # gear is NOT in D
-        if signal['DRTGTM'] != 1:
-            self.log.warning('Cant enable ACC: Gear is NOT in D')
+        # gear is NOT in D by wahlhelbelstellung or drehrichtungtempomat
+        if signal['WHST'] != 4 or signal['DRTGTM'] != 1:
+            self.log.info('Cant enable ACC: Gear is NOT in D')
+            ready_to_activate = False
+
+        # CAS is active
+        if self.cas_active == 1:
+            self.log.info('Cant enable ACC: CAS is active')
             ready_to_activate = False
 
         # check for MIN speed
         if signal['V_ANZ'] < int(self.config.acc_off_speed):
-            self.log.warning('Cant enable ACC: too slow - V_ANZ: ' + str(signal['V_ANZ']))
+            self.log.info('Cant enable ACC: too slow - V_ANZ: ' + str(signal['V_ANZ']))
             # trigger '---' display
             self.acc_set_dspl_lim_trigger()
             ready_to_activate = False
 
         # check for MAX speed
         if signal['V_ANZ'] > int(self.config.acc_max_speed):
-            self.log.warning('Cant enable ACC: too fast - V_ANZ: ' + str(signal['V_ANZ']))
+            self.log.info('Cant enable ACC: too fast - V_ANZ: ' + str(signal['V_ANZ']))
             # trigger '---' display
             self.acc_set_dspl_lim_trigger()
             ready_to_activate = False
 
         # lever OK
         if signal['WH_UP'] == 1:
-            self.log.warning('Cant enable ACC: Selector Level implausible - WH_UP = 1')
+            self.log.info('Cant enable ACC: Selector Level implausible - WH_UP = 1')
             ready_to_activate = False
 
         # all good -> ACTIVATE ACC
@@ -589,13 +611,20 @@ class Art:
                     self.log.warning('Too slow - deactivation - V_ANZ < acc_min_speed = ' +
                                      str(signal['V_ANZ']) + ' < ' + str(self.config.acc_min_speed))
 
-                    # beep
+                    # short beep
                     # self.set_warning(beep=1, duration=self.config.warning_time)
                     self.art_msg['ART_WT'] = 1
 
                     # acc off
                     self.acc_deactivation()
                     # return
+
+                # is GEAR not in D anymore by WhalHelbelSTellung oder DrehRichTunGTempoMat
+                if signal['WHST'] != 4 or signal['DRTGTM'] != 1:
+                    self.log.info('Gear is not in D anymore - deactivation')
+
+                    # acc off
+                    self.acc_deactivation()
 
                 # OFF by too much acceleration
                 if self.long_acceleration >= self.config.acc_off_acc:
@@ -673,21 +702,6 @@ class Art:
 
                     self.art_msg['ART_REG'] = 1
 
-                # BRAKING is on and its NOT OVERWRITEN BY DRIVER
-                if MBRE_ART > 0 and self.art_msg['ART_UEBERSP'] == 0:
-
-                    # enable ART_BRE deceleration / braking
-                    if self.config.art_bre_enabled == True:
-                        # enable ART BRAKES
-                        self.art_msg['ART_BRE'] = 1
-                        # set BRAKE troque
-                        self.art_msg['MBRE_ART'] = MBRE_ART
-
-                    # todo Braklight suppression details. by deceleration or brake torque?
-                    # between 0 and 15Nm
-                    if MBRE_ART <= 15:
-                        self.art_msg['BL_UNT'] = 1
-
                 # ART overwrite by driver
                 # ART_UBERSP
                 # M_FV (Fahrervorgabe) is bigger then the M_MIN (in case of decelerating) AND
@@ -703,6 +717,8 @@ class Art:
 
                     # if was not overwritten before
                     if self.art_msg['ART_UEBERSP'] == 0:
+                        # show on display
+                        self.acc_set_dspl_trigger()
                         # make a note
                         self.log.info('OVERWRITE active by driver')
 
@@ -731,11 +747,26 @@ class Art:
 
                     # if it was overwriten before
                     if self.art_msg['ART_UEBERSP'] == 1:
+                        # self.acc_set_dspl_trigger()
                         self.log.info('Overwrite off')
 
                     # it's not overwriten now
                     self.art_msg['ART_UEBERSP'] = 0
 
+                # BRAKING is on and its NOT OVERWRITEN BY DRIVER
+                if MBRE_ART > 0 and self.art_msg['ART_UEBERSP'] == 0:
+
+                    # enable ART_BRE deceleration / braking
+                    if self.config.art_bre_enabled == True:
+                        # enable ART BRAKES
+                        self.art_msg['ART_BRE'] = 1
+                        # set BRAKE troque
+                        self.art_msg['MBRE_ART'] = MBRE_ART
+
+                    # todo Braklight suppression details. by deceleration or brake torque?
+                    # between 0 and 15Nm
+                    if MBRE_ART <= 15:
+                        self.art_msg['BL_UNT'] = 1
 
                 # Todo
                 # ART channels
@@ -949,6 +980,11 @@ class Art:
         self.art_msg['ART_WT'] = 0
         self.art_msg['ART_INFO'] = 0
 
+        # CAS deactivation if speed is over 50
+        if self.cas_active == 1 and self.vehicle_msgs['signals']['V_ANZ'] > 50:
+            self.cas_active = 0
+            self.log.info('CAS off')
+
         if self.art.ready:
             # TM_EIN_ART - ART is ready
             # self.art_msg['TM_EIN_ART'] = 1
@@ -1023,17 +1059,18 @@ class Art:
 
     def set_art_ready(self):
 
+        # if it was not ready before
         if not self.art.ready:
             self.log.info('READY')
 
-            # set
-            self.art_msg['ART_OK'] = 1
-            self.art_msg['ART_EIN'] = 1
-            self.art_msg['TM_EIN_ART'] = 1
-            self.art_msg['ART_VFBR'] = 1
+        # set
+        self.art_msg['ART_OK'] = 1
+        self.art_msg['ART_EIN'] = 1
+        self.art_msg['TM_EIN_ART'] = 1
+        self.art_msg['ART_VFBR'] = 1
 
-            # if no chancel condition quit - we a are ready to go
-            self.art.ready = True
+        # if no chancel condition quit - we are ready to go
+        self.art.ready = True
 
     def is_ready(self):
         """
@@ -1194,6 +1231,7 @@ class Art:
         self.mdf.add_signal('art_info_light_duration', self.info_light_duration, unit='ms')
         self.mdf.add_signal('art_warn_beep_duration', self.warn_beep_duration, unit='ms')
         self.mdf.add_signal('art_ready_error', self.ready_error)
+        self.mdf.add_signal('art_cas_active', self.cas_active)
 
         # pid signals
         self.mdf.add_signal('pid_P', self.pid.P)
