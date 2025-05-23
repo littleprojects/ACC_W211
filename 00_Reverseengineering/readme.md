@@ -83,6 +83,28 @@ Distance Warning button
 - Enable/disable the distance warning
 - Center Console
 
+## Interaction with Limiter and CAS
+
+### Limiter
+
+Is acitvated be pressing the lever stick.
+- Disables ACC
+- Disables Limiter 
+
+### ACC - Adaptive Criuse Control
+
+Can be activate over 30kph.
+Switch off at 20 kph.
+
+### CAS - City Assist
+
+Breaks automatically your car down and hold the brak until you push the pedal again.
+Helps on hillup start or on traffic jam.
+
+Can be activate between 0 and 20 kph by Resume, up, Down.
+Work until 60 kph.
+If you press Resume, Up or Down over 30 kph. The ACC switch on and CAS goes off
+
 ## Vehicle Interface
 
 ### ACC ECU
@@ -129,11 +151,11 @@ Premium Long Range Radar
 - EU and USA 
 - Connector: Tyco MQS BU-GEH KPL 8P (C-114-18063-128 - Coding A)
 
-
 Needes Signals:
 - Vehicle moving direction (0 stanstill, 1 forward, 2 reverse) -> Available
 - Vehicle Speed in m/s -> available, calc needed
 - vehicle Yaw rate (°/s) -> available
+  - Sensor Raw value vs mesured deg (Roundabout test)
   - 300 = 180°
   - 600 = 360°
 > GIER_ROH / 1.6666 = °
