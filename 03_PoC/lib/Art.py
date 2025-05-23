@@ -22,7 +22,6 @@ from lib import utils
 from lib.Pid import PID
 
 
-
 # ART Statemachine states class
 class ArtState(Enum):
     ACC = 1  # init ACC/CC function
@@ -37,17 +36,8 @@ class ArtObj:
         # ART init values
         self.ready = False          # is not ready
         self.state = ArtState.ACC   # statemachine
-        self.last_state = ArtState.Acc
+        self.last_state = ArtState.ACC
         self.dspl_trigger_ts = 0    # timestamp of display trigger
-
-        # inputs
-        #self.braking = 0            # is driver braking
-        #self.lever_wa_pressed = 0   # is WA pressed
-        #self.lever_up_pressed = 0   # is UP pressed
-        #self.lever_dw_pressed = 0   # is DOWN pressed
-        #self.lever_off_pressed = 0  # is OFF pressed
-        #self.level_lim_pressed = 0  # is LIMITER pressed
-        #self.warn_bt_pressed = 0    # is Warning ON/OFF button pressed
 
 
 class Art:
@@ -163,8 +153,10 @@ class Art:
         # because I cant find a CAN msg about the CAS status
         self.cas_active = 0
         # Todo check CAS
-        # activation only at stand still WA, UP, DW? on LIM Mode?
-        # deactivation OFF or > 50Kph
+        # activation only < 20kph WA, UP, DW on LIM Mode / ACC?
+        # deactivation OFF or > 60Kph
+
+        self.lim_max_moment = 0
 
         self.log.info('INIT ACC - NOT READY')
 
@@ -213,17 +205,18 @@ class Art:
                 if self.is_btn_pressed(new_msgs, 'S_MINUS_B', mode=2):
                     self.lever_down()
 
-                # Todo Limiter
-                """
+                # LIMITER Activation
                 if self.is_btn_pressed(new_msgs, 'VMAX_AKT'):
-                    self.lim_activatio()
-                    
-                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1): # FALLING_EDGE
-                    self.lim_deactivatio()
-                """
+                    self.log.info('Limiter Mode ON')
+                    self.acc_deactivation()
+                    self.art.state = ArtState.LIM
 
-                # todo: long hold button
-                # per sec one button trigger
+                # LIMITER deactivation
+                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1): # FALLING_EDGE
+                    self.log.info('Limiter Mode OFF')
+                    self.lim_deactivatio()
+                    self.art.state = ArtState.ACC
+
 
         # update speed only if an update is available
         if 'V_ANZ' in new_msgs:
@@ -347,13 +340,16 @@ class Art:
             self.cas_active = 0
             self.log.info('CAS off')
 
+        # ACC off
         if self.art.state == ArtState.ACC_active:
             # display trigger
             self.acc_set_dspl_trigger()
-
             self.acc_deactivation()
 
-        # todo Limiter off
+        # Limiter off
+        if self.art.state == ArtState.LIM_active:
+            self.acc_set_dspl_trigger()
+            self.lim_deactivation()
 
     # level_resume pressed
     def lever_wa(self):
@@ -364,11 +360,11 @@ class Art:
 
         # signal = self.vehicle_msgs['signals']
 
-        # ACC ready -> activation
+        # ACC activation
         if self.art.state == ArtState.ACC:
 
             # CAS activation only on stand still
-            if self.vehicle_msgs['signals']['V_ANZ'] == 0:
+            if self.vehicle_msgs['signals']['V_ANZ'] <= 20:
                 self.cas_active = 1
                 self.log.info('CAS on')
 
@@ -382,7 +378,7 @@ class Art:
             # and power
             self.acc_activation(v_set)
 
-        # ACC active
+        # ACC speed adjustment
         if self.art.state == ArtState.ACC_active:
             #  speed +1
             self.art_msg['V_ART'] += 1
@@ -393,6 +389,15 @@ class Art:
 
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
 
+        # LIM activation
+        if self.art.state == ArtState.LIM:
+            self.acc_activation(self.vehicle_msgs['signals']['V_ANZ'])
+
+        # LIM speed adjustment
+        if self.art.state == ArtState.LIM_active:
+            self.art_msg['V_ART'] += 1
+            self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
+
     def lever_up(self):
         self.log.info('Lever PLUS pressed')
 
@@ -401,16 +406,27 @@ class Art:
 
         # signal = self.vehicle_msgs['signals']
 
-        # ACC ready -> activation
+        # ACC activation
         if self.art.state == ArtState.ACC:
+
+            # CAS activation only on stand still
+            if self.vehicle_msgs['signals']['V_ANZ'] <= 20:
+                self.cas_active = 1
+                self.log.info('CAS on')
 
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
 
             # and power
             self.acc_activation(v_set)
 
-        # ACC active
+        # ACC speed adjustment
         if self.art.state == ArtState.ACC_active:
+
+            # CAS activation only on stand still
+            if self.vehicle_msgs['signals']['V_ANZ'] <= 20:
+                self.cas_active = 1
+                self.log.info('CAS on')
+
             #  set speed to next tens +10
             speed = self.art_msg['V_ART'] + 1
             self.art_msg['V_ART'] = math.ceil(speed/10)*10
@@ -420,6 +436,17 @@ class Art:
                 self.art_msg['V_ART'] = self.config.acc_max_speed
 
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
+
+        # LIM activation
+        if self.art.state == ArtState.LIM:
+            v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+            self.lim_activation(v_set)
+
+        # LIM speed adjustment
+        if self.art.state == ArtState.LIM_active:
+            speed = self.art_msg['V_ART'] + 1
+            self.art_msg['V_ART'] = math.ceil(speed / 10) * 10
+            self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
 
     def lever_down(self):
         self.log.info('Lever MINUS pressed')
@@ -431,9 +458,8 @@ class Art:
 
         # ACC ready -> activation
         if self.art.state == ArtState.ACC:
-
+            # set current speed
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
-
             # and power
             self.acc_activation(v_set)
 
@@ -449,13 +475,27 @@ class Art:
 
             self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
 
+        # LIM activation
+        if self.art.state == ArtState.LIM:
+            # set current speed
+            v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+            self.lim_activation(v_set)
+
+        # LIM speed adjustment
+        if self.art.state == ArtState.LIM_active:
+            speed = self.art_msg['V_ART'] - 1
+            self.art_msg['V_ART'] = math.floor(speed / 10) * 10
+            self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
+
+    # ACCLERATION calcs ------------------------
+
     def calc_acceleration(self, current_speed, last_speed):
 
         # current timestamp
         now_ts = utils.ts_ms()
 
-        # init ts with first msg
-        if self.last_speed_ts == 0:
+        # init ts with first msg or if not ready
+        if self.last_speed_ts == 0 or not self.art.ready:
             self.last_speed_ts = now_ts
             return
 
@@ -503,6 +543,8 @@ class Art:
         self.lat_acceleration = round(a_lat, 2)
         self.corner_radius = round(r, 1)
 
+    # ACC ---------------------------------------
+
     def acc_activation(self, target_speed):
 
         ready_to_activate = True
@@ -512,6 +554,10 @@ class Art:
         # activation check
 
         signal = self.vehicle_msgs['signals']
+
+        if self.art.state is not ArtState.ACC:
+            self.log.warning('Cant enable ACC: was not in ACC state before')
+            ready_to_activate = False
 
         # is driver BRAKING currently
         if self.button_states['SFB'] == 1:
@@ -591,6 +637,9 @@ class Art:
         self.art_msg['ART_BRE'] = 0
         self.art_msg['MBRE_ART'] = 0
         self.art_msg['BL_UNT'] = 0
+        # Limit clearing - just to be sure
+        self.art_msg['LIM_REG'] = 0
+        self.art_msg['VMAX_AKT'] = 0
 
         # is ready
         if self.art.ready:
@@ -604,6 +653,11 @@ class Art:
                     self.log.info('Driver brakes - deactivation - SFB = 1')
                     self.acc_deactivation()
                     # return
+
+                # CAS is active
+                if self.cas_active == 1:
+                    self.log.info('CAS active - deactivation')
+                    self.acc_deactivation()
 
                 # min speed limit
                 if signal['V_ANZ'] < self.config.acc_min_speed:
@@ -820,6 +874,141 @@ class Art:
         if self.config.mdf_auto_save:
             self.mdf.write_mdf()
 
+    # LIMITER ------------------------------------------
+
+    def lim_activation(self, target_speed):
+
+        ready_to_activate = True
+
+        target_speed = round(target_speed)
+
+        signal = self.vehicle_msgs['signals']
+
+        # limit target speed
+        if target_speed > self.config.lim_max_speed:
+            self.log.info('LIM: target speed too high, set to max_speed')
+            target_speed = self.config.lim_max_speed
+
+        # safety checks
+
+        if self.art.state is not ArtState.LIM:
+            self.log.warning('Cant enable LIM: was not in LIM state before')
+            ready_to_activate = False
+
+        # gear is NOT in D by wahlhelbelstellung or drehrichtungtempomat
+        if signal['WHST'] != 4 or signal['DRTGTM'] != 1:
+            self.log.info('Cant enable LIM: Gear is NOT in D')
+            ready_to_activate = False
+
+        # CAS is active
+        if self.cas_active == 1:
+            self.log.info('Cant enable LIM: CAS is active')
+            ready_to_activate = False
+
+        # is lever OK
+        if signal['WH_UP'] == 1:
+            self.log.info('Cant enable LIM: Selector Level implausible - WH_UP = 1')
+            ready_to_activate = False
+
+        # all good -> ACTIVATE LIM
+        if ready_to_activate:
+            self.log.info('LIM activation')
+
+            # activate ACC
+            self.art.state = ArtState.LIM_active
+
+            # set speed
+            self.art_msg['V_ART'] = target_speed
+            self.art_msg['V_ZIEL'] = target_speed
+            self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
+
+            # display ein
+            self.art_msg['ART_SEG_EIN'] = 1
+            self.acc_set_dspl_trigger()
+
+            # todo init LIM controller
+            self.lim_max_moment = signal['M_FV']
+            # self.art_msg['LIM_REG'] = 1
+
+    def lim_calc(self):
+        # get signals
+        signal = self.vehicle_msgs['signals']
+
+        # set default values - will be overwritten if everything is correct
+        self.art_msg['VMAX_AKT'] = 0
+        self.art_msg['LIM_REG'] = 0
+        self.art_msg['M_ART'] = 0
+        self.art_msg['ART_BRE'] = 0
+        self.art_msg['MBRE_ART'] = 0
+        self.art_msg['BL_UNT'] = 0
+        self.art_msg['ART_SEG_EIN'] = 0
+        # ACC clearing - just to be sure
+        self.art_msg['ART_REG'] = 0
+
+        # is ready
+        if self.art.ready:
+
+            if self.art.state == ArtState.LIM:
+                self.art_msg['VMAX_AKT'] = 1
+
+            # LIM is ACTIVE - safety checks
+            if self.art.state == ArtState.LIM_active:
+                self.art_msg['VMAX_AKT'] = 1
+                # self.art_msg['LIM_REG'] = 1
+                self.art_msg['ART_SEG_EIN'] = 1
+
+                # over/min speed correction
+                # max limitation
+                if self.art_msg['V_ART'] > self.config.lim_max_speed:
+                    self.art_msg['V_ART'] = self.config.lim_max_speed
+                # min limitation
+                if self.art_msg['V_ART'] < self.config.lim_min_speed:
+                    self.art_msg['V_ART'] = self.config.lim_min_speed
+
+                # same output
+                self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
+
+                # Todo do limiter magic
+                """
+                if M_FV > pid_output = 
+                    M_ART = pid_output
+                else
+                    M_ART = F_FV
+                    Clamp pid
+                """
+                # signal['M_FV']
+                # simple torque limiter
+                if signal['M_FV'] <= self.lim_max_moment:
+                    self.art_msg['M_ART'] = signal['M_FV']
+                else:
+                    self.art_msg['M_ART'] = self.lim_max_moment
+                # self.art_msg['ART_BRE'] = 0
+                # self.art_msg['MBRE_ART'] = 0
+                # self.art_msg['BL_UNT'] = 0
+
+                # active
+                if self.config.lim_reg_enabled:
+                    self.art_msg['LIM_REG'] = 1
+
+    def lim_deactivation(self):
+
+        self.log.info('LIM deactivation')
+
+        self.art_msg['VMAX_AKT'] = 0
+        self.art_msg['LIM_REG'] = 0
+        self.art_msg['M_ART'] = 0
+        self.art_msg['ART_BRE'] = 0
+        self.art_msg['MBRE_ART'] = 0
+        self.art_msg['BL_UNT'] = 0
+        self.art_msg['ART_SEG_EIN'] = 0
+        self.lim_max_moment = 0
+        # ACC clearing - just to be sure
+        self.art_msg['ART_REG'] = 0
+
+        self.art.state = ArtState.LIM
+
+    # WARNINGS ------------------------------------------
+
     def set_warning(self, light=0, beep=0, duration=200):
 
         # switch to acc display
@@ -981,7 +1170,7 @@ class Art:
         self.art_msg['ART_INFO'] = 0
 
         # CAS deactivation if speed is over 50
-        if self.cas_active == 1 and self.vehicle_msgs['signals']['V_ANZ'] > 50:
+        if self.cas_active == 1 and self.vehicle_msgs['signals']['V_ANZ'] > 60:
             self.cas_active = 0
             self.log.info('CAS off')
 
@@ -1001,9 +1190,13 @@ class Art:
             # update safety distance
             self.acc_calc_distance()
 
+            state = self.art.state
             # DO THE MAGIC
-            self.acc_calc()
-            # todo self.lim_calc()
+            if state == ArtState.ACC or state == ArtState.ACC_active:
+                self.acc_calc()
+
+            if state == ArtState.LIM or state == ArtState.LIM_active:
+                self.lim_calc()
 
             # general warnings
             self.warnings()

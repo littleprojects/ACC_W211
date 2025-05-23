@@ -12,6 +12,8 @@ I try to (KISS) Keep It Simple and Stupid.
 
 Because I want so wirte it in C later for the ECU integration.
 And I need to understand it later again ;)
+
+pip install can cantools asammdf
 """
 
 import time
@@ -35,6 +37,8 @@ module_version = '0.0.1'
 
 # default module settings - all config values needs a default value
 default_config = {
+    'version': '0.0.1',  # version
+    'comment': None,
     'loglevel': 'INFO',  # debug
     'stats_update_time': 10,  # [sec] log stats updates - disable with 0
     'config_file': 'config.txt',
@@ -53,6 +57,11 @@ default_config = {
     'mdf_log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
     'mdf_auto_save': False,     # save MDF after ACC deactivation
 
+    # Display HMI
+    'art_trigger_time': 8000,  # [ms] show art display after a trigger
+    'lever_hold_time': 1000,  # [ms] button holding time to re-trigger action
+    'warning_time': 200,  # [ms] warning beep duration time
+
     # ACC Settings & Limits
     'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
     'acc_min_speed': 20,        # [kph] minimum speed for ACC activation
@@ -64,17 +73,18 @@ default_config = {
     'acc_pause_lat_acc': 2,     # [m/s²] pause ACC if side (lat) acceleration in corners is high
     'acc_off_lat_acc': 3,       # [m/s²] switch ACC off if side (lat) acceleration in corners is too high
 
-    # Display HMI
-    'art_trigger_time': 8000,   # [ms] show art display after a trigger
-    'lever_hold_time': 1000,    # [ms] button holding time to re-trigger action
-    'warning_time': 200,        # [ms] warning beep duration time
-
     # ACC PID Controller parameter
     'art_reg_enabled': True,  # enable/disable ART acceleration output
     'art_bre_enabled': True,  # enable/disable ART deceleration output
     'acc_p': 2,
     'acc_i': 0.03,
     'acc_d': 0.02,
+
+    # Error Limitation - limit max error to smooth controller
+    # Error = target_speed - current_speed
+    'pid_error_limit': True,   # enable/disable function
+    'pid_error_max': 10,        # acceleration error
+    'pid_error_min': -20,       # deceleration error
 
     # Rate Limit by Acc - Anti wind up function - clamp output and integral
     'acc_acceleration_limit': False,  # enable/disable acceleration limits
@@ -87,8 +97,15 @@ default_config = {
     'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
 
     # Moment Limits - Anti wind up - Limit output - CAN signal limits
-    'max_acc_moment': 300,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
+    'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
     'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
+
+    # Limiter functions
+    'lim_reg_enabled': True,    # enable/disable LIMITER controller
+
+    # Limiter Settings
+    'lim_max_speed': 250,       # [kph] max speed allowed with limiter
+    'lim_min_speed': 10,        # [kph] min speed of limiter
 }
 
 needed_msg_id_list = [
@@ -124,6 +141,12 @@ config = Config(module_name, default_config, log).config_obj
 # update Loglevel
 log.info('Change Loglevel to: ' + config.loglevel)
 log.setLevel(utils.parse_log_level(config.loglevel))
+
+log.info('Version: ' + config.version)
+if config.comment is not None:
+    log.info('Comment: ' + config.comment)
+
+# Todo write config
 
 # MDF
 mdf = Mdf(config.mdf_log_file, log, logging=config.mdf_log)

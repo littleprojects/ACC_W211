@@ -4,6 +4,7 @@ from lib import utils
 #from lib import check
 
 from lib.Art import Art
+from lib.Art import ArtState
 
 
 class CanHandler:
@@ -195,14 +196,27 @@ class CanHandler:
         # get signals from
         art_stats = self.Art.status_log()
 
+        out = ''
+
         if art_stats['ready']:
-            # status log output
-            self.log.info(f"Ready \t{art_stats['state']} "
-                f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
-                f"\tM_FV/M_ART/MBRE_ART: {round(self.vehicle_msg['signals']['M_FV'], 1)}/{art_stats['M_ART']}/{art_stats['MBRE_ART']} "
-                f"\tP,I,D: {art_stats['pid_p']}, {art_stats['pid_i']}, {art_stats['pid_d']} ({art_stats['pid_lc']})"
-                f"\tCAN_0: {self.stats['in']}/{self.stats['out']} ")
+
+            out = f"R & {art_stats['state']} "
+            out += f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
+
+            # ACC
+            if art_stats['state'] == ArtState.ACC_active:
+                # status log output
+                #f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
+                out += f"\tM_FV/M_ART/MBRE_ART: {round(self.vehicle_msg['signals']['M_FV'], 1)}/{art_stats['M_ART']}/{art_stats['MBRE_ART']} "
+                out += f"\tP,I,D: {art_stats['pid_p']}, {art_stats['pid_i']}, {art_stats['pid_d']} ({art_stats['pid_lc']}) "
+
+            # LIMITER
+            if art_stats['state'] == ArtState.LIM_active:
+                pass
 
         else:
             # status log output
-            self.log.info(f"Not Ready reason: {art_stats['ready_error']} \t{art_stats['state']} ")
+            out = f"Not Ready reason: {art_stats['ready_error']} \t{art_stats['state']} "
+            out += f"\tCAN_0: {self.stats['in']}/{self.stats['out']} "
+
+        self.log.info(out)

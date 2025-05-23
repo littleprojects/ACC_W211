@@ -123,11 +123,23 @@ class PID:
         # P - ERROR
         error = self.set_speed - current_speed
 
+        # Error Limit
+        if self.config.pid_error_limit:
+            # max limit
+            if error > self.config.pid_error_max:
+                self.limitation = 7
+                error = self.config.pid_error_max
+            # min limit
+            if error < self.config.pid_error_min:
+                self.limitation = 8
+                error = self.config.pid_error_min
+
         # I - INTEGRAL
         integral += error * dt_s * self.I
 
         # D - DERIVATIVE
-        derivative = round(((self.old_error - error) / dt_s), 2)
+        # derivative = round(((self.old_error - error) / dt_s), 2)
+        derivative = round(((error - self.old_error) / dt_s), 2)
 
         # Integral limiter to m_max
         if integral > self.m_max:       # (integral * self.I)
@@ -136,24 +148,19 @@ class PID:
         # OVERWRITE
         # freeze integral if overwrite is active (clamping)
         if overwrite:
-            """
-            if m_fv > self.m_min + 15:
-                # M_ART follows driver moment in overwrite mode
-                integral = m_fv / self.I
-            else:
-            """
+            self.limitation = 10
+
             # freez integral
             integral = old_integral
 
             # follow only on rising torque
             if m_fv > self.old_m_fv:
+                # integrate driver moment request for better adaptation
+                # integral = m_fv
+                # integral = driver moment
+
                 self.set_integral(m_fv)
-                self.limitation = 10
-
-            # integrate driver moment request for better adaptation
-            # integral = m_fv
-
-            # integral = driver moment
+                self.limitation = 11
 
         # PID CALC
         output = (self.P * error) + integral + (self.D * derivative)

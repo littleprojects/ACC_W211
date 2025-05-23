@@ -48,13 +48,14 @@ mdf_log = True
 # -----------------------------------------------------------------------
 # ACC PID Controller Settings
 # P Proportional factor
-acc_p = 3
+acc_p = 2.5
 
 # I Integral Factor
-acc_i = 0.7
+acc_i = 2
 
 # D Derivative Factor
-acc_d = 0.3
+#acc_d = 0.3
+acc_d = -0.1
 
 # Calibration
 # Set I and D to 0
@@ -63,8 +64,15 @@ acc_d = 0.3
 # 3. Increase D slowly. D helps to reduce overshoots.
 # 4. Tuning: test the system under different situations and adjust values to find a good calibration
 
+# ANTI WIND UP functions
+#pid_error_limit = 1
+#acc_acceleration_limit = 1
+#acc_rate_limit = 1
+
 # -----------------------------------------------------------------------
 # DEVELOPMENT SETTINGS
+
+comment = Test
 
 # Loglevel (default is INFO)
 # for debugging set it to "debug"
@@ -73,10 +81,15 @@ acc_d = 0.3
 # Logging status output time in seconds
 # default is 10 sec
 # can be disabled with 0
-stats_update_time = 10
+stats_update_time = 5
 
-#can_0_app_name = vCAN
+# for local testing with simulated CAN
+can_0_app_name = vCAN
 
 # disables sending CAN MSGS
 # default is True
 #can_0_send = False
+
+# enable/disable functions
+#art_reg_enabled = 1
+#art_bre_enabled = 1
