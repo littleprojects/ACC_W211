@@ -1,24 +1,80 @@
 """
 Simple scripte to log CAN messages in a file to replay
 it at any time with the can_replay.py script
+
+BusMaster Layout
+17:28:32:1449 Rx 1 0x212 s 8 02 A8 27 06 27 06 A7 06
 """
 
-
+import os
 import can
+import time
+import datetime
+
+
+def date_time_str(ts=time.time()):
+    return str(datetime.datetime.fromtimestamp(ts).strftime('%d:%m:%Y %H-%M-%S.%f')[:-3])
+
+
+def time_str(ts=time.time()):
+    return str(datetime.datetime.fromtimestamp(ts).strftime('%H-%M-%S.%f')[:-4])
+
+file_name = 'can_log_'
+file_type = '.log'
+
+i = 0
+while os.path.exists(file_name + str(i) + file_type):
+    i += 1
+
+file = file_name + str(i) + file_type
+
+print('log to: ' + file)
 
 # Erstelle eine Bus-Instanz
-bus = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name='NewApp')
+bus1 = can.interface.Bus(channel='0', interface='socketcan', bitrate=500000)
 
 i = 0
 
 # Öffne eine Datei zum Speichern der Nachrichten
-with open('can_log.asc', 'w') as log_file:
+with open(file, 'w') as log_file:
 
+    # header
+    log_file.write('''***BUSMASTER Ver 3.2.2***
+***PROTOCOL CAN***
+***NOTE: PLEASE DO NOT EDIT THIS DOCUMENT***
+***[START LOGGING SESSION]***
+***START DATE AND TIME ''' + date_time_str() + '''***
+***HEX***
+***SYSTEM MODE***
+***START CHANNEL BAUD RATE***
+***CHANNEL 1 - Vector - VN1610 Channel 1 SN - 553 - 500000 bps***
+***END CHANNEL BAUD RATE***
+***START DATABASE FILES***
+***END DATABASE FILES***
+***<Time><Tx/Rx><Channel><CAN ID><Type><DLC><DataBytes>***
+''')
+
+    # loooooooooooooooooooooooooooop
     while True:
         # Empfange Nachrichten und speichere sie in der Datei
-        msg = bus.recv()
+        msg = bus1.recv()
         if msg:
-            log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
+
+            # example string
+            # 17:28:32:1469 Rx 1 0x308 s 8 80 02 A5 00 00 78 A7 38
+            log = time_str()
+            log += ' RX'
+            log += ' ' + msg.channel
+            log += msg.arbitration_id
+            if msg.is_remote_frame:
+                log += ' x '
+            else:
+                log += ' s '
+            log += msg.dlc + ' '
+            log += ' '.join(f'{byte:02X}' for byte in msg.data)
+
+            log_file.write(log)
+            #log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
 
             i += 1
 
