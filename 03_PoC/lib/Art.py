@@ -12,6 +12,11 @@ ART/DTS Class
 - Todos:
     - Limit acceleration by corner radius
 
+- Problems:
+    - CAS not clear -> overwrite by LIM
+    - LIM deactivation
+    - LIM negative ouput
+
 """
 
 import math
@@ -212,13 +217,13 @@ class Art:
                     self.art.state = ArtState.LIM
 
                 # LIMITER deactivation
-                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1): # FALLING_EDGE
+                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1):  # FALLING_EDGE
                     self.log.info('Limiter Mode OFF')
-                    self.lim_deactivatio()
+                    self.lim_deactivation()
                     self.art.state = ArtState.ACC
 
-
         # update speed only if an update is available
+        # for acceleration calc
         if 'V_ANZ' in new_msgs:
             current_speed = new_msgs['V_ANZ']
 
@@ -269,7 +274,7 @@ class Art:
             if mode == 1:
                 # is button NOT pressed now?
                 if signal_value == 0:
-                    # YES it is pressed now
+                    # YES it is not pressed now
                     # but was it pressed before?
                     # if self.button_states[signal] == 1:
                     if self.button_states[signal] > 0:  # adaption to handle timestamps in button states
@@ -298,14 +303,16 @@ class Art:
                         out = True
 
             # remember the current state to compare it with the next input
-            state = signal_value
+            # state = signal_value
+
+            # reset button state if button is not pressed
+            if signal_value == 0:
+                self.button_states[signal] = 0
+
             # set when button was pressed ONYL when the button is pressed, and it was not pressed before
             if signal_value == 1 and self.button_states[signal] == 0:
-                # set timestamp
-                state = utils.ts_ms()
-
-            # safe current state
-            self.button_states[signal] = state
+                # save timestamp
+                self.button_states[signal] = utils.ts_ms()
 
         # report result
         return out
@@ -351,7 +358,7 @@ class Art:
             self.acc_set_dspl_trigger()
             self.lim_deactivation()
 
-    # level_resume pressed
+    # lever_resume pressed
     def lever_wa(self):
         self.log.info('Lever WA/Resume pressed')
 
@@ -498,6 +505,12 @@ class Art:
         if self.last_speed_ts == 0 or not self.art.ready:
             self.last_speed_ts = now_ts
             return
+
+        # todo
+        # do maybe with DVL signal 100Hz
+        # 790 DVL = 50kph
+
+        # todo smooth signal
 
         # delta time in ms; 100 = 10Hz
         dt = (now_ts - self.last_speed_ts) / 1000
@@ -666,8 +679,8 @@ class Art:
                                      str(signal['V_ANZ']) + ' < ' + str(self.config.acc_min_speed))
 
                     # short beep
-                    # self.set_warning(beep=1, duration=self.config.warning_time)
-                    self.art_msg['ART_WT'] = 1
+                    self.set_warning(beep=1, duration=self.config.warning_time)
+                    # self.art_msg['ART_WT'] = 1
 
                     # acc off
                     self.acc_deactivation()
@@ -948,14 +961,9 @@ class Art:
         # is ready
         if self.art.ready:
 
-            if self.art.state == ArtState.LIM:
+            # LIM
+            if self.art.state == ArtState.LIM or self.art.state == ArtState.LIM_active:
                 self.art_msg['VMAX_AKT'] = 1
-
-            # LIM is ACTIVE - safety checks
-            if self.art.state == ArtState.LIM_active:
-                self.art_msg['VMAX_AKT'] = 1
-                # self.art_msg['LIM_REG'] = 1
-                self.art_msg['ART_SEG_EIN'] = 1
 
                 # over/min speed correction
                 # max limitation
@@ -968,6 +976,24 @@ class Art:
                 # same output
                 self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
 
+            # LIM is ACTIVE - safety checks
+            if self.art.state == ArtState.LIM_active:
+
+                if self.art_msg['V_ART'] <= 0:
+                    self.lim_deactivation()
+                    self.log.error('LIM V_ART <= 0 - deactivation')
+
+                if self.lim_max_moment <= 0:
+                    self.lim_deactivation()
+                    self.log.error('LIM max moment <= 0 - deactivation')
+
+            # LIM ACTIVE after safety checks
+            if self.art.state == ArtState.LIM_active:
+
+                self.art_msg['VMAX_AKT'] = 1
+                # self.art_msg['LIM_REG'] = 1
+                self.art_msg['ART_SEG_EIN'] = 1
+
                 # Todo do limiter magic
                 """
                 if M_FV > pid_output = 
@@ -976,19 +1002,46 @@ class Art:
                     M_ART = F_FV
                     Clamp pid
                 """
+                speed_delta = self.art_msg['V_ZIEL'] - signal['V_ANZ']
+                # too fast: 60-75 = -15
+                # too slow: 60-45 = 15
+
+                # overspeed reduction
+                if signal['V_ANZ'] > self.art_msg['V_ZIEL']:
+                    # reduce moment
+                    if self.lim_max_moment > 0:
+                        self.lim_max_moment += speed_delta
+                        # self.lim_max_moment -= 5
+
                 # signal['M_FV']
                 # simple torque limiter
                 if signal['M_FV'] <= self.lim_max_moment:
+                    # below limit
                     self.art_msg['M_ART'] = signal['M_FV']
                 else:
+                    # at the limit but too slow and acceleration is low
+                    if signal['V_ANZ']+2 < self.art_msg['V_ZIEL']\
+                            and self.long_acceleration < 1:
+                        # increase moment if speed is too low
+                        self.lim_max_moment += speed_delta
+                        # self.lim_max_moment += 5
+
+                    # limit to max
                     self.art_msg['M_ART'] = self.lim_max_moment
+
                 # self.art_msg['ART_BRE'] = 0
                 # self.art_msg['MBRE_ART'] = 0
                 # self.art_msg['BL_UNT'] = 0
 
                 # active
                 if self.config.lim_reg_enabled:
-                    self.art_msg['LIM_REG'] = 1
+                    if self.lim_max_moment > 0:
+                        self.art_msg['LIM_REG'] = 1
+
+                # error handling
+                if self.art_msg['M_ART'] < 150:
+                    self.log.error(f"LIM - M_ART low ({self.art_msg['M_ART']}) - call deactivation")
+                    self.lim_deactivation()
 
     def lim_deactivation(self):
 
@@ -1158,7 +1211,7 @@ class Art:
     # 10 hz tricked tick for calc update
     def tick_10hz(self):
         # 10Hz timed
-        # to requestes can output
+        # to requests can output
 
         self.log.debug('10Hz tick')
 
@@ -1406,6 +1459,7 @@ class Art:
             'pid_i': round(self.pid.integral, 1),
             'pid_d': round(self.pid.derivative, 1),
             'pid_lc': self.pid.limitation,  # limitation code
+            'lim_max_moment': self.lim_max_moment,
         }
 
     def signal_log(self):
@@ -1441,6 +1495,9 @@ class Art:
         self.mdf.add_signal('pid_m_max', self.pid.m_max, unit='Nm')
         self.mdf.add_signal('pid_output', self.pid.old_output, unit='Nm')
         self.mdf.add_signal('pid_limit_code', self.pid.limitation)
+
+        # lim
+        self.mdf.add_signal('art_lim_max_moment', self.lim_max_moment, unit='Nm')
 
         # CAN data sre logged by the CAN_handler
 # end class ART

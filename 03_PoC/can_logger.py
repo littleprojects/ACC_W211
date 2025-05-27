@@ -19,7 +19,8 @@ def date_time_str(ts=time.time()):
 def time_str(ts=time.time()):
     return str(datetime.datetime.fromtimestamp(ts).strftime('%H-%M-%S.%f')[:-4])
 
-file_name = 'can_log_'
+
+file_name = 'log/can_log_'
 file_type = '.log'
 
 i = 0

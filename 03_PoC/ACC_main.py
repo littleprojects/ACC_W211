@@ -13,12 +13,17 @@ I try to (KISS) Keep It Simple and Stupid.
 Because I want so wirte it in C later for the ECU integration.
 And I need to understand it later again ;)
 
+Todo:
+- local storage file for persisteance settings (Warning On/Off)
+- Limiter Controller
+
 pip install can cantools asammdf
 """
 
 import time
 import cantools
 import threading
+import traceback
 
 from lib import utils
 from queue import Queue
@@ -83,7 +88,7 @@ default_config = {
     # Error Limitation - limit max error to smooth controller
     # Error = target_speed - current_speed
     'pid_error_limit': True,   # enable/disable function
-    'pid_error_max': 10,        # acceleration error
+    'pid_error_max': 20,        # acceleration error
     'pid_error_min': -20,       # deceleration error
 
     # Rate Limit by Acc - Anti wind up function - clamp output and integral
@@ -214,8 +219,8 @@ def main_loop():
                 # process the CAN msgs
                 try:
                     can_handler.new_msg()
-                except Exception as ex:
-                    log.error(ex)
+                except Exception as e:
+                    log.exception(e)
 
             # 10Hz Timer Flag
             if F_10Hz.is_set():
@@ -225,8 +230,8 @@ def main_loop():
                 # DO the MAGIC
                 try:
                     can_handler.send_art_msg()
-                except Exception as ex:
-                    log.error(ex)
+                except Exception as e:
+                    log.exception(e)
 
                 # break the loop if stop flag was set (Kill the main loop)
                 if event_stop.is_set():
@@ -252,16 +257,16 @@ if __name__ == "__main__":
     # do the magic
     try:
         main_loop()
-    except Exception as ex:
-        log.error(ex)
+    except Exception as e:
+        log.exception(e)
 
     # shutdown
-    log.info('stop threads')
+    log.info('Stop Threads')
 
     thread_timer.join()
     thread_can_0.join()
 
-    log.info(q_can_c_in.qsize())
+    # log.info(q_can_c_in.qsize())
 
     log.info('Shut down bus')
     can_0.shutdown_connection()

@@ -200,7 +200,7 @@ class CanHandler:
 
         if art_stats['ready']:
 
-            out = f"R & {art_stats['state']} "
+            out = f"R_{art_stats['state']} "
             out += f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
 
             # ACC
@@ -212,7 +212,7 @@ class CanHandler:
 
             # LIMITER
             if art_stats['state'] == ArtState.LIM_active:
-                pass
+                out += f"\tM_FV/_MAX/_ART: {round(self.vehicle_msg['signals']['M_FV'], 1)}/{art_stats['lim_max_moment']}/{art_stats['M_ART']} "
 
         else:
             # status log output
