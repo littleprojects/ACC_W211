@@ -18,9 +18,9 @@ class PID:
     def __init__(self, config):
         self.config = config
 
-        self.P = config.acc_p
-        self.I = config.acc_i
-        self.D = config.acc_d
+        self.kp = config.acc_kp
+        self.ki = config.acc_ki
+        self.kd = config.acc_kd
 
         self.set_speed = 0
         self.m_min = 0
@@ -49,7 +49,7 @@ class PID:
 
     def set_integral(self, integral):
         # set current moment as integral as init value
-        if self.I != 0:
+        if self.ki != 0:
             self.integral = integral  # / self.I
         else:
             self.integral = 0
@@ -63,7 +63,7 @@ class PID:
         self.old_output = current_moment
 
         # avoid division by 0
-        if self.I > 0:
+        if self.ki > 0:
             self.integral = current_moment  # / self.I
         else:
             self.integral = 0
@@ -92,9 +92,12 @@ class PID:
                  m_min,
                  m_max
                  ):
+
         now_ts = utils.ts_ms()
         # delta time in second 0.1 = 10Hz
-        dt_s = (now_ts - self.dt_ts) / 1000
+        #dt_s = (now_ts - self.dt_ts) / 1000
+        # Todo fixed for testing
+        dt_s = 0.1
 
         self.dt_ts = now_ts
 
@@ -127,15 +130,15 @@ class PID:
         if self.config.pid_error_limit:
             # max limit
             if error > self.config.pid_error_max:
-                self.limitation = 7
                 error = self.config.pid_error_max
+                self.limitation = 7
             # min limit
             if error < self.config.pid_error_min:
-                self.limitation = 8
                 error = self.config.pid_error_min
+                self.limitation = 8
 
         # I - INTEGRAL
-        integral += error * dt_s * self.I
+        integral += error * dt_s * self.ki
 
         # D - DERIVATIVE
         # derivative = round(((self.old_error - error) / dt_s), 2)
@@ -143,7 +146,11 @@ class PID:
 
         # Integral limiter to m_max
         if integral > self.m_max:       # (integral * self.I)
-            self.set_integral(m_max)
+            self.set_integral(self.m_max)
+
+        # Integral limit to m_min
+        if -integral > self.config.max_dec_moment:
+            self.set_integral(-self.config.max_dec_moment)
 
         # OVERWRITE
         # freeze integral if overwrite is active (clamping)
@@ -163,7 +170,7 @@ class PID:
                 self.limitation = 11
 
         # PID CALC
-        output = (self.P * error) + integral + (self.D * derivative)
+        output = (self.kp * error) + integral + (self.kd * derivative)
         # I-factor is added to integral already ( integral += error * dt_s * self.I)
         # to have an realistic integral value
 
@@ -173,7 +180,7 @@ class PID:
             output = min(self.m_max, output)
             integral = min(self.m_max, integral)
 
-        # todo M_MIN limitation
+        # todo M_MIN limitation ??? output can go below m_min for braking
         # output = max(self.m_min, output)
 
         # ANTI WIND UP method integral limitations
@@ -218,7 +225,7 @@ class PID:
             # limit output
             output = self.config.max_acc_moment
             # adapt integral
-            self.integral = self.config.max_acc_moment - error
+            self.integral = self.config.max_acc_moment  # - error
 
         # MOMENT LIMITER deceleration
         if -output > self.config.max_dec_moment:
@@ -226,7 +233,7 @@ class PID:
             # limit output
             output = -self.config.max_dec_moment
             # adapt integral
-            self.integral = -(self.config.max_dec_moment - error)
+            self.integral = -(self.config.max_dec_moment)  # - error)
 
         # remember values
         self.old_speed = current_speed

@@ -81,15 +81,15 @@ default_config = {
     # ACC PID Controller parameter
     'art_reg_enabled': True,  # enable/disable ART acceleration output
     'art_bre_enabled': True,  # enable/disable ART deceleration output
-    'acc_p': 2,
-    'acc_i': 0.03,
-    'acc_d': 0.02,
+    'acc_kp': 2,
+    'acc_ki': 0.03,
+    'acc_kd': 0.02,
 
     # Error Limitation - limit max error to smooth controller
     # Error = target_speed - current_speed
     'pid_error_limit': True,   # enable/disable function
-    'pid_error_max': 20,        # acceleration error
-    'pid_error_min': -20,       # deceleration error
+    'pid_error_max': 40,        # acceleration error
+    'pid_error_min': -30,       # deceleration error
 
     # Rate Limit by Acc - Anti wind up function - clamp output and integral
     'acc_acceleration_limit': False,  # enable/disable acceleration limits

@@ -48,14 +48,14 @@ mdf_log = True
 # -----------------------------------------------------------------------
 # ACC PID Controller Settings
 # P Proportional factor
-acc_p = 2.5
+acc_kp = 2
 
-# I Integral Factor
-acc_i = 2
+# I Integral Factor Nm/sec
+acc_ki = 15
 
 # D Derivative Factor
-#acc_d = 0.3
-acc_d = -0.1
+#acc_kd = 0.3
+acc_kd = -0.1
 
 # Calibration
 # Set I and D to 0

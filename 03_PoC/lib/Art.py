@@ -624,9 +624,10 @@ class Art:
             # init PID Controller
             self.pid.init_pid(target_speed, signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
 
-
             # set distance
             self.acc_calc_distance()
+
+            self.log.info(f"Init PID with Kp: {self.pid.kp}, Ki: {self.pid.ki}, Kd: {self.pid.kd}")
 
         else:
             # just to be sure
@@ -679,11 +680,11 @@ class Art:
                                      str(signal['V_ANZ']) + ' < ' + str(self.config.acc_min_speed))
 
                     # short beep
-                    self.set_warning(beep=1, duration=self.config.warning_time)
+                    # self.set_warning(beep=1, duration=self.config.warning_time)
                     # self.art_msg['ART_WT'] = 1
 
                     # acc off
-                    self.acc_deactivation()
+                    self.acc_deactivation(beep=True)
                     # return
 
                 # is GEAR not in D anymore by WhalHelbelSTellung oder DrehRichTunGTempoMat
@@ -691,7 +692,7 @@ class Art:
                     self.log.info('Gear is not in D anymore - deactivation')
 
                     # acc off
-                    self.acc_deactivation()
+                    self.acc_deactivation(beep=True)
 
                 # OFF by too much acceleration
                 if self.long_acceleration >= self.config.acc_off_acc:
@@ -744,7 +745,7 @@ class Art:
                                                    signal['M_MAX']              # max moment
                                                    )
 
-                # min M_ART is 160 Nm
+                # min M_ART is 160 Nm todo: as config value
                 M_ART_min_torque = 160
 
                 # min limit M_ART
@@ -755,7 +756,7 @@ class Art:
                     torque_request -= M_ART_min_torque
 
                 # invert negative torque to BRAKE torque and cap at 0
-                MBRE_ART = min(-torque_request, 0)
+                MBRE_ART = max(-torque_request, 0)
 
                 # if braking - NO acceleration
                 if MBRE_ART > 0:
@@ -765,8 +766,7 @@ class Art:
                 self.art_msg['M_ART'] = M_ART
 
                 # enable ART_REG acceleration
-                if self.config.art_reg_enabled == True:
-
+                if self.config.art_reg_enabled:
                     self.art_msg['ART_REG'] = 1
 
                 # ART overwrite by driver
@@ -774,9 +774,11 @@ class Art:
                 # M_FV (Fahrervorgabe) is bigger then the M_MIN (in case of decelerating) AND
                 # M_FV is xNm bigger the ACC Moment
                 # print(str(signal['M_FV']) + ' > ' + str(self.art_msg['M_ART']) + ' = ' + str(signal['M_FV'] > self.art_msg['M_ART'] > 0))
-                if (signal['M_FV'] + self.config.acc_pause_nm_delta) > self.art_msg['M_ART'] \
-                        and (   signal['M_FV'] + self.config.acc_pause_nm_delta)  > signal['M_MIN'] \
-                        and self.art_msg['M_ART'] > 0:
+                # todo clean up
+                if (signal['M_FV'] - self.config.acc_pause_nm_delta) > self.art_msg['M_ART'] \
+                        and (signal['M_FV'] - self.config.acc_pause_nm_delta) > signal['M_MIN'] \
+                        and self.art_msg['M_ART'] > 0\
+                        and self.art_msg['ART_UEBERSP'] == 0:
                     # and self.art_msg['ART_REG'] == 1:
                     # self.config.acc_pause_nm_delta
                     # and signal['M_FV'] > signal['M_MIN'] \
@@ -784,10 +786,11 @@ class Art:
 
                     # if was not overwritten before
                     if self.art_msg['ART_UEBERSP'] == 0:
-                        # show on display
-                        self.acc_set_dspl_trigger()
                         # make a note
-                        self.log.info('OVERWRITE active by driver')
+                        self.log.info(f"OVERWRITE active by driver: M_FV {signal['M_FV']} - {self.config.acc_pause_nm_delta} > { self.art_msg['M_ART']}")
+
+                    # show on display all the time
+                    self.acc_set_dspl_trigger()
 
                     # and it's overwritten now
                     self.art_msg['ART_UEBERSP'] = 1
@@ -810,12 +813,14 @@ class Art:
 
                 # no overwrite active
                 # else:
-                if signal['M_FV'] < self.art_msg['M_ART']:
+                if (signal['M_FV'] + self.config.acc_pause_nm_delta) < self.art_msg['M_ART']\
+                        and self.art_msg['ART_UEBERSP'] == 1:
+                        #or signal['M_FV'] < 170:
 
                     # if it was overwriten before
                     if self.art_msg['ART_UEBERSP'] == 1:
                         # self.acc_set_dspl_trigger()
-                        self.log.info('Overwrite off')
+                        self.log.info(f"Overwrite off: {signal['M_FV']} + {self.config.acc_pause_nm_delta} < {self.art_msg['M_ART']}")
 
                     # it's not overwriten now
                     self.art_msg['ART_UEBERSP'] = 0
@@ -854,7 +859,7 @@ class Art:
         self.acc_reset_trigger()
 
     # disable the acc and reset outputs
-    def acc_deactivation(self):
+    def acc_deactivation(self, beep=False):
 
         # disable segment display
         self.art_msg['ART_SEG_EIN'] = 0
@@ -882,7 +887,10 @@ class Art:
         self.pid.reset()
 
         # display trigger
-        # self.acc_set_dspl_trigger()
+        self.acc_set_dspl_trigger()
+
+        if beep:
+            self.set_warning(beep=1, duration=self.config.warning_time)
 
         if self.config.mdf_auto_save:
             self.mdf.write_mdf()
@@ -946,6 +954,11 @@ class Art:
     def lim_calc(self):
         # get signals
         signal = self.vehicle_msgs['signals']
+
+        # in LIM are this values off
+        self.art_msg['TM_EIN_ART'] = 0
+        self.art_msg['ART_EIN'] = 0
+
 
         # set default values - will be overwritten if everything is correct
         self.art_msg['VMAX_AKT'] = 0
@@ -1481,9 +1494,9 @@ class Art:
         self.mdf.add_signal('art_cas_active', self.cas_active)
 
         # pid signals
-        self.mdf.add_signal('pid_P', self.pid.P)
-        self.mdf.add_signal('pid_I', self.pid.I)
-        self.mdf.add_signal('pid_D', self.pid.D)
+        self.mdf.add_signal('pid_P', self.pid.kp)
+        self.mdf.add_signal('pid_I', self.pid.ki)
+        self.mdf.add_signal('pid_D', self.pid.kd)
 
         self.mdf.add_signal('pid_error', self.pid.old_error)
         self.mdf.add_signal('pid_integral', self.pid.integral)
