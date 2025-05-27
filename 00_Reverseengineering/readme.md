@@ -158,7 +158,7 @@ Needes Signals:
   - Sensor Raw value vs mesured deg (Roundabout test)
   - 300 = 180°
   - 600 = 360°
-> GIER_ROH / 1.6666 = °
+> GIER_ROH / 1.6666 = ° or GIER_ROH * 0.6 = °
 
 - check mounting position to be sure. But should be in rage
 - dimensions and cable connector

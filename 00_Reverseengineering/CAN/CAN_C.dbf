@@ -224,7 +224,7 @@
 [END_MSG]
 
 [START_MSG] BS_300h,768,8,3,1,S,
-[START_SIGNALS] GIER_ROH,16,8,0,U,32768,0,0,-327.68,0.01,°/s²,,
+[START_SIGNALS] GIER_ROH,16,8,0,U,54613,0,0,-327.68,0.006,°/s²,,
 [START_SIGNALS] ART_E,1,1,3,B,1,0,1,0,1,,,
 [START_SIGNALS] SFB,2,2,0,U,3,0,1,0,1,,,
 [END_MSG]
@@ -498,9 +498,9 @@ DTR "Abstands Regel TempomatDistronic Control Modul";
 600 S SOLL_ABST "Fahrerwunschabstand";
 600 S ABST_R_OBJ "Abstand relevantes Objekt";
 600 S V_ART "eingestellte ART-Geschwindigkeit";
-600 S ART_ERROR "ART Fehlercode";
-600 S ART_INFO "ART Infolampe";
-600 S ART_WT "ART Warnton";
+600 S ART_ERROR "ART Fehlercode1 - 0001 - Distronic momntan nicht vergügbar! Siehe Betriebsanleitung.2 - 0010 - Distronic Werkstatt aufsuchen!4 - 0100 - Externe Störung! Neu aktivieren!8 - 1000 - nothing";
+600 S ART_INFO "ART Infolampe (Rotes Dreieck)";
+600 S ART_WT "ART Warnton BEEEP";
 600 S S_OBJ "Erkennung stehendes Objekt";
 600 S ART_DSPL_EIN "Display auf ART-Anzeige schalten";
 512 S HAS_KL "Handbremse gezogen Kontrollampe";
