@@ -1,6 +1,6 @@
 """
 Simple scripte to log CAN messages in a file to replay
-it at any time with the can_replay.py script
+it at any time with the BusMaster
 
 BusMaster Layout
 ***<Time><Tx/Rx><Channel><CAN ID><Type><DLC><DataBytes>***
@@ -23,7 +23,28 @@ def time_str(ts=time.time()):
     return str(datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S:%f')[:-2])
 
 
-file_name = 'log/can_log_'
+def log_string(msg):
+    # example string
+    # 17:28:32:1469 Rx 1 0x308 s 8 80 02 A5 00 00 78 A7 38
+    log = time_str(time.time())
+    log += ' Rx'
+    log += ' ' + msg.channel
+    log += ' 0x' + str(msg.arbitration_id)
+    if msg.is_remote_frame:
+        log += ' x '
+    else:
+        log += ' s '
+    log += str(msg.dlc) + ' '
+    log += ' '.join(f'{byte:02X}' for byte in msg.data)
+    log += '\n'
+
+    # log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
+
+    return log
+
+
+
+file_name = 'can_log/can_log_'  # + Counter I
 file_type = '.log'
 
 # init dataset
@@ -31,25 +52,31 @@ data = {'i': 0}
 
 # loads setting from file
 store = Storage('can_logger_storage.sav', data)
-
 i = store.data['i']
-
 store.data['i'] += 1
 store.write()
 
 file = file_name + str(i) + file_type
 
+# create folder to file
 os.makedirs(os.path.dirname(file), exist_ok=True)
 
 print('log to: ' + file)
 
+# init can
 os.system('sudo ip link set can0 type can bitrate 50000')
 os.system('sudo ifconfig can0 down')
 os.system('sudo ifconfig can0 txqueuelen 65536')
 os.system('sudo ifconfig can0 up')
 
-# Erstelle eine Bus-Instanz
-bus1 = can.interface.Bus(channel='can0', interface='socketcan', bitrate=500000)
+os.system('sudo ip link set can1 type can bitrate 50000')
+os.system('sudo ifconfig can1 down')
+os.system('sudo ifconfig can1 txqueuelen 65536')
+os.system('sudo ifconfig can1 up')
+
+# connect to can
+bus0 = can.interface.Bus(channel='can0', interface='socketcan', bitrate=500000)
+bus1 = can.interface.Bus(channel='can1', interface='socketcan', bitrate=500000)
 
 i = 0
 
@@ -74,36 +101,19 @@ with open(file, 'w') as log_file:
 
     # loooooooooooooooooooooooooooop
     while True:
-        # Empfange Nachrichten und speichere sie in der Datei
-        msg = bus1.recv(5)
+        # can receive and write to file
+        msg = bus0.recv(0.001)
         if msg:
+            log_file.write(log_string(msg))
 
-            # example string
-            # 17:28:32:1469 Rx 1 0x308 s 8 80 02 A5 00 00 78 A7 38
-            log = time_str(time.time())
-            log += ' Rx'
-            log += ' ' + msg.channel
-            log += ' 0x'  + str(msg.arbitration_id)
-            if msg.is_remote_frame:
-                log += ' x '
-            else:
-                log += ' s '
-            log += str(msg.dlc) + ' '
-            log += ' '.join(f'{byte:02X}' for byte in msg.data)
-            log += '\n'
-
-            log_file.write(log)
-            #log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
-
-            print(log)
-           
-            log = ''
+            i += 1
+        
+        msg = bus1.recv(0.001)
+        if msg:
+            log_file.write(log_string(msg))
 
             i += 1
 
-            if i % 1000 == 0:
-                #i = 0
-                print(str(i) + ' Msgs recorded')
-        
-        else:
-            print('.') 
+        if i > 1000:
+            print('' + str(i) + ' Msgs recorded')
+            i = 0

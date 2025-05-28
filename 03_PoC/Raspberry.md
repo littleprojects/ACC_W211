@@ -93,3 +93,40 @@ activate it
 
 work with python as normal
 > pip install can cantools asammdf
+
+## Autostart
+
+Create a service file
+>sudo nano /lib/systemd/system/sample.service
+
+with content
+>[Unit]
+>Description=Autostart Service
+>After=multi-user.target
+>
+>[Service]
+>Type=idle
+>ExecStart=/home/pi/autostart.sh
+>
+>[Install]
+>WantedBy=multi-user.target
+
+Create an Autosart scrip
+>nano /home/pi/autostart.sh
+
+with the content
+>#!/bin/bash
+>
+>echo "yo working"
+>
+>cd /home/pi
+>
+>source can/bin/activate
+>
+>cd /home/pi/ACC_W211/03_PoC
+>
+>python3 can_logger.py
+
+
+
+
