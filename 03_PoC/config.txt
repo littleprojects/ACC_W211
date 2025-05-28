@@ -51,7 +51,7 @@ mdf_log = True
 acc_kp = 2
 
 # I Integral Factor Nm/sec
-acc_ki = 15
+acc_ki = 10
 
 # D Derivative Factor
 #acc_kd = 0.3
@@ -84,7 +84,7 @@ comment = Test
 stats_update_time = 5
 
 # for local testing with simulated CAN
-can_0_app_name = vCAN
+#can_0_app_name = vCAN
 
 # disables sending CAN MSGS
 # default is True

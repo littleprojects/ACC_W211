@@ -25,6 +25,7 @@ from enum import Enum
 from lib import utils
 
 from lib.Pid import PID
+#from lib.Storage import Storage
 
 
 # ART Statemachine states class
@@ -37,12 +38,11 @@ class ArtState(Enum):
 
 class ArtObj:
     def __init__(self):
-
         # ART init values
-        self.ready = False          # is not ready
-        self.state = ArtState.ACC   # statemachine
+        self.ready = False  # is not ready
+        self.state = ArtState.ACC  # statemachine
         self.last_state = ArtState.ACC
-        self.dspl_trigger_ts = 0    # timestamp of display trigger
+        self.dspl_trigger_ts = 0  # timestamp of display trigger
 
 
 class Art:
@@ -124,15 +124,15 @@ class Art:
 
         # dict to remember the button states
         self.button_states = {
-            'SFB': 0,               # Braking
-            'WH_UP': 0,             # lever NOT ok
-            'AUS': 0,               # lever OFF
-            'WA': 0,                # lever ON/RESUME/+1
-            'S_PLUS_B': 0,          # lever UP +10
-            'S_MINUS_B': 0,         # lever DOWN -10
-            'ART_ABW_BET': 0,       # Button Warning ON/OFF
-            'CRASH': 0,             # Crash detection
-            'VMAX_AKT': 0,          # Limiter
+            'SFB': 0,  # Braking
+            'WH_UP': 0,  # lever NOT ok
+            'AUS': 0,  # lever OFF
+            'WA': 0,  # lever ON/RESUME/+1
+            'S_PLUS_B': 0,  # lever UP +10
+            'S_MINUS_B': 0,  # lever DOWN -10
+            'ART_ABW_BET': 0,  # Button Warning ON/OFF
+            'CRASH': 0,  # Crash detection
+            'VMAX_AKT': 0,  # Limiter
         }
 
         self.ready_error = 0
@@ -140,14 +140,14 @@ class Art:
         self.speed_mps = 0  # [m/s]
         self.long_acceleration = 0
         self.lat_acceleration = 0
-        self.corner_radius = 0       # 0 = absolute straight
+        self.corner_radius = 0  # 0 = absolute straight
 
         self.info_light_duration = 0
         self.warn_beep_duration = 0
 
         # delta timestamp
         self.last_ts = utils.ts_ms()
-        self.dt_ms = 100    # 10 Hz
+        self.dt_ms = 100  # 10 Hz
 
         # last data
         self.last_speed = 0
@@ -217,10 +217,14 @@ class Art:
                     self.art.state = ArtState.LIM
 
                 # LIMITER deactivation
-                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1):  # FALLING_EDGE
-                    self.log.info('Limiter Mode OFF')
-                    self.lim_deactivation()
-                    self.art.state = ArtState.ACC
+                # if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1):  # FALLING_EDGE -> ??? don't work ->
+                # work around
+                if 'VMAX_AKT' in new_msgs:
+                    if (self.art.state == ArtState.LIM or self.art.state == ArtState.LIM_active) \
+                            and new_msgs['VMAX_AKT'] == 0:
+                        self.log.info('Limiter Mode OFF')
+                        self.lim_deactivation()
+                        self.art.state = ArtState.ACC
 
         # update speed only if an update is available
         # for acceleration calc
@@ -436,7 +440,7 @@ class Art:
 
             #  set speed to next tens +10
             speed = self.art_msg['V_ART'] + 1
-            self.art_msg['V_ART'] = math.ceil(speed/10)*10
+            self.art_msg['V_ART'] = math.ceil(speed / 10) * 10
 
             # upper limit
             if self.art_msg['V_ART'] > self.config.acc_max_speed:
@@ -474,7 +478,7 @@ class Art:
         if self.art.state == ArtState.ACC_active:
             #  flor speed to lower tens -10
             speed = self.art_msg['V_ART'] - 1
-            self.art_msg['V_ART'] = math.floor(speed/10)*10
+            self.art_msg['V_ART'] = math.floor(speed / 10) * 10
 
             # lower limit
             if self.art_msg['V_ART'] < self.config.acc_min_speed:
@@ -545,7 +549,7 @@ class Art:
 
         # Radius R = speed in m/s * angular velocity (rad/s) = v * ψ
         # Todo is it in RAD or DEG???
-        r = self.speed_mps * current_rotation * 0.0174533   # = math.pi/180 for Deg to RAD
+        r = self.speed_mps * current_rotation * 0.0174533  # = math.pi/180 for Deg to RAD
 
         if r > 0:
             # a_lat = speed^2 / radius
@@ -736,13 +740,13 @@ class Art:
             if self.art.state == ArtState.ACC_active:
 
                 # DO YOUR MAGIC PID-CONTROLLER
-                torque_request = self.pid.pid_calc(signal['V_ANZ'],             # current_speed
-                                                   self.long_acceleration,      # current acceleration (long)
-                                                   self.art_msg['V_ZIEL'],      # set_speed
+                torque_request = self.pid.pid_calc(signal['V_ANZ'],  # current_speed
+                                                   self.long_acceleration,  # current acceleration (long)
+                                                   self.art_msg['V_ZIEL'],  # set_speed
                                                    self.art_msg['ART_UEBERSP'],  # overwrite
-                                                   signal['M_FV'],              # driver moment
-                                                   signal['M_MIN'],             # min moment
-                                                   signal['M_MAX']              # max moment
+                                                   signal['M_FV'],  # driver moment
+                                                   signal['M_MIN'],  # min moment
+                                                   signal['M_MAX']  # max moment
                                                    )
 
                 # min M_ART is 160 Nm todo: as config value
@@ -777,7 +781,7 @@ class Art:
                 # todo clean up
                 if (signal['M_FV'] - self.config.acc_pause_nm_delta) > self.art_msg['M_ART'] \
                         and (signal['M_FV'] - self.config.acc_pause_nm_delta) > signal['M_MIN'] \
-                        and self.art_msg['M_ART'] > 0\
+                        and self.art_msg['M_ART'] > 0 \
                         and self.art_msg['ART_UEBERSP'] == 0:
                     # and self.art_msg['ART_REG'] == 1:
                     # self.config.acc_pause_nm_delta
@@ -787,7 +791,8 @@ class Art:
                     # if was not overwritten before
                     if self.art_msg['ART_UEBERSP'] == 0:
                         # make a note
-                        self.log.info(f"OVERWRITE active by driver: M_FV {signal['M_FV']} - {self.config.acc_pause_nm_delta} > { self.art_msg['M_ART']}")
+                        self.log.info(
+                            f"OVERWRITE active by driver: M_FV {signal['M_FV']} - {self.config.acc_pause_nm_delta} > {self.art_msg['M_ART']}")
 
                     # show on display all the time
                     self.acc_set_dspl_trigger()
@@ -813,14 +818,15 @@ class Art:
 
                 # no overwrite active
                 # else:
-                if (signal['M_FV'] + self.config.acc_pause_nm_delta) < self.art_msg['M_ART']\
+                if (signal['M_FV'] + self.config.acc_pause_nm_delta) < self.art_msg['M_ART'] \
                         and self.art_msg['ART_UEBERSP'] == 1:
-                        #or signal['M_FV'] < 170:
+                    # or signal['M_FV'] < 170:
 
                     # if it was overwriten before
                     if self.art_msg['ART_UEBERSP'] == 1:
                         # self.acc_set_dspl_trigger()
-                        self.log.info(f"Overwrite off: {signal['M_FV']} + {self.config.acc_pause_nm_delta} < {self.art_msg['M_ART']}")
+                        self.log.info(
+                            f"Overwrite off: {signal['M_FV']} + {self.config.acc_pause_nm_delta} < {self.art_msg['M_ART']}")
 
                     # it's not overwriten now
                     self.art_msg['ART_UEBERSP'] = 0
@@ -959,7 +965,6 @@ class Art:
         self.art_msg['TM_EIN_ART'] = 0
         self.art_msg['ART_EIN'] = 0
 
-
         # set default values - will be overwritten if everything is correct
         self.art_msg['VMAX_AKT'] = 0
         self.art_msg['LIM_REG'] = 0
@@ -1023,7 +1028,7 @@ class Art:
                 if signal['V_ANZ'] > self.art_msg['V_ZIEL']:
                     # reduce moment
                     if self.lim_max_moment > 0:
-                        self.lim_max_moment += speed_delta
+                        self.lim_max_moment += speed_delta/3
                         # self.lim_max_moment -= 5
 
                 # signal['M_FV']
@@ -1033,10 +1038,10 @@ class Art:
                     self.art_msg['M_ART'] = signal['M_FV']
                 else:
                     # at the limit but too slow and acceleration is low
-                    if signal['V_ANZ']+2 < self.art_msg['V_ZIEL']\
+                    if signal['V_ANZ'] + 2 < self.art_msg['V_ZIEL'] \
                             and self.long_acceleration < 1:
                         # increase moment if speed is too low
-                        self.lim_max_moment += speed_delta
+                        self.lim_max_moment += speed_delta/2
                         # self.lim_max_moment += 5
 
                     # limit to max
@@ -1055,6 +1060,9 @@ class Art:
                 if self.art_msg['M_ART'] < 150:
                     self.log.error(f"LIM - M_ART low ({self.art_msg['M_ART']}) - call deactivation")
                     self.lim_deactivation()
+
+                # remove too many digits
+                self.art_msg['M_ART'] = round(self.art_msg['M_ART'], 2)
 
     def lim_deactivation(self):
 

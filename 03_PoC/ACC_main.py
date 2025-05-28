@@ -17,7 +17,7 @@ Todo:
 - local storage file for persisteance settings (Warning On/Off)
 - Limiter Controller
 
-pip install can cantools asammdf
+pip3 install can cantools asammdf
 """
 
 import time
@@ -154,7 +154,7 @@ if config.comment is not None:
 # Todo write config
 
 # MDF
-mdf = Mdf(config.mdf_log_file, log, logging=config.mdf_log)
+mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
 
 # init CAN Queues and Flags/Events
 q_can_c_in = Queue()
