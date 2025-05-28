@@ -12,7 +12,7 @@ import can
 import time
 import datetime
 
-from lib import Storage
+from lib.Storage import Storage
 
 
 def date_time_str(ts=time.time()):
@@ -20,7 +20,7 @@ def date_time_str(ts=time.time()):
 
 
 def time_str(ts=time.time()):
-    return str(datetime.datetime.fromtimestamp(ts).strftime('%H-%M-%S.%f')[:-4])
+    return str(datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S:%f')[:-2])
 
 
 file_name = 'log/can_log_'
@@ -39,9 +39,13 @@ store.write()
 
 file = file_name + str(i) + file_type
 
+os.makedirs(os.path.dirname(file), exist_ok=True)
+
 print('log to: ' + file)
 
 os.system('sudo ip link set can0 type can bitrate 50000')
+os.system('sudo ifconfig can0 down')
+os.system('sudo ifconfig can0 txqueuelen 65536')
 os.system('sudo ifconfig can0 up')
 
 # Erstelle eine Bus-Instanz
@@ -71,27 +75,35 @@ with open(file, 'w') as log_file:
     # loooooooooooooooooooooooooooop
     while True:
         # Empfange Nachrichten und speichere sie in der Datei
-        msg = bus1.recv()
+        msg = bus1.recv(5)
         if msg:
 
             # example string
             # 17:28:32:1469 Rx 1 0x308 s 8 80 02 A5 00 00 78 A7 38
-            log = time_str()
-            log += ' RX'
+            log = time_str(time.time())
+            log += ' Rx'
             log += ' ' + msg.channel
-            log += msg.arbitration_id
+            log += ' 0x'  + str(msg.arbitration_id)
             if msg.is_remote_frame:
                 log += ' x '
             else:
                 log += ' s '
-            log += msg.dlc + ' '
+            log += str(msg.dlc) + ' '
             log += ' '.join(f'{byte:02X}' for byte in msg.data)
+            log += '\n'
 
             log_file.write(log)
             #log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
+
+            print(log)
+           
+            log = ''
 
             i += 1
 
             if i % 1000 == 0:
                 #i = 0
                 print(str(i) + ' Msgs recorded')
+        
+        else:
+            print('.') 
