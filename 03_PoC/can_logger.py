@@ -3,6 +3,7 @@ Simple scripte to log CAN messages in a file to replay
 it at any time with the can_replay.py script
 
 BusMaster Layout
+***<Time><Tx/Rx><Channel><CAN ID><Type><DLC><DataBytes>***
 17:28:32:1449 Rx 1 0x212 s 8 02 A8 27 06 27 06 A7 06
 """
 
@@ -10,6 +11,8 @@ import os
 import can
 import time
 import datetime
+
+from lib import Storage
 
 
 def date_time_str(ts=time.time()):
@@ -23,16 +26,26 @@ def time_str(ts=time.time()):
 file_name = 'log/can_log_'
 file_type = '.log'
 
-i = 0
-while os.path.exists(file_name + str(i) + file_type):
-    i += 1
+# init dataset
+data = {'i': 0}
+
+# loads setting from file
+store = Storage('can_logger_storage.sav', data)
+
+i = store.data['i']
+
+store.data['i'] += 1
+store.write()
 
 file = file_name + str(i) + file_type
 
 print('log to: ' + file)
 
+os.system('sudo ip link set can0 type can bitrate 50000')
+os.system('sudo ifconfig can0 up')
+
 # Erstelle eine Bus-Instanz
-bus1 = can.interface.Bus(channel='0', interface='socketcan', bitrate=500000)
+bus1 = can.interface.Bus(channel='can0', interface='socketcan', bitrate=500000)
 
 i = 0
 

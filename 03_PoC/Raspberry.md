@@ -43,10 +43,16 @@ config
 > dtoverlay=mcp2515,spi1-2,oscillator=16000000,interrupt=13
 save and exit
 
-> reboots
+reboot to activate
+> sudo reboot
 
 check with
 > dmesg | grep spi
+
+should report:
+> mcp251x spi1.2 can0: MCP2515 successfully initialized.
+> mcp251x spi1.1 can1: MCP2515 successfully initialized.
+Look good - go ahead
 
 start CAN
 > sudo ip link set can0 up type can bitrate 500000
@@ -57,14 +63,30 @@ start CAN
 check with
 > ifconfig
 
+
 stop can
 > sudo ifconfig can0 down
 > sudo ifconfig can1 down
 
+## Testing
+
+connect CAN0 and CAN1 with to wires.
+From H->H and L->L
+
+be sure the 120R termination is set on both CANs
+
+Termina1: Test receive on CAN 0
+> candump can0
+
+Terminal2: Test send on CAN 1
+> cansend can1 000#11.22.33.44
+
 ## Python
 
-create a vitural enviroment on pi
-> python -m venv can
+//> sudo apt install python3-pip
+
+create a virtual environment on pi
+> python3 -m venv can
 
 activate it 
 > source can/bin/activate
