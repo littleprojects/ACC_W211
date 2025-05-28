@@ -9,7 +9,7 @@ class Mdf:
     Creates MDF files to Log CAN Data
     """
 
-    def __init__(self, file_name, log, dbc=None, save_interval=0, logging=True):
+    def __init__(self, file_name, log, dbc=None, save_interval=0, recording=True):
 
         self.log = log
 
@@ -18,7 +18,7 @@ class Mdf:
         # autosave interval over msg count (by time would be better)
         self.save_interval = save_interval
 
-        self.logging = logging
+        self.recording = recording
 
         # start time of msg timestamp calc (ts_msg - ts_start)
         self.ts_start = time.time()
@@ -30,7 +30,7 @@ class Mdf:
 
         self.i = 0
 
-        if logging:
+        if recording:
             self.log.info(f'MDF log to file: {file_name}')
         else:
             self.log.info('MDF logging is deactivated')
@@ -91,7 +91,7 @@ class Mdf:
 
 
         # add data only if logging is activ
-        if self.logging:
+        if self.recording:
             self.data[name]['data'].append(data)
             self.data[name]['ts'].append(ts)
 
@@ -121,14 +121,21 @@ class Mdf:
     def write_mdf(self):
 
         # skip if logging is off
-        if not self.logging:
+        if not self.recording:
+            # clean up dict
+            self.data = {'signal': {'data': [], 'ts': [], 'unit': '', 'comment': ''}}
             return False
+
+        # todo: -> do in a thread. so it would not block the main thread
 
         # create new MDF
         mdf = MDF(version='4.10')
 
-        self.log.debug(self.data)
+        # self.log.debug(self.data)
 
+        self.log.info('MDF: Write File: ' + self.file_name)
+
+        # pack data together
         for name in self.data:
 
             len_data = len(self.data[name]['data'])
@@ -145,9 +152,10 @@ class Mdf:
                 data,
                 timestamps=ts,
                 name=name,
-                #unit=self.data[name]['unit'],
-                #comment=self.data[name]['comment'],
-                # conversion = None,
+                unit=self.data[name]['unit'],
+                comment=self.data[name]['comment'],
+                # conversion= None,
+                #channel_index=
             )
 
             unit = self.data[name]['unit']
@@ -163,12 +171,7 @@ class Mdf:
 
             mdf.append([sig])
 
-        #self.log.info(str(len(sigs)))
-        #self.log.info(str(len(self.data)) + ' ' + str(len(self.data['CAN_0_V_ART']['data'])))
-        #self.log.info(str(len(self.data)) + ' ' + str(self.data['CAN_0_V_ART']['data']))
-        #self.log.info(str(len(self.data)) + ' ' + str(self.data['CAN_0_V_ART']['ts']))
-
-        self.log.info('MDF: Write File: ' + self.file_name)
+        # write file
         try:
             mdf.save(self.file_name, overwrite=True, compression=True)
         except Exception as e:
