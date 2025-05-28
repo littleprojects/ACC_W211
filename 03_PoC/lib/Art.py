@@ -25,7 +25,7 @@ from enum import Enum
 from lib import utils
 
 from lib.Pid import PID
-#from lib.Storage import Storage
+from lib.Storage import Storage
 
 
 # ART Statemachine states class
@@ -116,6 +116,15 @@ class Art:
             'signals': {},  # signals as dict
         }
 
+        # storage for persistent data
+        self.persistent_data = {
+            'warning_state': 0,
+        }
+
+        self.Store = Storage(self.config.persistent_storage_file, self.persistent_data, self.log)
+        # restore last warning state
+        self.art_msg['ART_ABW_AKT'] = self.Store.data['warning_state']
+
         # init ART States
         self.art = ArtObj()
 
@@ -163,6 +172,7 @@ class Art:
 
         self.lim_max_moment = 0
 
+
         self.log.info('INIT ACC - NOT READY')
 
     # todo LIM
@@ -181,6 +191,8 @@ class Art:
             # Warning ON/OFF toggle button
             if self.is_btn_pressed(new_msgs, 'ART_ABW_BET'):
                 self.art_warning_button()
+                # save persistent the new state
+                self.Store.write()
 
             # CRASH detected
             if self.is_btn_pressed(new_msgs, 'CRASH'):

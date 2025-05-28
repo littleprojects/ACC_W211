@@ -38,7 +38,9 @@ class Storage:
         # read data from file
         with open(self.path_to_file, 'r') as file:
             # parse from JSON
-            self.data = json.load(file)
+            loaded_data = json.load(file)
+            # merge loaded data into dataset -> new data will added smooth
+            self.data.update(loaded_data)
 
         return self.data
 

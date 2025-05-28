@@ -47,6 +47,7 @@ default_config = {
     'loglevel': 'INFO',  # debug
     'stats_update_time': 10,  # [sec] log stats updates - disable with 0
     'config_file': 'config.txt',
+    'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
 
     # CAN settings
     'can_0_interface': 'vector',
