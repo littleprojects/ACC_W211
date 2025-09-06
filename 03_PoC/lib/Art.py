@@ -339,10 +339,10 @@ class Art:
         # if ART warning button pressed toggle warning status
         if self.art_msg['ART_ABW_AKT'] == 0:
             self.art_msg['ART_ABW_AKT'] = 1
-            self.log.debug('Activate warnings')
+            self.log.info('Activate warnings')
         else:
             self.art_msg['ART_ABW_AKT'] = 0
-            self.log.debug('Deactivate warnings')
+            self.log.info('Deactivate warnings')
 
     def art_braking(self):
 
@@ -671,6 +671,18 @@ class Art:
         self.art_msg['LIM_REG'] = 0
         self.art_msg['VMAX_AKT'] = 0
 
+        self.art_msg['GMIN_ART'] = 0  # minimum gear
+        self.art_msg['GMAX_ART'] = 0  # maximum gear
+        self.art_msg['AKT_R_ART'] = 0  # shift down request from art
+
+        # additional signals
+        # signal['M_FV'],  # driver moment
+        # signal['M_MIN'],  # min moment
+        # signal['M_MAX'],  # max moment
+        # signal['GIC'],   # current gear
+        # signal['M_VERL'],  # loss torque
+        # signal['FMRAD'] # factor wheel torque
+
         # is ready
         if self.art.ready:
 
@@ -752,6 +764,7 @@ class Art:
             if self.art.state == ArtState.ACC_active:
 
                 # DO YOUR MAGIC PID-CONTROLLER
+
                 torque_request = self.pid.pid_calc(signal['V_ANZ'],  # current_speed
                                                    self.long_acceleration,  # current acceleration (long)
                                                    self.art_msg['V_ZIEL'],  # set_speed
@@ -760,6 +773,19 @@ class Art:
                                                    signal['M_MIN'],  # min moment
                                                    signal['M_MAX']  # max moment
                                                    )
+                """
+                torque_request = self.pid.pid_calc2(signal['V_ANZ'],  # current_speed
+                                                   self.long_acceleration,  # current acceleration (long)
+                                                   self.art_msg['V_ZIEL'],  # set_speed
+                                                   self.art_msg['ART_UEBERSP'],  # overwrite
+                                                   signal['M_FV'],  # driver moment
+                                                   signal['M_MIN'],  # min moment
+                                                   signal['M_MAX'],  # max moment
+                                                   # additional signals
+                                                   signal['GIC'],   # current gear
+                                                   signal['M_VERL']  # loss torque
+                                                   )
+                """
 
                 # min M_ART is 160 Nm todo: as config value
                 M_ART_min_torque = 160
@@ -858,13 +884,15 @@ class Art:
                     if MBRE_ART <= 15:
                         self.art_msg['BL_UNT'] = 1
 
+                # GEAR selection
+                self.art_msg['GMIN_ART'] = self.acc_gear_min(signal['V_ANZ'], signal['GIC'], self.art_msg['M_ART'])
+                self.art_msg['GMAX_ART'] = self.acc_gear_max(signal['V_ANZ'], signal['GIC'], self.art_msg['M_ART'])
+
                 # Todo
                 # ART channels
                 # MPAR_ART - parity bit at changes - is always 0 ???
 
-                # GMIN_ART
-                # GMAX_ART
-                # SLV_ART
+                # SLV_ART - gearshift variation for ART TODO check
                 # AKT_R_ART - active downshift request
                 # DYN_UNT
 
@@ -1035,6 +1063,10 @@ class Art:
                 speed_delta = self.art_msg['V_ZIEL'] - signal['V_ANZ']
                 # too fast: 60-75 = -15
                 # too slow: 60-45 = 15
+
+                # PID Regler mit Vorhaltezeit TV
+                # hoher D anteil
+                # I Anteil limitieren? 15 kmh vorher und acc abhängig
 
                 # overspeed reduction
                 if signal['V_ANZ'] > self.art_msg['V_ZIEL']:
@@ -1240,6 +1272,31 @@ class Art:
                 self.art_msg['ART_VFBR'] = 1
                 # clear trigger
                 self.art.dspl_trigger_ts = 0
+
+    def acc_gear_max(self, current_speed, current_gear, current_moment):
+
+        # todo: a better speed and moment gear map
+
+        max_gear = 0
+
+        if current_moment > 160:
+            max_gear = current_gear + 1
+
+        return max_gear
+
+    def acc_gear_min(self, current_speed, current_gear, current_moment):
+
+        # todo: a better speed and moment gear map
+
+        min_gear = 0
+
+        if current_moment > 160:
+            min_gear = current_gear -1
+
+            # min gear is 2
+            min_gear = max(min_gear, 2)
+
+        return min_gear
 
     # 10 hz tricked tick for calc update
     def tick_10hz(self):
