@@ -206,9 +206,12 @@ class CanHandler:
             # ACC
             if art_stats['state'] == ArtState.ACC_active:
                 # status log output
-                #f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
+                #out +=f"\tV_ANZ/ART/Ziel: {round(self.vehicle_msg['signals']['V_ANZ'], 1)}/{art_stats['V_ART']}/{art_stats['V_ZIEL']} "
+                out += f"\tG_min/is/max: {art_stats['art_GMIN']}/{self.vehicle_msg['signals']['GIC']}/{art_stats['art_GMAX']}"
                 out += f"\tM_FV/M_ART/MBRE_ART: {round(self.vehicle_msg['signals']['M_FV'], 1)}/{art_stats['M_ART']}/{art_stats['MBRE_ART']} "
                 out += f"\tP,I,D: {art_stats['pid_p']}, {art_stats['pid_i']}, {art_stats['pid_d']} ({art_stats['pid_lc']}) "
+                out += f"M_ART: {art_stats['M_ART']}"
+
 
             # LIMITER
             if art_stats['state'] == ArtState.LIM_active:
@@ -217,6 +220,6 @@ class CanHandler:
         else:
             # status log output
             out = f"Not Ready reason: {art_stats['ready_error']} \t{art_stats['state']} "
-            out += f"\tCAN_0: {self.stats['in']}/{self.stats['out']} "
+            out += f"\tCAN_0: Rx {self.stats['in']}, Tx {self.stats['out']} "
 
         self.log.info(out)
