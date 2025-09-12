@@ -36,13 +36,13 @@ from lib.Logger import Logger
 from lib.Can_handler import CanHandler
 
 # module name for LOGGING and CONFIG
-module_name = 'BASIC_MSG_SEND'
+module_name = 'PoC'
 # just the Version of this script, to display and log; update this at major changes
-module_version = '0.0.1'
+module_version = '0.0.2'
 
 # default module settings - all config values needs a default value
 default_config = {
-    'version': '0.0.1',  # version
+    'version': '0.0.2',  # version
     'comment': None,
     'loglevel': 'INFO',  # debug
     'stats_update_time': 10,  # [sec] log stats updates - disable with 0
