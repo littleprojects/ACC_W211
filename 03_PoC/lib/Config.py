@@ -112,7 +112,7 @@ class Config:
         else:
             # no section found - return empty dict
             self.log.warning(
-                'Config section NOT found: config file: ' + file + '; Module: ' + self.module_name + '; config group MISSING: [' + section + ']; use default settings')
+                'Config section NOT found: config file: ' + file + '; Module: ' + self.name + '; config group MISSING: [' + section + ']; use default settings')
             return dict()
     
 
