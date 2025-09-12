@@ -3,7 +3,7 @@
 #loglevel = debug
 
 
-[BASIC_MSG_SEND]
+[PoC]
 
 # -----------------------------------------------------------------------
 # ACC Settings
@@ -84,12 +84,12 @@ comment = Test
 stats_update_time = 5
 
 # for local testing with simulated CAN
-#can_0_app_name = vCAN
+can_0_app_name = vCAN
 
 # disables sending CAN MSGS
 # default is True
 #can_0_send = False
 
 # enable/disable functions
-#art_reg_enabled = 1
-#art_bre_enabled = 1
+art_reg_enabled = 1
+art_bre_enabled = 0
