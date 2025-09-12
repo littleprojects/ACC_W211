@@ -248,6 +248,133 @@ class PID:
 
         return output
 
+
+    # try a new acc controller with loss torque and only acceleration
+    def pid_calc2(self,
+                 current_speed,
+                 acc_long,
+                 set_speed,
+                 overwrite,
+                 m_fv,
+                 m_min,
+                 m_max,
+                 m_verl
+                 ):
+
+        # PID parameter TODO: read from config
+        # todo add a speed factor to kP to have a higher kP at higher Speeds
+        self.kp = 3
+        self.ki = 0
+        self.kd = 0
+
+        # set current settings
+        self.set_speed = set_speed
+        self.m_max = m_max
+        self.m_min = m_min
+
+        current_speed = round(current_speed, 1)
+
+        self.acceleration = acc_long
+
+        # error code
+        self.limitation = 0
+
+        # remember old data
+        integral = self.integral
+        old_integral = self.integral
+
+        # P - SPEED ERROR
+        error = self.set_speed - current_speed
+
+        # Anti wind up
+        # Error Limiter TODO: read parameters from config
+        # 20kph difference * kp = 40Nm
+        if self.config.pid_error_limit:
+            # max limit
+            if error > 20:
+                error = 20
+                self.limitation = 7
+            # min limit
+            if error < -20:
+                error = -20
+                self.limitation = 8
+
+        # I - INTEGRAL
+        integral += error * self.ki
+
+        # D - DERIVATIVE
+        # derivative = round(((self.old_error - error) / dt_s), 2)
+        derivative = round(((error - self.old_error)), 2)
+
+        # Integral limiter to m_max
+        if integral > self.m_max:       # (integral * self.I)
+            self.set_integral(self.m_max)
+
+        # Integral limit to m_min
+        if -integral > self.config.max_dec_moment:
+            self.set_integral(-self.config.max_dec_moment)
+
+        # PID CALC + loss torque + 160Nm basic
+        output = (self.kp * error) + integral + (self.kd * derivative) + m_verl + 160
+        # I-factor is added to integral already ( integral += error * dt_s * self.I)
+        # to have an realistic integral value
+
+        # OVERWRITE
+        # freeze integral if overwrite is active (clamping)
+        if overwrite:
+            self.limitation = 10
+
+            output = 0
+
+            # freez integral
+            integral = old_integral
+            """
+            # follow only on rising torque
+            if m_fv > self.old_m_fv:
+                # integrate driver moment request for better adaptation
+                # integral = m_fv
+                # integral = driver moment
+
+                self.set_integral(m_fv)
+                self.limitation = 11
+            """
+
+        # speed is too high
+        if error < -5:
+            # reset integral
+            integral = 0
+
+            # set torque to min
+            output = 160
+
+        # Output MIN MAX limit
+        # M_MAX limitation
+        if self.m_max > 0:
+            output = min(self.m_max, output)
+            integral = min(self.m_max, integral)
+
+        # ANTI WIND UP INTEGRAL
+        # max limitation
+        integral = min(integral, 50)
+        # min limitation
+        integral = max(integral, -50)
+
+        # M_MIN limitation -> output >= 0
+        output = max(output, 0)
+
+        # remember values
+        self.old_speed = current_speed
+        self.old_output = output
+        self.old_m_fv = m_fv
+        self.old_error = error
+        self.integral = round(integral, 1)  # reduce digits
+        self.derivative = derivative
+
+        # reduce digits
+        output = round(output, 2)
+
+        return output
+
 """
 if __name__ == "__main__":
     class Config:
