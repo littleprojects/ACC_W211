@@ -142,7 +142,7 @@ ART_ABSTAND
 
 min distance 3.5m
 
-factor_var = ART_ABSTAND / 100 # turn 200->-2; 100->-1; 0->0
+factor_var = ART_ABSTAND / -100 # turn 200->-2; 100->-1; 0->0
 SOLL_ABSTAND [m] = round(Speed * (0,475 - factor_var * 0,2476 ) + 3.5) 
 
 Or a 3D Look Up Table
