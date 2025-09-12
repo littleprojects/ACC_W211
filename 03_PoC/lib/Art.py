@@ -26,6 +26,7 @@ from lib import utils
 
 from lib.Pid import PID
 from lib.Storage import Storage
+#from lib.Debug_display import Viewer
 
 
 # ART Statemachine states class
@@ -144,6 +145,8 @@ class Art:
             'VMAX_AKT': 0,  # Limiter
         }
 
+        self.dist_factor = 100
+
         self.ready_error = 0
 
         self.speed_mps = 0  # [m/s]
@@ -172,6 +175,9 @@ class Art:
 
         self.lim_max_moment = 0
 
+        # Debug viewer (Matplot)
+        #self.view = Viewer()
+        #self.view.run()
 
         self.log.info('INIT ACC - NOT READY')
 
@@ -256,6 +262,7 @@ class Art:
 
         # do the basic ready check
         # self.is_ready()
+        # self.view.run()
         # is done at the 1o Hz tick to reduce load
 
     # todo Mode holding
@@ -366,12 +373,12 @@ class Art:
         # ACC off
         if self.art.state == ArtState.ACC_active:
             # display trigger
-            self.acc_set_dspl_trigger()
+            #self.acc_set_dspl_trigger()
             self.acc_deactivation()
 
         # Limiter off
         if self.art.state == ArtState.LIM_active:
-            self.acc_set_dspl_trigger()
+            #self.acc_set_dspl_trigger()
             self.lim_deactivation()
 
     # lever_resume pressed
@@ -722,6 +729,7 @@ class Art:
                     # acc off
                     self.acc_deactivation(beep=True)
 
+                """
                 # OFF by too much acceleration
                 if self.long_acceleration >= self.config.acc_off_acc:
                     self.log.warning('Too much acceleration - deactivation - long_acc >= acc_off_acc ' +
@@ -745,6 +753,7 @@ class Art:
                     # acc off
                     # Todo - check and enable
                     # self.acc_deactivation()
+                """
 
                 """ Todo - lat acceleration calc is wrong
                 # OFF by too fast cornering
@@ -764,7 +773,7 @@ class Art:
             if self.art.state == ArtState.ACC_active:
 
                 # DO YOUR MAGIC PID-CONTROLLER
-
+                """
                 torque_request = self.pid.pid_calc(signal['V_ANZ'],  # current_speed
                                                    self.long_acceleration,  # current acceleration (long)
                                                    self.art_msg['V_ZIEL'],  # set_speed
@@ -782,20 +791,19 @@ class Art:
                                                    signal['M_MIN'],  # min moment
                                                    signal['M_MAX'],  # max moment
                                                    # additional signals
-                                                   signal['GIC'],   # current gear
+                                                   #signal['GIC'],   # current gear
                                                    signal['M_VERL']  # loss torque
                                                    )
-                """
 
                 # min M_ART is 160 Nm todo: as config value
                 M_ART_min_torque = 160
 
-                # min limit M_ART
+                # min limit M_ART is 160Nm
                 M_ART = max(torque_request, M_ART_min_torque)
 
                 # eliminate the toque "dead zone" between 0 to min torque
                 if torque_request < M_ART_min_torque:
-                    torque_request -= M_ART_min_torque
+                    torque_request -= M_ART_min_torque  # -160
 
                 # invert negative torque to BRAKE torque and cap at 0
                 MBRE_ART = max(-torque_request, 0)
@@ -924,6 +932,13 @@ class Art:
         self.art_msg['BL_UNT'] = 0
         self.art_msg['ART_UEBERSP'] = 0
 
+        self.art_msg['LIM_REG'] = 0
+        self.art_msg['VMAX_AKT'] = 0
+
+        self.art_msg['GMIN_ART'] = 0  # minimum gear
+        self.art_msg['GMAX_ART'] = 0  # maximum gear
+        self.art_msg['AKT_R_ART'] = 0  # shift down request from art
+
         # switch to state ACC ready
         # todo: switch state here or in caller function?
         self.art.state = ArtState.ACC
@@ -933,7 +948,7 @@ class Art:
         self.pid.reset()
 
         # display trigger
-        self.acc_set_dspl_trigger()
+        #self.acc_set_dspl_trigger()
 
         if beep:
             self.set_warning(beep=1, duration=self.config.warning_time)
@@ -1199,7 +1214,24 @@ class Art:
     def acc_calc_distance(self):
         # get vehicle speed
 
-        # is signal already in vehcilse data
+        # get the distance from the ajuster
+        if 'ART_ABSTAND' in self.vehicle_msgs['signals']:
+            # read dist_factor from CAN
+            new_dist_factor = self.vehicle_msgs['signals']['ART_ABSTAND']
+
+            # is factor different to the old one
+            if new_dist_factor != self.dist_factor:
+                # show on display
+                self.acc_set_dspl_trigger()
+
+            # safe factor
+            self.dist_factor = new_dist_factor
+
+            # 0 -> wide
+            # 100 -> normal
+            # 200 -> short distance
+
+        # is signal already in vehicle data
         if 'V_ANZ' in self.vehicle_msgs['signals']:
 
             speed = self.vehicle_msgs['signals']['V_ANZ']
@@ -1211,12 +1243,15 @@ class Art:
             # calc distance in [m]
             # todo do the right calc
             # but doesnt matter if no radar is connected
-            dist = speed / 2
+            #dist = speed / 2
 
-            # round up
+            factor_var = self.dist_factor / -100  # turn 200->-2 short; 100->-1 normal; 0->0 wide
+            dist = speed * (0.475 - factor_var * 0.2476) + 3.5
+
+            # round up to meter
             dist = math.ceil(dist)
 
-            # keep a minimum distance of 3 meter
+            # keep a minimum distance of 3 meter Todo min_dist as config parameter
             dist = max(3, dist)
 
             # zero dist at standstill
@@ -1279,7 +1314,8 @@ class Art:
 
         max_gear = 0
 
-        if current_moment > 160:
+        # torque is requested
+        if current_moment > 150:
             max_gear = current_gear + 1
 
         return max_gear
@@ -1290,8 +1326,9 @@ class Art:
 
         min_gear = 0
 
-        if current_moment > 160:
-            min_gear = current_gear -1
+        # torque is requested
+        if current_moment > 150:
+            min_gear = current_gear - 1
 
             # min gear is 2
             min_gear = max(min_gear, 2)
@@ -1356,10 +1393,13 @@ class Art:
         self.signal_log()
 
         # is ACC is not active anymore - set TM_EIN_ART off to trigger ACC OFF on display
-        if self.art.last_state == ArtState.ACC_active and self.art.state != ArtState.ACC_active:
-            self.art_msg['TM_EIN_ART'] = 0
+        # if self.art.last_state == ArtState.ACC_active and self.art.state != ArtState.ACC_active:
+        #    self.art_msg['TM_EIN_ART'] = 0
+        # self.art.last_state = self.art.state
+        # is done is acc_deactivation
 
-        self.art.last_state = self.art.state
+        # Debug Viewer (Matplot)
+        #self.view.run()
 
         return self.art_msg
 
@@ -1550,6 +1590,8 @@ class Art:
             'pid_d': round(self.pid.derivative, 1),
             'pid_lc': self.pid.limitation,  # limitation code
             'lim_max_moment': self.lim_max_moment,
+            'art_GMIN': self.art_msg['GMIN_ART'],
+            'art_GMAX': self.art_msg['GMAX_ART'],
         }
 
     def signal_log(self):
@@ -1569,6 +1611,8 @@ class Art:
         self.mdf.add_signal('art_warn_beep_duration', self.warn_beep_duration, unit='ms')
         self.mdf.add_signal('art_ready_error', self.ready_error)
         self.mdf.add_signal('art_cas_active', self.cas_active)
+        self.mdf.add_signal('art_GMIN', self.art_msg['GMIN_ART'])
+        self.mdf.add_signal('art_GMAX', self.art_msg['GMAX_ART'])
 
         # pid signals
         self.mdf.add_signal('pid_P', self.pid.kp)
