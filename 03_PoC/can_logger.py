@@ -16,7 +16,7 @@ from lib.Storage import Storage
 
 
 def date_time_str(ts=time.time()):
-    return str(datetime.datetime.fromtimestamp(ts).strftime('%d:%m:%Y %H-%M-%S.%f')[:-3])
+    return str(datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%:M%S.%f')[:-3])
 
 
 def time_str(ts=time.time()):
