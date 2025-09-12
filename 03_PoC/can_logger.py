@@ -16,7 +16,11 @@ from lib.Storage import Storage
 
 
 def date_time_str(ts=time.time()):
-    return str(datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%:M%S.%f')[:-3])
+    try:
+        return str(datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%:M%S.%f')[:-3])
+    except:
+        print('DATETIME ERROR')
+        return str('2025-09-05 01:02:03.4')
 
 
 def time_str(ts=time.time()):
@@ -41,7 +45,6 @@ def log_string(msg):
     # log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
 
     return log
-
 
 
 file_name = 'can_log/can_log_'  # + Counter I
@@ -82,9 +85,9 @@ i = 0
 
 # Öffne eine Datei zum Speichern der Nachrichten
 with open(file, 'w') as log_file:
-
     # header
-    log_file.write('''***BUSMASTER Ver 3.2.2***
+    try:
+        log_file.write('''***BUSMASTER Ver 3.2.2***
 ***PROTOCOL CAN***
 ***NOTE: PLEASE DO NOT EDIT THIS DOCUMENT***
 ***[START LOGGING SESSION]***
@@ -98,6 +101,8 @@ with open(file, 'w') as log_file:
 ***END DATABASE FILES***
 ***<Time><Tx/Rx><Channel><CAN ID><Type><DLC><DataBytes>***
 ''')
+    except:
+        print('CANT WRITE HEADER')
 
     # loooooooooooooooooooooooooooop
     while True:
@@ -107,7 +112,7 @@ with open(file, 'w') as log_file:
             log_file.write(log_string(msg))
 
             i += 1
-        
+
         msg = bus1.recv(0.001)
         if msg:
             log_file.write(log_string(msg))
