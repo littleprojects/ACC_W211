@@ -264,7 +264,7 @@ class PID:
         # PID parameter TODO: read from config
         # todo add a speed factor to kP to have a higher kP at higher Speeds
         self.kp = 3
-        self.ki = 0
+        self.ki = 0.15
         self.kd = 0
 
         # set current settings
@@ -274,7 +274,7 @@ class PID:
 
         current_speed = round(current_speed, 1)
 
-        self.acceleration = acc_long
+        # self.acceleration = acc_long
 
         # error code
         self.limitation = 0
@@ -299,12 +299,16 @@ class PID:
                 error = -20
                 self.limitation = 8
 
+        break_factor = 1
+        if error < -5:
+            break_factor = 2
+
         # I - INTEGRAL
-        integral += error * self.ki
+        integral += error * self.ki * break_factor
 
         # D - DERIVATIVE
         # derivative = round(((self.old_error - error) / dt_s), 2)
-        derivative = round(((error - self.old_error)), 2)
+        derivative = round((error - self.old_error), 2)
 
         # Integral limiter to m_max
         if integral > self.m_max:       # (integral * self.I)
@@ -318,6 +322,8 @@ class PID:
         output = (self.kp * error) + integral + (self.kd * derivative) + m_verl + 160
         # I-factor is added to integral already ( integral += error * dt_s * self.I)
         # to have an realistic integral value
+
+        # TODO FMRAD Factor Moment Wheel signal['FMRAD'] ???
 
         # OVERWRITE
         # freeze integral if overwrite is active (clamping)
@@ -340,12 +346,12 @@ class PID:
             """
 
         # speed is too high
-        if error < -5:
+        #if error < -5:
             # reset integral
-            integral = 0
+        #    integral = 0
 
             # set torque to min
-            output = 160
+        #    output = 160
 
         # Output MIN MAX limit
         # M_MAX limitation
@@ -355,9 +361,9 @@ class PID:
 
         # ANTI WIND UP INTEGRAL
         # max limitation
-        integral = min(integral, 50)
+        integral = min(integral, 60)
         # min limitation
-        integral = max(integral, -50)
+        integral = max(integral, -60)
 
         # M_MIN limitation -> output >= 0
         output = max(output, 0)

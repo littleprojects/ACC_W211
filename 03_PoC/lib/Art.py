@@ -8,7 +8,6 @@ ART/DTS Class
     - Adaptive Cruise Control (ACC)
     - Limiter (Lim)
 
-
 - Todos:
     - Limit acceleration by corner radius
 
@@ -16,6 +15,9 @@ ART/DTS Class
     - CAS not clear -> overwrite by LIM
     - LIM deactivation
     - LIM negative ouput
+    #- Wiederaufnahme +1 beim V_Ziel sollte 0 sein
+    #- Up bei neustart geht auf next biggest speed -> should set current speed
+    #- reactivation after overwrite have trouble
 
 """
 
@@ -369,17 +371,20 @@ class Art:
         if self.cas_active == 1:
             self.cas_active = 0
             self.log.info('CAS off')
+            return
 
         # ACC off
         if self.art.state == ArtState.ACC_active:
             # display trigger
             #self.acc_set_dspl_trigger()
             self.acc_deactivation()
+            return
 
         # Limiter off
         if self.art.state == ArtState.LIM_active:
             #self.acc_set_dspl_trigger()
             self.lim_deactivation()
+            return
 
     # lever_resume pressed
     def lever_wa(self):
@@ -397,16 +402,19 @@ class Art:
             if self.vehicle_msgs['signals']['V_ANZ'] <= 20:
                 self.cas_active = 1
                 self.log.info('CAS on')
+                return
 
             # RESUME Speed
             v_set = self.art_msg['V_ART']
 
             # set speed only if speed was not set before
             if v_set == 0:
-                v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+                # v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+                v_set = math.floor(self.vehicle_msgs['signals']['V_ANZ'])
 
             # and power
             self.acc_activation(v_set)
+            return
 
         # ACC speed adjustment
         if self.art.state == ArtState.ACC_active:
@@ -421,7 +429,8 @@ class Art:
 
         # LIM activation
         if self.art.state == ArtState.LIM:
-            self.acc_activation(self.vehicle_msgs['signals']['V_ANZ'])
+            self.lim_activation(self.vehicle_msgs['signals']['V_ANZ'])
+            return
 
         # LIM speed adjustment
         if self.art.state == ArtState.LIM_active:
@@ -444,10 +453,11 @@ class Art:
                 self.cas_active = 1
                 self.log.info('CAS on')
 
-            v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+            v_set = math.floor(self.vehicle_msgs['signals']['V_ANZ'])
 
             # and power
             self.acc_activation(v_set)
+            return
 
         # ACC speed adjustment
         if self.art.state == ArtState.ACC_active:
@@ -471,6 +481,7 @@ class Art:
         if self.art.state == ArtState.LIM:
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
             self.lim_activation(v_set)
+            return
 
         # LIM speed adjustment
         if self.art.state == ArtState.LIM_active:
@@ -489,9 +500,10 @@ class Art:
         # ACC ready -> activation
         if self.art.state == ArtState.ACC:
             # set current speed
-            v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+            v_set = math.floor(self.vehicle_msgs['signals']['V_ANZ'])
             # and power
             self.acc_activation(v_set)
+            return
 
         # ACC active
         if self.art.state == ArtState.ACC_active:
@@ -510,6 +522,7 @@ class Art:
             # set current speed
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
             self.lim_activation(v_set)
+            return
 
         # LIM speed adjustment
         if self.art.state == ArtState.LIM_active:
@@ -919,7 +932,7 @@ class Art:
         self.art_msg['ART_SEG_EIN'] = 0
 
         # ART AUS in Display
-        self.art_msg['TM_EIN_ART'] = 0
+        # self.art_msg['TM_EIN_ART'] = 0
         # will not work here,because it's not triggered by 10Hz function
 
         self.log.info('ACC deactivation')
@@ -948,7 +961,7 @@ class Art:
         self.pid.reset()
 
         # display trigger
-        #self.acc_set_dspl_trigger()
+        self.acc_set_dspl_trigger()
 
         if beep:
             self.set_warning(beep=1, duration=self.config.warning_time)
@@ -1017,8 +1030,8 @@ class Art:
         signal = self.vehicle_msgs['signals']
 
         # in LIM are this values off
-        self.art_msg['TM_EIN_ART'] = 0
-        self.art_msg['ART_EIN'] = 0
+        # self.art_msg['TM_EIN_ART'] = 0
+        # self.art_msg['ART_EIN'] = 0
 
         # set default values - will be overwritten if everything is correct
         self.art_msg['VMAX_AKT'] = 0
@@ -1374,9 +1387,15 @@ class Art:
             # DO THE MAGIC
             if state == ArtState.ACC or state == ArtState.ACC_active:
                 self.acc_calc()
+                # set modes
+                self.art_msg['ART_EIN'] = 1
+                self.art_msg['LIM_REG'] = 0
 
             if state == ArtState.LIM or state == ArtState.LIM_active:
                 self.lim_calc()
+                # set modes
+                self.art_msg['ART_EIN'] = 0
+                self.art_msg['LIM_REG'] = 1
 
             # general warnings
             self.warnings()
@@ -1441,9 +1460,12 @@ class Art:
 
         # set
         self.art_msg['ART_OK'] = 1
-        self.art_msg['ART_EIN'] = 1
         self.art_msg['TM_EIN_ART'] = 1
         self.art_msg['ART_VFBR'] = 1
+
+        # switch between ART und LIM
+        # self.art_msg['ART_EIN'] = 1
+        # self.art_msg['LIM_REG'] = 0
 
         # if no chancel condition quit - we are ready to go
         self.art.ready = True
