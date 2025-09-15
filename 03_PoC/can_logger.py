@@ -46,6 +46,7 @@ def log_string(msg):
 
     return log
 
+print('Start CAN Logger')
 
 file_name = 'can_log/can_log_'  # + Counter I
 file_type = '.log'
@@ -66,27 +67,33 @@ os.makedirs(os.path.dirname(file), exist_ok=True)
 
 print('log to: ' + file)
 
+print('CAN setup')
+
 # init can
-os.system('sudo ip link set can0 type can bitrate 50000')
 os.system('sudo ifconfig can0 down')
+os.system('sudo ip link set can0 type can bitrate 50000')
 os.system('sudo ifconfig can0 txqueuelen 65536')
 os.system('sudo ifconfig can0 up')
 
-os.system('sudo ip link set can1 type can bitrate 50000')
 os.system('sudo ifconfig can1 down')
+os.system('sudo ip link set can1 type can bitrate 50000')
 os.system('sudo ifconfig can1 txqueuelen 65536')
 os.system('sudo ifconfig can1 up')
+
+print('CAN connect')
 
 # connect to can
 bus0 = can.interface.Bus(channel='can0', interface='socketcan', bitrate=500000)
 bus1 = can.interface.Bus(channel='can1', interface='socketcan', bitrate=500000)
 
-i = 0
+i = 1
+j = 1
 
 # Öffne eine Datei zum Speichern der Nachrichten
-with open(file, 'w') as log_file:
+with open(file, 'a') as log_file:
     # header
     try:
+        print('write header')
         log_file.write('''***BUSMASTER Ver 3.2.2***
 ***PROTOCOL CAN***
 ***NOTE: PLEASE DO NOT EDIT THIS DOCUMENT***
@@ -104,21 +111,39 @@ with open(file, 'w') as log_file:
     except:
         print('CANT WRITE HEADER')
 
-    # loooooooooooooooooooooooooooop
+print('wait for CAN frames')
+
+# loooooooooooooooooooooooooooop
+try:
     while True:
         # can receive and write to file
-        msg = bus0.recv(0.001)
-        if msg:
-            log_file.write(log_string(msg))
+        msg0 = bus0.recv(0.001)
+        msg1 = bus1.recv(0.001)
 
-            i += 1
+        if msg1 or msg1:
+            with open(file, 'a') as log_file:
+                if msg0:
+                    log_file.write(log_string(msg0))
+                    i += 1
 
-        msg = bus1.recv(0.001)
-        if msg:
-            log_file.write(log_string(msg))
+                if msg1:
+                    log_file.write(log_string(msg1))
+                    i += 1
 
-            i += 1
+        # idle counter
+        j += 1
 
-        if i > 1000:
+        if i % 1000 == 0:
             print('' + str(i) + ' Msgs recorded')
-            i = 0
+            i = 1
+            j = 1
+
+        if j % 1000 == 0:
+            i = 1
+            print('waiting')
+except KeyboardInterrupt:
+    print('shutdown bus')
+    bus0.shutdown()
+    bus1.shutdown()
+
+print('EXIT')
