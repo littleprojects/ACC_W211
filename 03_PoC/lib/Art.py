@@ -28,7 +28,7 @@ from lib import utils
 
 from lib.Pid import PID
 from lib.Storage import Storage
-#from lib.Debug_display import Viewer
+from lib.Debug_viewer import Viewer
 
 
 # ART Statemachine states class
@@ -178,8 +178,8 @@ class Art:
         self.lim_max_moment = 0
 
         # Debug viewer (Matplot)
-        #self.view = Viewer()
-        #self.view.run()
+        self.view = Viewer()
+        self.view.run()
 
         self.log.info('INIT ACC - NOT READY')
 
@@ -1419,6 +1419,8 @@ class Art:
 
         # Debug Viewer (Matplot)
         #self.view.run()
+        self.view.update_signals(self.vehicle_msgs['signals'], self.art_msg)
+        self.view.run()
 
         return self.art_msg
 
@@ -1538,9 +1540,7 @@ class Art:
 
             if delay > max_delay:
                 all_msg_in_time = False
-
                 # self.log.debug('Checker: ' + msg_id + ' is to old - ' + str(delay) + ' ms')
-
                 # end loop
                 break
 
