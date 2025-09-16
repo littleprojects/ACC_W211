@@ -74,7 +74,12 @@ class CanHandler:
             self.vehicle_msg['msgs'].update({vehicle_msg_id: utils.ts_ms()})
 
             # decode msg
-            decode_msg = self.db_0.decode_message(msg.arbitration_id, msg.data)
+            try:
+                decode_msg = self.db_0.decode_message(msg.arbitration_id, msg.data)
+            except Exception as e:
+                # could happen if there are CAN Errors on the bus
+                self.log.critical('Cant decode msg: ' + str(e))
+                continue
 
             # ignore empty msgs
             if len(decode_msg) == 0:
