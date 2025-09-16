@@ -70,9 +70,9 @@ default_config = {
 
     # ACC Settings & Limits
     'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
-    'acc_min_speed': 20,        # [kph] minimum speed for ACC activation
+    'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
     'acc_max_speed': 180,       # [kph] max speed for ACC activation
-    'acc_off_speed': 10,        # [kph] switch off ACC at this speed
+    'acc_off_speed': 20,        # [kph] switch off ACC at this speed
     'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
     'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
     'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta
