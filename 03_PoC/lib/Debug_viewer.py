@@ -93,34 +93,64 @@ class Viewer:
         # axR.set_axis_off() # delete all axis
 
         #ax1
-        self.plot_art_reg, = self.ax1.plot([], [], label='ART_REG', color='red', linestyle='-')
         self.plot_lim_reg, = self.ax1.plot([], [], label='LIM_REG', color='blue', linestyle='--')
         self.plot_art_ueb, = self.ax1.plot([], [], label='ART_UEBERSP')
-        self.ax1.set_ylim(-0.2, 1.2)
+        self.plot_art_reg, = self.ax1.plot([], [], label='ART_REG', color='red', linestyle='-')
+        self.ax1.set_ylim(-0.05, 1.2)
         self.ax1.legend(loc="upper left")
 
 
         # ax2
         self.ax2_m_fv, = self.ax2.plot([], [], label='M_FV')
-        self.ax2_m_art, = self.ax2.plot([], [], label='M_ART')
         self.ax2_m_bre, = self.ax2.plot([], [], label='MBRE_ART')
-        self.ax2.set_ylim(0, 400)
+        self.ax2_m_art, = self.ax2.plot([], [], label='M_ART', color='r')
+        self.ax2.set_ylim(-8, 450)
         self.ax2.legend(loc="upper left")
 
         # ax3
         self.ax3_1, = self.ax3.plot([], [], label='V_ANZ')
         self.ax3_2, = self.ax3.plot([], [], label='V_ART')
-        self.ax3_3, = self.ax3.plot([], [], label='V_ZIEL')
-        self.ax3.set_ylim(0, 160)
+        self.ax3_3, = self.ax3.plot([], [], label='V_ZIEL', color='red', linestyle='--')
+        self.ax3.set_ylim(-2, 160)
         self.ax3.legend(loc="upper left")
 
 
         # axR.clear()
-        self.text_l = axR.text(0.05, 0.5, "ART_REG:\nLIM_REG:", fontsize=12, color='blue')
-        self.text_r = axR.text(0.5, 0.5, "0", fontsize=12, color='blue')
+        text_x_pos = 0.75
+        text_1 = axR.text(0.05, text_x_pos, """
+ART_REG:
+LIM_REG:
+ART_UBERSP:
+""", fontsize=12, color='blue')
+        self.text_1r = axR.text(0.5, text_x_pos, "", fontsize=12, color='blue')
         # text.update(1,2,"TEst")
 
-        self.ani = animation.FuncAnimation(self.fig, self.update_ani, interval=10, save_count=1000)
+        text_x_pos = 0.55
+        text_1b = axR.text(0.05, text_x_pos, """
+G_MAX
+Gear
+G_MIN
+        """, fontsize=12, color='green')
+        self.text_1br = axR.text(0.5, text_x_pos, "", fontsize=12, color='green')
+        # text.update(1,2,"TEst")
+
+        text_x_pos = 0.35
+        text_2 = axR.text(0.05, text_x_pos, """
+M_FV:
+M_ART:
+M_BRE:
+        """, fontsize=12, color='blue')
+        self.text_2r = axR.text(0.5, text_x_pos, "", fontsize=12, color='blue')
+
+        text_x_pos = 0
+        text_3 = axR.text(0.05, text_x_pos, """
+V_ANZ:
+V_ART:
+V_ZIEL:
+""", fontsize=12, color='blue')
+        self.text_3r = axR.text(0.5, text_x_pos, "", fontsize=12, color='blue')
+
+        self.ani = animation.FuncAnimation(self.fig, self.update_ani, interval=100, save_count=1000)
 
         plt.show(block=False)
 
@@ -172,8 +202,28 @@ class Viewer:
         # text
         #print(self.signal_data['ART_REG'])
         #self.text_r.update( "1")
-        self.text_r.set_text(f"""{self.signal_data['ART_REG']}
-{self.signal_data['LIM_REG']}""")
+        self.text_1r.set_text(f"""
+{self.signal_data['ART_REG']}
+{self.signal_data['LIM_REG']}
+{self.signal_data['ART_UEBERSP']}
+""")
+
+        self.text_1br.set_text(f"""
+{self.signal_data['GMAX_ART']}
+{self.signal_data['GIC']}
+{self.signal_data['GMIN_ART']}
+""")
+
+        self.text_2r.set_text(f"""
+{round(self.signal_data['M_FV'],1)}
+{self.signal_data['M_ART']}
+{self.signal_data['MBRE_ART']}
+""")
+        self.text_3r.set_text(f"""
+{self.signal_data['V_ANZ']}
+{self.signal_data['V_ART']}
+{self.signal_data['V_ZIEL']}        
+""")
 
     def run(self):
         #plt.show(block=False)
@@ -181,7 +231,7 @@ class Viewer:
         #plt.pause(0.01)
         #self.update_data(self.x)
         #self.update_time_data()
-        plt.pause(0.0001)
+        plt.pause(0.001)
 
     def get_data(self, t):
         return np.sin(self.x * t)  # + np.random.normal(0, 0.05)
