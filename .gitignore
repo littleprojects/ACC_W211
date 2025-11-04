@@ -13,6 +13,7 @@
 *.dbf
 *.config
 test_*.py
+03_PoC/test/
 
 
 
