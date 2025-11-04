@@ -20,7 +20,7 @@ module_version = '0.0.1'
 config = {
     'loglevel':                 'INFO',             # debug
     #'loglevel':                 'DEBUG',             # debug
-    'can_0_dbc':                '../00_Reverseengineering/CAN/CAN_C.dbc',
+    'can_0_dbc':                'dbc/CAN_C.dbc',
     'mdf_log_file':             'log/Canlog_' + utils.date_time_str() + '.mf4',
 }
 

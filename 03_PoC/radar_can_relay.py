@@ -22,8 +22,8 @@ config = {
 
     'loglevel': 'INFO',  # debug
     # 'loglevel':                 'DEBUG',             # debug
-    'can_0_dbc': 'CAN_C.dbc',   # vehicle CAN
-    'can_1_dbc': 'CAN_ARS408_id0.dbc', # radar CAN
+    'can_0_dbc': 'dbc/CAN_C.dbc',   # vehicle CAN
+    'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc', # radar CAN
 }
 
 log = Logger(module_name).logger

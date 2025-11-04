@@ -55,7 +55,7 @@ default_config = {
     'can_0_bitrate': '500000',
     # 'can_0_app_name':           'vCAN',             # 'VN1610' for hardware interface
     'can_0_app_name': 'VN1610',  # Hardware interface
-    'can_0_dbc': 'CAN_C.dbc',  # path to DBC
+    'can_0_dbc': 'dbc/CAN_C.dbc',  # path to DBC
     'can_0_send': True,  # enables or disables MSG sending
 
     # MDF Log
