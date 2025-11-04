@@ -72,7 +72,7 @@ def relay_speed(vehicle_msg):
     # speed_msg_data += b'\xFF\xFF\xFF\xFF\xFF\xFF'
     # speed_msg_data += b'\x00\x00\x00\x00\x00\x00'
 
-    print(speed_msg_data)
+    #print(speed_msg_data)
 
     can_msg = can.Message(arbitration_id=0x300, dlc=2, is_extended_id=False, data=speed_msg_data) #
 
@@ -92,15 +92,17 @@ def relay_yaw(can_msg):
     # yaw += 131
 
     yaw_msg_data = db_1.encode_message('YawRateInformation', {
-        'RadarDevice_YawRate': yaw,
+        # ToDo -> offset correction first
+        #'RadarDevice_YawRate': yaw,
+        'RadarDevice_YawRate': 0,
     })
 
     # fill up to 8 bytes
     # yaw_msg_data += b'\x00\x00\x00\x00\x00\x00'
 
     can_msg = can.Message(arbitration_id=0x301, is_extended_id=False, data=yaw_msg_data)
-    # ToDo -> offset correction first
-    # bus1.send(can_msg)
+
+    bus1.send(can_msg)
 
     log.debug('send ' + str(yaw))
 
@@ -123,14 +125,14 @@ try:
             # speed V_ANZ on 0x412
             if msg_id == '0x412':
                 decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
-                relay_speed(decode_msg) # 0x300 dlc=2
+                relay_speed(decode_msg)  # send 0x300 dlc=2
 
                 i += 1
 
             # yaw GIER_ROH on 0x300 with DLC=8  / DLC=2 is the speed signal
-            if msg_id == '0x300' & msg.dlc == 8:
+            if msg_id == '0x300' and msg.dlc == 8:
                 decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
-                relay_yaw(decode_msg)
+                relay_yaw(decode_msg)  # send 0x301
 
                 i += 1
 
@@ -146,4 +148,4 @@ except KeyboardInterrupt:
     bus0.shutdown()
     bus1.shutdown()
 
-log.info('STOPPED relay')
+log.info('STOPPED ' + module_name)
