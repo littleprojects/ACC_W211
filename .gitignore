@@ -1,6 +1,7 @@
 # Project related
 *.asc
 *.zip
+*.pdf
 03_PoC/log/
 *.mdf
 *.mf4
@@ -8,6 +9,11 @@
 *.xlsx
 *.lnk
 .$*
+*.dbc
+*.dbf
+*.config
+test_*.py
+
 
 
 # Byte-compiled / optimized / DLL files
