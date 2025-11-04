@@ -17,6 +17,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
+import threading
+
 # module name for printGING and CONFIG
 module_name = 'RADAR_VIEW'
 # just the Version of this script, to display and print; update this at major changes
@@ -28,8 +30,8 @@ config = {
 
     'printlevel': 'INFO',  # debug
     # 'printlevel':                 'DEBUG',             # debug
-    'can_0_dbc': 'dbc/CAN_CAN_ARS408_id0.dbc',
-    #'mdf_print_file': 'print/' + module_name + '_' + utils.date_time_str() + '.mf4',
+    'can_0_dbc': 'dbc/CAN_ARS408_id0.dbc',
+    # 'mdf_print_file': 'print/' + module_name + '_' + utils.date_time_str() + '.mf4',
 }
 
 # print = printger(module_name).printger
@@ -47,19 +49,27 @@ db_0 = cantools.database.load_file(config['can_0_dbc'])
 print(('Start CAN: ' + config['bus_interface']))
 bus = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])
 
+# main obj list
 obs = {'status': {},
        'obj': {}
        }
 
+# temporary object list
+new_obj = {}
+
+"""
 obj_data = {
     '1': {'x': 1, 'y': 5, 'w': 2, 'angle': 0},
     '2': {'x': 10, 'y': 50, 'w': 2, 'angle': 0},
     '3': {'x': -10, 'y': 150, 'w': 2, 'angle': 10},
 }
+"""
 
 fig = plt.figure(figsize=(6, 6))
 plt.axis('equal')
-plt.axis([-100, 100, 0, 200])
+# plt.axis([-100, 100, 0, 200]) # full size
+plt.axis([-50, 50, 0, 100]) # half size
+# plt.axis([-30, 30, 0, 60])  # small size
 plt.grid()
 
 ax = plt.gca()
@@ -150,16 +160,35 @@ def corner_coordinates(radius, offset=0):
         return points
 
 
+# filter
+def obj_filter(obj):
+
+    # coordinates missing
+    if obj.get('Obj_DistLong') is None or \
+            obj.get('Obj_DistLat') is None:
+        return True
+
+    # distance
+    if obj.get('Obj_DistLong') > 100:
+        return True
+
+    # high lat, long speed
+    # points
+
+    return False
+
+
 def target_selector(radius, object_list, dist):
     line = corner_coordinates(radius)
 
-    new_line = []
+    # convert line coordinates
+    drive_line = []
     for i in range(len(line)):
-        new_line.append((line[i][0], line[i][1]))
+        drive_line.append((line[i][0], line[i][1]))
 
-    dist_list = []
-    cp_lines = []
-    target_obj = None
+    min_dist = 500
+    obj_list = []
+    target = None
 
     # print(object_list)
 
@@ -173,12 +202,12 @@ def target_selector(radius, object_list, dist):
         # if target_obj == None:
         #    target_obj = obj
 
-        # skip if coordiantes missing
-        if obj.get('Obj_DistLong') is None or \
-                obj.get('Obj_DistLat') is None:
+        # filter function
+        if obj_filter(obj):
             continue
 
-        # set default if data missing
+        # set defaults if data missing
+        # todo: do in function
         if obj.get('Obj_Width') is None:
             obj['Obj_Width'] = 2
 
@@ -195,260 +224,43 @@ def target_selector(radius, object_list, dist):
         # print(obj)
 
         # object coordinates
-        x = obj.get('Obj_DistLat') + obj.get('Obj_Width') / 2
+        x = -obj.get('Obj_DistLat')  # - obj.get('Obj_Width') / 2  # obj center
         y = obj.get('Obj_DistLong')
 
         # get the shortest distance and closest point
-        dist, cp = point_to_polyline_distance((x, y), new_line)
+        obj_dist, cp = point_to_polyline_distance((x, y), drive_line)
+
+        # obj type 0 = normal, 1 = in lane, 2 target
+        obj_type = 0
+
+        # is obj edge close to path
+        # Todo: dist_to_path can variate over dist_to_ego
+        if abs(obj_dist) < (dist - obj.get('Obj_Width') / 2):
+            obj_type = 1
+
+        # create item
+        list_item = {
+            'obj_id': key,
+            'line': {'x1': x, 'y1': y, 'x2': cp[0].item(), 'y2': cp[1].item(), },
+            'obj': obj,
+            'type': obj_type
+        }
 
         # add to list
-        dist_list.append(dist.item())
-        cp_lines.append({'x1': x, 'y1': y, 'x2': cp[0].item(), 'y2': cp[1].item(), 'obj_id': key, 'obj': obj})
+        obj_list.append(list_item)
 
-        # target selection
-        if target_obj is None:
-            if abs(dist) < 2 + obj.get('Obj_Width') / 2:
-                target_obj = obj
+        # target selection with the smallest distance on driving path (type 1)
+        if obj_type == 1 and y < min_dist:
+            target = list_item
+            # set new min dist
+            min_dist = y
+
+            #print(y)
 
     # print(dist_list)
+    #print('---')
 
-    return dist_list, cp_lines, target_obj
-
-
-# print(target_selector(obj_data))
-
-
-def init():
-    # initialize an empty list of obj
-    return []
-
-
-def animate(i):
-    # print("animate running...")
-    fig.patches = []
-    # draw circles, select to color for the circles based on the input argument i.
-    someColors = ['r', 'b', 'g', 'm', 'y']
-    patches = []
-    # for x in range(0,nx):
-    # for y in range(0,ny):
-
-    # static objects
-    """
-    patches.append((ax.add_patch(plt.arrow(
-        x=0,
-        y=0,
-        dx=0,
-        dy=300,
-        width=1,
-    ))))
-    """
-    # radar field
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            [[0, 0], [35, 20], [45, 55], [10, 70], [25, 150], [17, 250],
-             [-17, 250], [-25, 150], [-10, 70], [-45, 55], [-35, 20]],
-            closed=True,
-            # facecolor='blue',
-            edgecolor='red',
-            alpha=0.2,
-        ))
-    )
-
-    # straight lines
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(0, 1),
-            closed=False,
-            facecolor='blue',
-            edgecolor='black'
-        ))
-    )
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(0, -1),
-            closed=False,
-            edgecolor='black'
-        ))
-    )
-
-    """
-    # corner left RED
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(2000-i),
-            closed=False,
-            edgecolor='red',
-            facecolor=None,
-            fill=False,
-            linewidth=2
-        ))
-    )
-    # corner right
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(2000-i, 1),
-            closed=False,
-            edgecolor='black',
-            facecolor=None,
-            fill=False
-        ))
-    )
-    """
-
-    """
-    # corner left
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(-500-i, -1),
-            closed=False,
-            edgecolor='black',
-            facecolor=None,
-            fill=False
-        ))
-    )
-    # corner right
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(-500-i, 1), closed=False, edgecolor='black', facecolor=None, fill=False
-    )))
-    """
-
-    # circle
-    # patches.append(ax.add_patch(plt.Circle((i+0.5,i+0.5),0.45,color=someColors[i % 5])))
-
-    """
-    # rectangle
-    for key in obj_data:
-        id = key
-
-        obj = obj_data[id]
-
-        # x = long (Distance) + 1,95m
-        # y = lat (+left, -right)
-
-        # box
-        patches.append(ax.add_patch(plt.Rectangle(
-            (obj.get('x') - obj.get('w')/2, obj.get('y')),  # x, y
-            obj.get('w')*2,  # width
-            obj.get('w')*2,  # height
-            angle=obj.get('angle'),
-            rotation_point='center',
-            color='b',
-            #edgecolor='k' # k = black
-            #color=someColors[i % 5]
-            )))
-
-        # text
-        patches.append(ax.text(
-            obj.get('x') + 4,   # x
-            obj.get('y'),  # y
-            str(id),  # text
-        ))
-    """
-
-    # Path
-    # coner simulation
-    """
-    patches.append(
-        ax.add_patch(plt.Polygon(
-            corner_coordinates(2000 - i),
-            closed=False,
-            edgecolor='red',
-            facecolor=None,
-            fill=False,
-            linewidth=2
-        ))
-    )
-    """
-
-    obj_list = obs.get('obj')
-
-    dist, obj_lines, target_obj = target_selector(0, obj_list, dist=2)
-
-    # target_obj = None
-
-    for i in range(len(obj_lines)):
-        # print(i)
-
-        obj = obj_lines[i]
-
-        color = 'black'
-        if abs(dist[i]) < 2:
-            color = 'red'
-
-            # if target_obj is None:
-            #    target_obj = obj.get('obj')
-
-        # line to path
-        patches.append(
-            ax.add_patch(plt.Polygon(
-                [[obj.get('x1'), obj.get('y1')],
-                 [obj.get('x2'), obj.get('y2')]],
-                closed=False,
-                facecolor=None,
-                fill=False,
-                # facecolor='blue',
-                edgecolor=color
-                # alpha=0.2,
-            ))
-        )
-
-        obj_rct = obj.get('obj')
-
-        color = 'blue'
-        if abs(dist[i]) < 2 + obj_rct.get('Obj_Width') / 2:
-            color = 'green'
-
-            # if target_obj is None:
-            #    target_obj = obj_rct
-
-        # x = long (Distance) + 1,95m
-        # y = lat (+left, -right)
-
-        # box
-        patches.append(ax.add_patch(plt.Rectangle(
-            (obj_rct.get('Obj_DistLat') - obj_rct.get('Obj_Width') / 2, obj_rct.get('Obj_DistLong')),  # x, y
-            obj_rct.get('Obj_Width') * 2,  # width
-            obj_rct.get('Obj_Length') * 2,  # height
-            angle=obj_rct.get('Obj_OrientationAngle'),
-            rotation_point='center',
-            color=color,
-            # edgecolor='k' # k = black
-            # color=someColors[i % 5]
-        )))
-
-        # """
-        # text
-        patches.append(ax.text(
-            obj_rct.get('Obj_DistLat') + 4,  # x
-            obj_rct.get('Obj_DistLong'),  # y
-            str(str(obj_rct.get('Obj_ID')) + ' ' + str(obj_rct.get('Obj_Class'))),  # text
-        ))
-        # """
-
-    # Target obj
-    if target_obj is not None:
-        patches.append(ax.add_patch(plt.Rectangle(
-            (target_obj.get('Obj_DistLat') - target_obj.get('Obj_Width') / 2, target_obj.get('Obj_DistLong')),  # x, y
-            target_obj.get('Obj_Width') * 2,  # width
-            target_obj.get('Obj_Length') * 2,  # height
-            angle=target_obj.get('Obj_OrientationAngle'),
-            rotation_point='center',
-            color='r',
-            # edgecolor='k' # k = black
-            # color=someColors[i % 5]
-        )))
-
-    """
-    patches.append(ax.add_patch(plt.Rectangle(
-        (i, i),     # x, y
-        1,  # width
-        1,  # height
-        angle=i,
-        color=someColors[i % 5])))
-    """
-
-    return patches
+    return obj_list, target
 
 
 # 0x60a 0 Status
@@ -464,9 +276,40 @@ def obj_0_status(msg):
 
     # obs['NofObjects'] = msg['Obj_NofObjects']
 
-    # run cleanup
-    obj_cleanup()
+    # run cleanup -> do in animation when it is needed
+    # obj_cleanup()
 
+    #print(msg)
+
+    # errors to check
+    error_list = [
+        'RadarState_Persistent_Error',
+        'RadarState_Interference',
+        'RadarState_Temperature_Error',
+        'RadarState_Temporary_Error',
+        'RadarState_Voltage_Error',
+        'RadarState_RadarPowerCfg',
+        'RadarState_MotionRxState',
+    ]
+
+    # check for errors
+    for item in error_list:
+        if msg.get(item) != 0:
+            print(item)
+
+    """
+    'RadarState_Persistent_Error':  0 'No error', 
+    'RadarState_Interference':      0 'No interference', 
+    'RadarState_Temperature_Error': 0 'No error', 
+    'RadarState_Temporary_Error':   0 'No error', 
+    'RadarState_Voltage_Error':     0 'No error', 
+    'RadarState_RadarPowerCfg':     0 'Standard',  
+    'RadarState_MotionRxState': 3 'Speed and yaw rate missing', 
+    """
+
+def obj_0_status_2(msg):
+    # cut_obj_list(msg['Obj_NofObjects'])
+    obs['status'].update(msg)
 
 # obsolet -> integrated in obj_updater
 # 0x60b general
@@ -477,7 +320,7 @@ def obj_0_status(msg):
 # Object List
 # 0x60b-c general, quality, extended
 def obj_update(msg):
-    ts = utils.ts_ms()
+    # ts = utils.ts_ms()
     obj_id = msg['Obj_ID']
 
     data = {}
@@ -487,17 +330,28 @@ def obj_update(msg):
         data = obs['obj'].get(obj_id)
 
     # add timestamp
-    data['ts'] = ts
+    # data['ts'] = ts
 
     # update data with new infos
     data.update(msg)
 
-    # update dict
+    # update temporary obj list
+    new_obj.update({obj_id: data})
+    # update permanent obj list
     obs['obj'].update({obj_id: data})
 
 
 # delete old and incomplete objs
 def obj_cleanup(delay_ms=500):
+    global obs, new_obj
+
+    # 60A start of new obj list
+    # -> replace obj_list with new list to clean older obj
+    obs['obj'] = new_obj
+    # -> create new empty list and fill with obj
+    new_obj = {}
+
+    """
     ts = utils.ts_ms()
 
     obj_list = obs.get('obj')
@@ -529,10 +383,13 @@ def obj_cleanup(delay_ms=500):
     # delete elements
     for x in del_list:
         del obs['obj'][x]
+    """
 
 
 def can_reader():
     i = 0
+
+    print('Wait for CAN messages')
 
     try:
         # receive loooooooping
@@ -547,17 +404,24 @@ def can_reader():
                 # try:
                 # decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
 
+                # radar status msg
                 if msg_id == '0x201':
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
-                    obj_0_status(decode_msg)
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    obj_0_status(decode_msg, )
 
+                # start of obj list
                 if msg_id == '0x60a':
                     decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
-                    obj_0_status(decode_msg)
+                    obj_0_status_2(decode_msg)
+                    # will overwrite obj list with a fresh one to remove old obj
+                    obj_cleanup()
+                    # plt.pause(0.001)
 
+                # obj info
                 if msg_id == '0x60b' or msg_id == '0x60c' or msg_id == '0x60d' or msg_id == '0x60e':
                     decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
                     obj_update(decode_msg)
+                    # plt.pause(0.01)
 
                 # print(str(hex(msg.arbitration_id)) + ' ' + str(decode_msg))
 
@@ -570,29 +434,281 @@ def can_reader():
                 if i % 100 == 0:
                     # plt.pause(0.001)
                     # update_ani()
-                    plt.pause(0.001)
+                    #plt.pause(0.001)
                     # print(obs)
+                    pass
 
                 if i == 1:
-                    print('Recording started')
+                    print('Started')
 
                 if i % 1000 == 0:
                     print('Msgs: ' + str(i))
+
+            # bus idle
+            #else:
+                #plt.pause(0.001)
+
 
     except KeyboardInterrupt:
         print('Shut down bus')
         # stop bus
         bus.shutdown()
 
-        print(str(i) + ' Msgs printt ')
+        # print(str(i) + ' Msgs')
 
         # if i > 0:
         # mdf.write_mdf()
 
-        print('STOPPED printging')
+        print('STOPPED')
 
         print(obs)
 
+
+thread = threading.Thread(target=can_reader)
+thread.start()
+
+def init():
+
+
+    # initialize an empty list of obj
+    return []
+
+
+# Todo: exit handler
+
+def animate(i):
+    # print("animate running...")
+    # fig.patches = []
+    # draw circles, select to color for the circles based on the input argument i.
+    # someColors = ['r', 'b', 'g', 'm', 'y']
+
+    # todo: run filter
+
+    # create patch list with static elements, radar objects will append later to the list
+    patches = [
+        # radar field filed of view
+        ax.add_patch(plt.Polygon(
+            [[0, 0], [35, 20], [45, 55], [10, 70], [25, 150], [17, 250],
+             [-17, 250], [-25, 150], [-10, 70], [-45, 55], [-35, 20]],
+            closed=True,
+            # facecolor='blue',
+            edgecolor='red',
+            alpha=0.2,
+        )),
+        # straight lines right
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(0, 1.2),
+            closed=False,
+            facecolor='blue',
+            edgecolor='black'
+        )),
+        # straight lines left
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(0, -1.2),
+            closed=False,
+            edgecolor='black'
+        ))]
+
+    # Curved line
+    """
+    # corner left RED
+    patches.append(
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(2000-i),
+            closed=False,
+            edgecolor='red',
+            facecolor=None,
+            fill=False,
+            linewidth=2
+        ))
+    )
+    # corner right
+    patches.append(
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(2000-i, 1),
+            closed=False,
+            edgecolor='black',
+            facecolor=None,
+            fill=False
+        ))
+    )
+    # corner left
+    patches.append(
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(-500-i, -1),
+            closed=False,
+            edgecolor='black',
+            facecolor=None,
+            fill=False
+        ))
+    )
+    # corner right
+    patches.append(
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(-500-i, 1), closed=False, edgecolor='black', facecolor=None, fill=False
+    )))
+
+    # Path
+    # coner simulation
+    patches.append(
+        ax.add_patch(plt.Polygon(
+            corner_coordinates(2000 - i),
+            closed=False,
+            edgecolor='red',
+            facecolor=None,
+            fill=False,
+            linewidth=2
+        ))
+    )
+    """
+
+    # example patch obj
+    """
+    # circle
+    # patches.append(ax.add_patch(plt.Circle((i+0.5,i+0.5),0.45,color=someColors[i % 5])))
+
+    # arrow example
+    patches.append((ax.add_patch(plt.arrow(
+        x=0,
+        y=0,
+        dx=0,
+        dy=300,
+        width=1,
+    ))))
+
+    # rectangle
+    for key in obj_data:
+        id = key
+
+        obj = obj_data[id]
+
+        # x = long (Distance) + 1,95m
+        # y = lat (+left, -right)
+
+        # box
+        patches.append(ax.add_patch(plt.Rectangle(
+            (obj.get('x') - obj.get('w')/2, obj.get('y')),  # x, y
+            obj.get('w')*2,  # width
+            obj.get('w')*2,  # height
+            angle=obj.get('angle'),
+            rotation_point='center',
+            color='b',
+            #edgecolor='k' # k = black
+            #color=someColors[i % 5]
+            )))
+
+        # text
+        patches.append(ax.text(
+            obj.get('x') + 4,   # x
+            obj.get('y'),  # y
+            str(id),  # text
+        ))
+    """
+
+    # copy obj dict to work with
+    obj_list = obs.get('obj').copy()
+
+    # run target_selector MAGIC create the target selector list
+    ts_list, target_obj = target_selector(0, obj_list, dist=2)
+
+    # target_obj = None
+
+    # go to obj list
+    for i in range(len(ts_list)):
+        # print(i)
+
+        # load single item form list
+        obj = ts_list[i]
+
+        # normal line color
+        line_color = 'black'
+        obj_color = 'blue'
+
+        # is obj in path
+        if obj.get('type') == 1:
+            # line_color = 'red'
+            obj_color = 'green'
+
+            # if target_obj is None:
+            #    target_obj = obj.get('obj')
+
+        # load obj data
+        obj_rct = obj.get('obj')
+
+        # box
+        patches.append(ax.add_patch(plt.Rectangle(
+            (-obj_rct.get('Obj_DistLat') - obj_rct.get('Obj_Width') / 2, obj_rct.get('Obj_DistLong')),  # x, y
+            obj_rct.get('Obj_Width'),  # width
+            obj_rct.get('Obj_Length'),  # height
+            angle=obj_rct.get('Obj_OrientationAngle'),
+            rotation_point='center',
+            color=obj_color,
+            # edgecolor='k' # k = black
+            # color=someColors[i % 5]
+        )))
+
+        # """
+        # text
+        x_coor = -obj_rct.get('Obj_DistLat')
+        text_align = 'left'
+        if x_coor > 0:
+            x_coor += obj_rct.get('Obj_Width') + 1
+        else:
+            x_coor += - obj_rct.get('Obj_Width') - 1
+            text_align = 'right'
+
+        patches.append(ax.text(
+            x_coor,  # x
+            obj_rct.get('Obj_DistLong'),  # + obj_rct.get('Obj_Length') / 2,  # y
+            str(str(obj_rct.get('Obj_ID')) + ' ' + str(obj_rct.get('Obj_Class'))),  # text
+            ha=text_align,
+        ))
+        # """
+
+        # get line details
+        line = obj.get('line')
+
+        # line to path
+        patches.append(
+            ax.add_patch(plt.Polygon(
+                [[line.get('x1'), line.get('y1')],
+                 [line.get('x2'), line.get('y2')]],
+                closed=False,
+                facecolor=None,
+                fill=False,
+                # facecolor='blue',
+                edgecolor=line_color
+                # alpha=0.2,
+            ))
+        )
+
+    # Target obj
+    if target_obj is not None:
+        # load obj data
+        obj_rct = target_obj.get('obj')
+        # box
+        patches.append(ax.add_patch(plt.Rectangle(
+            (-obj_rct.get('Obj_DistLat') - obj_rct.get('Obj_Width') / 2, obj_rct.get('Obj_DistLong')),  # x, y
+            obj_rct.get('Obj_Width'),  # width
+            obj_rct.get('Obj_Length'),  # height
+            angle=obj_rct.get('Obj_OrientationAngle'),
+            rotation_point='center',
+            color='red',
+            # edgecolor='k' # k = black
+            # color=someColors[i % 5]
+        )))
+
+    """
+    patches.append(ax.add_patch(plt.Rectangle(
+        (i, i),     # x, y
+        1,  # width
+        1,  # height
+        angle=i,
+        color=someColors[i % 5])))
+    """
+    fig.canvas.draw()
+
+    return patches
 
 '''
 blit=True
@@ -600,12 +716,16 @@ Static Background: All non-changing elements of the plot (like axes, labels, or 
 Dynamic Updates: For each frame, only the parts of the plot that change (like moving points or lines) are redrawn on top of the static background.
 Efficiency: This reduces the computational load, making animations faster and smoother. 
 '''
-anim = animation.FuncAnimation(fig, animate, interval=100, save_count=2, blit=True)
-plt.show(block=False)
+anim = animation.FuncAnimation(fig, animate, init_func=init, interval=100, save_count=2, blit=True)
+#plt.show(block=False)
+plt.show()
 
-can_reader()
+# plt.pause(0.001)
 
-print(obs)
+# main loop
+# can_reader()
+
+# print(obs)
 
 """
 {'status': {
