@@ -2,6 +2,8 @@
 
 Limiter and ACC are controlled by the ACC ecu program.
 
+# ACC
+
 ## State machine
 
 INIT
@@ -153,3 +155,12 @@ Warn if distance below 0.8 sec
 warn_dist (speed):
   return speed * 0.36 * 0.8
 ```
+
+
+## Limiter
+
+* limit speed to target speed
+* ajust speed limit +1, +10 or -10 kph
+* diable with button
+* diable at kick down
+
