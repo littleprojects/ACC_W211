@@ -29,10 +29,8 @@
 
 # CAN INTERFACE selection
 # hardware interface default parameter
-#can_0_interface = vector
-#can_0_app_name = VN1610
-#can_0_channel = 0
-#can_0_bitrate = 500000
+#can_app_name = VN1610
+#can_interface = vector
 
 # -----------------------------------------------------------------------
 # MDF log file
@@ -83,9 +81,6 @@ comment = Test
 # can be disabled with 0
 stats_update_time = 5
 
-# for local testing with simulated CAN
-can_0_app_name = vCAN
-
 # disables sending CAN MSGS
 # default is True
 #can_0_send = False
@@ -93,3 +88,6 @@ can_0_app_name = vCAN
 # enable/disable functions
 art_reg_enabled = 1
 art_bre_enabled = 0
+
+# for local testing with simulated CAN
+can_app_name = vCAN

@@ -50,13 +50,22 @@ default_config = {
     'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
 
     # CAN settings
-    'can_0_interface': 'vector',
+    'can_interface': 'vector',
+    'can_app_name': 'VN1610',  # Hardware interface
+    # 'can_app_name': 'vCAN',  # virtual CAN interface
+
+    # Vehicle CAN
     'can_0_channel': '0',
     'can_0_bitrate': '500000',
-    # 'can_0_app_name':           'vCAN',             # 'VN1610' for hardware interface
-    'can_0_app_name': 'VN1610',  # Hardware interface
+
     'can_0_dbc': 'dbc/CAN_C.dbc',  # path to DBC
     'can_0_send': True,  # enables or disables MSG sending
+
+    # Radar CAN
+    'can_1_channel': '1',
+    'can_1_bitrate': '500000',
+    'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc',
+    'can_1_send': True,  # enables or disables MSG sending
 
     # MDF Log
     'mdf_log': False,
@@ -174,11 +183,20 @@ T_10Hz = Timer(0.1, F_10Hz, event_stop)
 T_stats = Timer(config.stats_update_time, F_stats, event_stop)
 
 # init CAN Communication
-can_0 = Can(config.can_0_interface,
+can_0 = Can(config.can_interface,
             config.can_0_channel,
             config.can_0_bitrate,
             log,
-            app_name=config.can_0_app_name,
+            app_name=config.can_app_name,
+            # filter_list=
+            )
+
+# init CAN Communication
+can_1 = Can(config.can_interface,
+            config.can_1_channel,
+            config.can_1_bitrate,
+            log,
+            app_name=config.can_app_name,
             # filter_list=
             )
 
