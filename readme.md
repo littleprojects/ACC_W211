@@ -61,6 +61,14 @@ The **Continental 408-21** looks good.
 - little bit older but not so expensiv
 - wide short range
 
-## PoC
+## Development progress
 
-In Progress
+- [x] CAR CAN reverse engineering
+- [x] Simple Cruise Control to proof the concept
+- [x] Drinking coffe 
+- [x] Radar sensor selection
+- [ ] Radar integration - in progress
+- [ ] ...
+
+<img src="radar_test_setup_2.jpeg"><br>
+Temporary radar integration to collect radar data.
