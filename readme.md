@@ -49,6 +49,10 @@ Notes about the Tooling in need to do this.
 
 * USB CAN Interface -> Vector VN1610. Bus other would also work
 * CAN Logging and interpreting SW -> Busmaster
+* small ecu with CAN interface for PoC
+
+<img src="01_Tooling/pi_with_can_hat.jpeg">
+Pi with CAN hat for CAN logging and PoC testing
 
 ## Radar Sensor
 
