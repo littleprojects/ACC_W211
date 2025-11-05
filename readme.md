@@ -70,5 +70,5 @@ The **Continental 408-21** looks good.
 - [ ] Radar integration - in progress
 - [ ] ...
 
-<img src="radar_test_setup_2.jpeg"><br>
+<img src="02_Sensor/radar_test_setup_2.jpeg"><br>
 Temporary radar integration to collect radar data.
