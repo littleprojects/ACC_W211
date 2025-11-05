@@ -7,9 +7,7 @@ This script print the CAN data and parse it with a CAN Database (DBC)
 
 import can
 import cantools
-from lib import utils
-# from lib.Mdf import Mdf
-# from lib.printger import printger
+# from lib import utils
 
 import math
 import numpy as np
@@ -30,66 +28,55 @@ config = {
 
     'printlevel': 'INFO',  # debug
     # 'printlevel':                 'DEBUG',             # debug
-    'can_0_dbc': 'dbc/CAN_ARS408_id0.dbc',
-    # 'mdf_print_file': 'print/' + module_name + '_' + utils.date_time_str() + '.mf4',
+
+    'can_0_dbc': 'dbc/CAN_C.dbc',
+    'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc',
 }
 
-# print = printger(module_name).printger
-# print.setLevel(utils.parse_print_level(config['printlevel']))
-
-# print('Init ' + module_name + ' ' + module_version)
+print('Init ' + module_name + ' ' + module_version)
 
 # print(('Load DBC: ' + config['can_0_dbc']))
 db_0 = cantools.database.load_file(config['can_0_dbc'])
-
-# not used now
-# mdf = Mdf(config['mdf_print_file'], print, db_0) #, save_interval=10000)
+db_1 = cantools.database.load_file(config['can_1_dbc'])
 
 # CAN Bus-Instanz
 print(('Start CAN: ' + config['bus_interface']))
-bus = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])
+bus0 = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name=config['bus_interface'])
+bus1 = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])
 
 # main obj list
 obs = {'status': {},
-       'obj': {}
+       'obj': {},
+       'radius': 0,
+       'speed': 0
        }
 
 # temporary object list
 new_obj = {}
 
-"""
-obj_data = {
-    '1': {'x': 1, 'y': 5, 'w': 2, 'angle': 0},
-    '2': {'x': 10, 'y': 50, 'w': 2, 'angle': 0},
-    '3': {'x': -10, 'y': 150, 'w': 2, 'angle': 10},
-}
-"""
-
 fig = plt.figure(figsize=(6, 6))
 plt.axis('equal')
+
 # plt.axis([-100, 100, 0, 200]) # full size
 # plt.axis([-50, 50, 0, 100]) # half size
 plt.axis([-30, 30, 0, 60])  # small size
+
 plt.grid()
 
 ax = plt.gca()
 
 
-# ax.axis('equal')
-# ax.set_aspect('equal')
-# ax.set(xlim=(-100, 100), ylim=(0, 255))
-
-
-# set_aspect('equal',
-# ax.tick_params(axis='x', which='major', length=1)
-# ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
-
-
 def yaw2r(yaw_ds, speed_kph):
+
+    # exit at standstill
+    if yaw_ds == 0 or speed_kph == 0:
+        # radius 0 = straight
+        return 0
+
     speed_ms = speed_kph / 3.6
     yaw_rad = math.radians(yaw_ds)
     r = speed_ms / yaw_rad
-    return r
+    return -r
 
 
 def point_to_segment_distance(P, A, B):
@@ -265,9 +252,9 @@ def target_selector(radius, object_list, dist):
 
 # 0x60a 0 Status
 # 0x60b 1 General
-# 0x60c 2 Quality
+# 0x60c 2 Quality -> not needed now
 # 0x60d 3 Extended
-# 0x60e 4 Warning
+# 0x60e 4 Warning -> not needed now
 
 # 0x201 (1Hz) & 0x60a (>10Hz) status
 def obj_0_status(msg):
@@ -311,11 +298,6 @@ def obj_0_status_2(msg):
     # cut_obj_list(msg['Obj_NofObjects'])
     obs['status'].update(msg)
 
-# obsolet -> integrated in obj_updater
-# 0x60b general
-# def obj_1_genral(msg):
-#    # obj_id = msg['Obj_ID']
-#    obs.update({msg['Obj_ID']: msg})
 
 # Object List
 # 0x60b-c general, quality, extended
@@ -339,6 +321,31 @@ def obj_update(msg):
     new_obj.update({obj_id: data})
     # update permanent obj list
     obs['obj'].update({obj_id: data})
+
+
+def yaw_update(msg):
+    # read yaw from can msg
+    yaw = msg.get('GIER_ROH')
+
+    # offset correction
+    yaw += 131.234
+    #print(round(yaw, 3))
+
+    # Todo: update only on moving -> test
+    #if yaw == 0 or obs['speed'] == 0:
+    #    return
+
+    # yaw to radius
+    radius = yaw2r(yaw, obs['speed'])
+
+    #print(radius)
+
+    # update radius
+    obs['radius'] = radius
+
+
+def speed_update(msg):
+    obs['speed'] = round(msg.get('V_ANZ'), 1)
 
 
 # delete old and incomplete objs
@@ -386,7 +393,7 @@ def obj_cleanup(delay_ms=500):
     """
 
 
-def can_reader():
+def radar_can_reader():
     i = 0
 
     print('Wait for CAN messages')
@@ -396,7 +403,7 @@ def can_reader():
         while True:
 
             # wait for msgs for 1 sec - is a blocking function
-            msg = bus.recv(1)
+            msg = bus1.recv(1)
 
             if msg:
                 msg_id = hex(msg.arbitration_id)
@@ -406,12 +413,12 @@ def can_reader():
 
                 # radar status msg
                 if msg_id == '0x201':
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
                     obj_0_status(decode_msg, )
 
                 # start of obj list
                 if msg_id == '0x60a':
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data)
                     obj_0_status_2(decode_msg)
                     # will overwrite obj list with a fresh one to remove old obj
                     obj_cleanup()
@@ -419,7 +426,7 @@ def can_reader():
 
                 # obj info
                 if msg_id == '0x60b' or msg_id == '0x60c' or msg_id == '0x60d' or msg_id == '0x60e':
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data)
                     obj_update(decode_msg)
                     # plt.pause(0.01)
 
@@ -452,7 +459,7 @@ def can_reader():
     except KeyboardInterrupt:
         print('Shut down bus')
         # stop bus
-        bus.shutdown()
+        bus1.shutdown()
 
         # print(str(i) + ' Msgs')
 
@@ -464,8 +471,43 @@ def can_reader():
         print(obs)
 
 
-thread = threading.Thread(target=can_reader)
-thread.start()
+def vehicle_can_reader():
+    try:
+        # receive loooooooping
+        while True:
+
+            # wait for msgs for 1 sec - is a blocking function
+            msg = bus0.recv(1)
+
+            if msg:
+                msg_id = hex(msg.arbitration_id)
+
+                # try:
+                # decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
+
+                # yaw rate msg
+                if msg_id == '0x300':
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    yaw_update(decode_msg)
+
+                # speed msg
+                if msg_id == '0x412':
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    speed_update(decode_msg)
+
+    except KeyboardInterrupt:
+        print('Shut down bus')
+        # stop bus
+        bus0.shutdown()
+
+
+# start CAN Reader as thread
+thread_r_can = threading.Thread(target=radar_can_reader)
+thread_r_can.start()
+
+thread_v_can = threading.Thread(target=vehicle_can_reader)
+thread_v_can.start()
+
 
 def init():
 
@@ -495,17 +537,30 @@ def animate(i):
         )),
         # straight lines right
         ax.add_patch(plt.Polygon(
-            corner_coordinates(0, 1.2),
+            corner_coordinates(obs.get('radius'), 1),
             closed=False,
-            facecolor='blue',
-            edgecolor='black'
+            facecolor='None',
+            edgecolor='black',
+            fill=False,
+            linewidth=2
         )),
         # straight lines left
         ax.add_patch(plt.Polygon(
-            corner_coordinates(0, -1.2),
+            corner_coordinates(obs.get('radius'), -1),
             closed=False,
-            edgecolor='black'
-        ))]
+            facecolor='None',
+            edgecolor='black',
+            fill=False,
+            linewidth=2
+        )),
+        # speed text
+        ax.text(
+            21,  # x
+            5,  # y
+            'kph: ' + str(obs.get('speed')),  # text
+        )
+
+    ]
 
     # Curved line
     """
@@ -607,7 +662,7 @@ def animate(i):
     obj_list = obs.get('obj').copy()
 
     # run target_selector MAGIC create the target selector list
-    ts_list, target_obj = target_selector(0, obj_list, dist=2)
+    ts_list, target_obj = target_selector(obs.get('radius'), obj_list, dist=1.5)
 
     # target_obj = None
 
