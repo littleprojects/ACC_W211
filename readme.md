@@ -1,16 +1,20 @@
-# W211 ACC
+# W211 ACC 
 
-This project is about to replace the ACC radar a MB W211.
+This project is about to replace the ACC (Adaptive Cruise Control) on an MB W211.
+
+Also called ART (AbstandsRegelTempomat) or Distronic.
 
 ## Motivation
 
-The radar runs on 24GHz and is disrupted by other radar modern radar systems.
+The w211 radar runs on 24GHz and is disrupted by other radar modern radar systems quite ofter.
 The most new car use radar at 24GHz for BlindSpotWarning (BSW).
-This systems interfere with the W211 radar and the ACC throws an error and stop working.
+These systems interfere with the W211 radar and the ACC throws an error and stop working.
+In this situation, the ACC/CC cant be used or reactivated for a while. It's impossible to drive with the ACC in traffic anymore.
 
 <img src="00_Reverseengineering/error_msg_4.jpeg">
+Error Message
 
-The modern radar uses a frequency sweep. So it changes the frequency permanent to be robust.
+The modern radar uses a frequency sweep. So it changes the frequency permanent to be more robust.
 
 
 ## Limitations
@@ -79,3 +83,22 @@ Fits good at the original sensor position.
 
 <img src="02_Sensor/radar_test_setup_2.jpeg"><br>
 Temporary radar integration to collect radar data.
+
+
+<hr>
+
+**Credits**
+
+* To the good documentation of the ART/Distronic system
+  * https://w220.wiki/Distronic
+* CAN Bus data
+  * https://github.com/rnd-ash/mb-w211-pc
+  * https://github.com/rnd-ash/W203-canbus/tree/master
+
+<hr>
+
+**License**
+
+This project is licensed under the MIT License.
+
+This project includes third-party libraries.
