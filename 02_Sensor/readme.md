@@ -138,5 +138,34 @@ set radar config
  | filtercfg_min_vxdepart    | 0.0      |
  | filtercfg_max_vxdepart    | 128.0    |
 
+## Radar inegration
+
+### Test setup for testing and data collection
+
+First quick installation of the radar on the car to collect CAN data.
+
+Power supply comes from a lighter socket. :) 
+
+<img src="radar_test_setup_1.jpeg"><br>
+Side view
+
+<img src="radar_test_setup_2.jpeg"><br>
+Front view
+
+
+<img src="radar_test_setup_3.jpeg"><br>
+temporary wiring
+<br>
+Now it's time for a coffe and do some data collection runs in the night when its hard to see the external radar sensor.
+I dont need trouble with the officials: ;) 
+
+### Speed and Yaw relay
+
+The radar needs a speed and yaw input. This will do the "can_relay" script.
+It reads speed and yaw from the vehicle CAN. Do some calc km/h->m/s and send it to the radar CAN.
+
+
+
+
 
 
