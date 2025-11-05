@@ -65,6 +65,9 @@ The **Continental 408-21** looks good.
 - little bit older but not so expensiv
 - wide short range
 
+<img src="02_Sensor/408.jpeg">
+Fits good at the original sensor position.
+
 ## Development progress
 
 - [x] CAR CAN reverse engineering
