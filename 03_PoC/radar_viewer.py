@@ -68,8 +68,8 @@ obj_data = {
 fig = plt.figure(figsize=(6, 6))
 plt.axis('equal')
 # plt.axis([-100, 100, 0, 200]) # full size
-plt.axis([-50, 50, 0, 100]) # half size
-# plt.axis([-30, 30, 0, 60])  # small size
+# plt.axis([-50, 50, 0, 100]) # half size
+plt.axis([-30, 30, 0, 60])  # small size
 plt.grid()
 
 ax = plt.gca()
@@ -235,7 +235,7 @@ def target_selector(radius, object_list, dist):
 
         # is obj edge close to path
         # Todo: dist_to_path can variate over dist_to_ego
-        if abs(obj_dist) < (dist - obj.get('Obj_Width') / 2):
+        if abs(obj_dist) < dist : #  obj.get('Obj_Width') / 2):
             obj_type = 1
 
         # create item
@@ -482,8 +482,6 @@ def animate(i):
     # draw circles, select to color for the circles based on the input argument i.
     # someColors = ['r', 'b', 'g', 'm', 'y']
 
-    # todo: run filter
-
     # create patch list with static elements, radar objects will append later to the list
     patches = [
         # radar field filed of view
@@ -605,7 +603,7 @@ def animate(i):
         ))
     """
 
-    # copy obj dict to work with
+    # copy obj dict to work with - changes can not effect the calc and display
     obj_list = obs.get('obj').copy()
 
     # run target_selector MAGIC create the target selector list
