@@ -30,3 +30,29 @@ Also ASAMMDF (Python) comes with a good GUI and a loot of tools.
 
 When you install a Vector software. A very usefull comes with it.
 **CANdb++** a very intuitive tools to create and mantain CAN Database
+
+## CAN onboard logger
+
+I install in the car a CAN logger to collect daily raw data from normal system behavior.
+If I replace the ART-ECU and sensor, I can not original system data anymore easy.
+Data could be useful to for analysis later.  
+
+<img src="pi_with_can_hat.jpeg">
+
+Material:
+- Pi 3 (is still cheap)
+- 2 channel hat
+  - Waveshare dual CAN hat+ with Power supply 
+  - can1 Vehicle CAN_C (engine & ART/ACC)
+  - can2 Radar
+  - power comes from the lighter socket nearby
+    - I bridge ground from power to CAN GND
+- optional extension for later
+  - Waveshare dual CAN hat
+    - can3 Vehicle CAN_B (comfort)
+    - can4 spare
+
+Software:
+- can_logger -> records raw CAN data in Busmaster log file format to view & replay later
+- Syncthing -> to upload the data automatically it a connection (Hotspot) is available
+
