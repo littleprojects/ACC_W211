@@ -243,7 +243,7 @@ BO_ 808 BS_328h: 8 Vector__XXX
  SG_ BRE_AKT_E : 47|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 768 BS_300h: 8 Vector__XXX
- SG_ GIER_ROH : 55|16@0+ (0.006,-327.68) [0|0] "°/s²" Vector__XXX
+ SG_ GIER_ROH : 55|16@0+ (0.006,-196.446) [0|0] "°/s²" Vector__XXX
  SG_ ART_E : 3|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ SFB : 8|2@1+ (1,0) [0|0] "" Vector__XXX
 
