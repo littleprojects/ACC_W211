@@ -35,20 +35,26 @@ config = {
 
 print('Init ' + module_name + ' ' + module_version)
 
-# print(('Load DBC: ' + config['can_0_dbc']))
+print(('Load DBC: ' + config['can_0_dbc']))
+# vehicle CAN
 db_0 = cantools.database.load_file(config['can_0_dbc'])
+# radar CAN
 db_1 = cantools.database.load_file(config['can_1_dbc'])
 
 # CAN Bus-Instanz
 print(('Start CAN: ' + config['bus_interface']))
+# vehicle CAN
 bus0 = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name=config['bus_interface'])
+# radar CAN
 bus1 = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])
 
 # main obj list
 obs = {'status': {},
        'obj': {},
        'radius': 0,
-       'speed': 0
+       'speed': 0,
+       'art_dist': 0,
+       'rad_dist': 0,
        }
 
 # temporary object list
@@ -76,7 +82,7 @@ def yaw2r(yaw_ds, speed_kph):
     speed_ms = speed_kph / 3.6
     yaw_rad = math.radians(yaw_ds)
     r = speed_ms / yaw_rad
-    return -r
+    return r
 
 
 def point_to_segment_distance(P, A, B):
@@ -328,7 +334,7 @@ def yaw_update(msg):
     yaw = msg.get('GIER_ROH')
 
     # offset correction
-    yaw += 131.234
+    # yaw += 131.234 # obsolete since dbc update
     #print(round(yaw, 3))
 
     # Todo: update only on moving -> test
@@ -347,6 +353,9 @@ def yaw_update(msg):
 def speed_update(msg):
     obs['speed'] = round(msg.get('V_ANZ'), 1)
 
+
+def art_update(msg):
+    obs['art_dist'] = msg.get('ABST_R_OBJ')
 
 # delete old and incomplete objs
 def obj_cleanup(delay_ms=500):
@@ -495,6 +504,11 @@ def vehicle_can_reader():
                     decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
                     speed_update(decode_msg)
 
+                # ART msg
+                if msg_id == '0x258':
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    art_update(decode_msg)
+
     except KeyboardInterrupt:
         print('Shut down bus')
         # stop bus
@@ -552,14 +566,7 @@ def animate(i):
             edgecolor='black',
             fill=False,
             linewidth=2
-        )),
-        # speed text
-        ax.text(
-            21,  # x
-            5,  # y
-            'kph: ' + str(obs.get('speed')),  # text
-        )
-
+        ))
     ]
 
     # Curved line
@@ -739,7 +746,7 @@ def animate(i):
     if target_obj is not None:
         # load obj data
         obj_rct = target_obj.get('obj')
-        # box
+        # draw box
         patches.append(ax.add_patch(plt.Rectangle(
             (-obj_rct.get('Obj_DistLat') - obj_rct.get('Obj_Width') / 2, obj_rct.get('Obj_DistLong')),  # x, y
             obj_rct.get('Obj_Width'),  # width
@@ -750,6 +757,25 @@ def animate(i):
             # edgecolor='k' # k = black
             # color=someColors[i % 5]
         )))
+        # store distance
+        obs['rad_dist'] = obj_rct.get('Obj_DistLong')
+    else:
+        # no target - reset distance
+        obs['rad_dist'] = 0
+
+    # add text details
+    patches.append(
+        # speed text
+        ax.text(
+            21,  # x
+            2,  # y
+            # text
+            'kph ' + str(obs.get('speed')) + '\n'\
+            'art  ' + str(round(obs.get('art_dist'), 1)) + '\n' \
+            'rad ' + str(round(obs.get('rad_dist'), 1))
+            ,
+        )
+    )
 
     """
     patches.append(ax.add_patch(plt.Rectangle(
@@ -759,7 +785,7 @@ def animate(i):
         angle=i,
         color=someColors[i % 5])))
     """
-    fig.canvas.draw()
+    #fig.canvas.draw()
 
     return patches
 
