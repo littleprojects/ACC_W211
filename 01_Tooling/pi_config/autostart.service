@@ -1,0 +1,11 @@
+[Unit]
+Description=Autostart Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStartPre=/bin/sleep 30
+ExecStart=/home/pi/autostart.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,7 @@
 	
-## doku
+# PI config
+
+## Hardware
 https://www.waveshare.com/wiki/2-CH_CAN_HAT%2B
 https://copperhilltech.com/blog/beginners-guide-to-using-socketcan-with-raspberry-pi-and-pican-board/
 
@@ -78,21 +80,21 @@ exit enviroemnt
 
 
 ### testing with python
-in envroment
+in environment
 
 after setting up can 
 python -m can.viewer -c can0 -i socketcan
 
-activate python enviroment
+activate python environment
 source can/bin/activate
 
-exit enviroemnt
-deacitvate
+exit environment
+deactivate
 
 
 ## AUTOSTART
 
-Servie
+Service
 
 systemctl 
 systemctl status autostart.service
@@ -104,3 +106,15 @@ start|stop|status
 
 sudo systemctl enable autostart
 disable
+
+Serice start the autostart.sh in /home/pi/
+
+## autostart.sh
+
+This script will be start by a service.
+
+- It inits the CAN lines
+- starts a Syncthing service to send log data home
+- start the can_logger for raw data recording
+- start the radar_can_relay to forward speed and yaw to the radar
+

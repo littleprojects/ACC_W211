@@ -1,13 +1,18 @@
 #!/bin/bash
 
+#echo "change user to PI"
+
+#su pi
+
 echo "move old logs"
 
-mv ~/ACC_W211/03_PoC/can_log/*.log ~/Sync/CAN_logs
+mv  /home/pi/ACC_W211/03_PoC/can_log/*.log /home/pi/Sync/CAN_logs
 
-echo "start Syncthing"
+echo "start Syncthing as PI"
 
-cd ~
-syncthing &
+cd /home/pi
+
+sudo -u pi syncthing &
 
 echo "setup can"
 
@@ -38,4 +43,5 @@ echo "Start CAN Logger"
 
 cd /home/pi/ACC_W211/03_PoC
 
-python3 can_logger.py 
+python3 can_logger.py &
+python3 radar_can_relay.py
