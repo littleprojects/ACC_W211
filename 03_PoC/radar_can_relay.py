@@ -41,6 +41,9 @@ log.info('init CAN bus')
 bus0 = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name=config['bus_interface'])
 bus1 = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])
 
+# PI config
+# bus0 = can.interface.Bus(channel='can0', interface='socketcan', bitrate=500000)
+# bus1 = can.interface.Bus(channel='can1', interface='socketcan', bitrate=500000)
 
 # 0x300 speed
 def relay_speed(vehicle_msg):
@@ -93,8 +96,8 @@ def relay_yaw(can_msg):
 
     yaw_msg_data = db_1.encode_message('YawRateInformation', {
         # ToDo -> offset correction first
-        #'RadarDevice_YawRate': yaw,
-        'RadarDevice_YawRate': 0,
+        'RadarDevice_YawRate': yaw,
+        #'RadarDevice_YawRate': 0,  # send zero
     })
 
     # fill up to 8 bytes
@@ -139,7 +142,6 @@ try:
             if i % 1000 == 0:
                 log.info('Msgs: ' + str(i))
                 i += 1  # +1 so it will not show this multiple times
-
 
 
 except KeyboardInterrupt:
