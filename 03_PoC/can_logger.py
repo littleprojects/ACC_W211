@@ -14,6 +14,11 @@ import datetime
 
 from lib.Storage import Storage
 
+print('sleep a bit')
+
+# sleep a while, so the  system can start up correctly
+time.sleep(10)
+
 
 def date_time_str(ts=time.time()):
     try:
@@ -67,18 +72,17 @@ os.makedirs(os.path.dirname(file), exist_ok=True)
 
 print('log to: ' + file)
 
-print('CAN setup')
-
 # init can
-os.system('sudo ifconfig can0 down')
-os.system('sudo ip link set can0 type can bitrate 50000')
-os.system('sudo ifconfig can0 txqueuelen 65536')
-os.system('sudo ifconfig can0 up')
+#print('CAN setup')
+#os.system('sudo ifconfig can0 down')
+#os.system('sudo ip link set can0 type can bitrate 50000')
+#os.system('sudo ifconfig can0 txqueuelen 65536')
+#os.system('sudo ifconfig can0 up')
 
-os.system('sudo ifconfig can1 down')
-os.system('sudo ip link set can1 type can bitrate 50000')
-os.system('sudo ifconfig can1 txqueuelen 65536')
-os.system('sudo ifconfig can1 up')
+#os.system('sudo ifconfig can1 down')
+#os.system('sudo ip link set can1 type can bitrate 50000')
+#os.system('sudo ifconfig can1 txqueuelen 65536')
+#os.system('sudo ifconfig can1 up')
 
 print('CAN connect')
 
@@ -90,7 +94,7 @@ i = 1
 j = 1
 
 # Öffne eine Datei zum Speichern der Nachrichten
-with open(file, 'a') as log_file:
+with open(file, 'w') as log_file:
     # header
     try:
         print('write header')
@@ -107,6 +111,7 @@ with open(file, 'a') as log_file:
 ***START DATABASE FILES***
 ***END DATABASE FILES***
 ***<Time><Tx/Rx><Channel><CAN ID><Type><DLC><DataBytes>***
+
 ''')
     except:
         print('CANT WRITE HEADER')
@@ -120,7 +125,7 @@ try:
         msg0 = bus0.recv(0.001)
         msg1 = bus1.recv(0.001)
 
-        if msg1 or msg1:
+        if msg0 or msg1:
             with open(file, 'a') as log_file:
                 if msg0:
                     log_file.write(log_string(msg0))
@@ -133,12 +138,12 @@ try:
         # idle counter
         j += 1
 
-        if i % 1000 == 0:
+        if i > 1000:
             print('' + str(i) + ' Msgs recorded')
             i = 1
             j = 1
 
-        if j % 1000 == 0:
+        if j > 20000:
             i = 1
             print('waiting')
 except KeyboardInterrupt:
