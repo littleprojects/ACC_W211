@@ -29,8 +29,39 @@ config = {
     'printlevel': 'INFO',  # debug
     # 'printlevel':                 'DEBUG',             # debug
 
+    # CAN Databases
     'can_0_dbc': 'dbc/CAN_C.dbc',
     'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc',
+
+    # Filter
+    'filter_dist_2 vehicle': 100,    # objects how are far away from vehicle (Look at Lat pos)
+    'filter_dist_2_path': 10,       # object how are far away from the driving path
+    'filter_dyn_prop_list': [0x1, 0x3, 0x4],  # see dyn_prop list
+
+    # display
+    'skip_hidden_objs': False
+}
+
+dyn_prop = {
+    0x0: 'moving',
+    0x1: 'stationary',
+    0x2: 'oncoming',
+    0x3: 'stationary candidate',
+    0x4: 'unknown',
+    0x5: 'crossing stationary',
+    0x6: 'crossing moving',
+    0x7: 'stopped',
+}
+
+obj_class = {
+    0x0: 'point',
+    0x1: 'car',
+    0x2: 'truck',
+    0x3: 'not in use',
+    0x4: 'motorcycle',
+    0x5: 'bicycle',
+    0x6: 'wide',
+    0x7: 'reserved',
 }
 
 print('Init ' + module_name + ' ' + module_version)
@@ -162,7 +193,11 @@ def obj_filter(obj):
         return True
 
     # distance
-    if obj.get('Obj_DistLong') > 100:
+    if obj.get('Obj_DistLong') > config.get('filter_dist_2 vehicle'):
+        return True
+
+    # dynamic
+    if obj.get('Obj_DynProp') in config.get('filter_dyn_prop_list'):
         return True
 
     # high lat, long speed
@@ -195,9 +230,21 @@ def target_selector(radius, object_list, dist):
         # if target_obj == None:
         #    target_obj = obj
 
-        # filter function
-        if obj_filter(obj):
+        # skip incomplete objs
+        if obj.get('Obj_DistLong') is None or \
+                obj.get('Obj_DistLat') is None:
             continue
+
+        # filter function
+        hide_obj = False
+
+        if obj_filter(obj):
+            hide_obj = True
+
+            # skip
+            if config.get('skip_hidden_objs'):
+                continue
+
 
         # set defaults if data missing
         # todo: do in function
@@ -223,13 +270,21 @@ def target_selector(radius, object_list, dist):
         # get the shortest distance and closest point
         obj_dist, cp = point_to_polyline_distance((x, y), drive_line)
 
-        # obj type 0 = normal, 1 = in lane, 2 target
-        obj_type = 0
+        # filter obj with too much distance to path
+        if obj_dist > config.get('filter_dist_2_path'):
+            hide_obj = True
+            continue
+
+        # obj type 0 = hide, 1 = normal, 2 = in lane, 3 target
+        obj_type = 1
 
         # is obj edge close to path
         # Todo: dist_to_path can variate over dist_to_ego
         if abs(obj_dist) < dist : #  obj.get('Obj_Width') / 2):
-            obj_type = 1
+            obj_type = 2
+
+        if hide_obj:
+            obj_type = 0
 
         # create item
         list_item = {
@@ -243,15 +298,20 @@ def target_selector(radius, object_list, dist):
         obj_list.append(list_item)
 
         # target selection with the smallest distance on driving path (type 1)
-        if obj_type == 1 and y < min_dist:
+        if obj_type == 2 and y < min_dist:
             target = list_item
             # set new min dist
             min_dist = y
+
+        # Todo login obj in after time as target
+        # Todo logout after time or dist
 
             #print(y)
 
     # print(dist_list)
     #print('---')
+
+    # Todo: floor target dist
 
     return obj_list, target
 
@@ -422,12 +482,12 @@ def radar_can_reader():
 
                 # radar status msg
                 if msg_id == '0x201':
-                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interpret signals to string
                     obj_0_status(decode_msg, )
 
                 # start of obj list
                 if msg_id == '0x60a':
-                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data)
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False)
                     obj_0_status_2(decode_msg)
                     # will overwrite obj list with a fresh one to remove old obj
                     obj_cleanup()
@@ -435,7 +495,7 @@ def radar_can_reader():
 
                 # obj info
                 if msg_id == '0x60b' or msg_id == '0x60c' or msg_id == '0x60d' or msg_id == '0x60e':
-                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data)
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False)
                     obj_update(decode_msg)
                     # plt.pause(0.01)
 
@@ -495,7 +555,7 @@ def vehicle_can_reader():
                 # decode_msg = db_0.decode_message(msg.arbitration_id, msg.data)
 
                 # yaw rate msg
-                if msg_id == '0x300':
+                if msg_id == '0x300' and msg.dlc == 8:
                     decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
                     yaw_update(decode_msg)
 
@@ -524,8 +584,6 @@ thread_v_can.start()
 
 
 def init():
-
-
     # initialize an empty list of obj
     return []
 
@@ -683,9 +741,14 @@ def animate(i):
         # normal line color
         line_color = 'black'
         obj_color = 'blue'
+        fill = True
+
+        # is obj hidden
+        if obj.get('type') == 0:
+            fill = False
 
         # is obj in path
-        if obj.get('type') == 1:
+        if obj.get('type') == 2:
             # line_color = 'red'
             obj_color = 'green'
 
@@ -703,44 +766,52 @@ def animate(i):
             angle=obj_rct.get('Obj_OrientationAngle'),
             rotation_point='center',
             color=obj_color,
+            fill=fill,
             # edgecolor='k' # k = black
             # color=someColors[i % 5]
         )))
 
-        # """
-        # text
-        x_coor = -obj_rct.get('Obj_DistLat')
-        text_align = 'left'
-        if x_coor > 0:
-            x_coor += obj_rct.get('Obj_Width') + 1
-        else:
-            x_coor += - obj_rct.get('Obj_Width') - 1
-            text_align = 'right'
 
-        patches.append(ax.text(
-            x_coor,  # x
-            obj_rct.get('Obj_DistLong'),  # + obj_rct.get('Obj_Length') / 2,  # y
-            str(str(obj_rct.get('Obj_ID')) + ' ' + str(obj_rct.get('Obj_Class'))),  # text
-            ha=text_align,
-        ))
-        # """
 
-        # get line details
-        line = obj.get('line')
 
-        # line to path
-        patches.append(
-            ax.add_patch(plt.Polygon(
-                [[line.get('x1'), line.get('y1')],
-                 [line.get('x2'), line.get('y2')]],
-                closed=False,
-                facecolor=None,
-                fill=False,
-                # facecolor='blue',
-                edgecolor=line_color
-                # alpha=0.2,
+
+        # if hidden - no text, no line
+        if fill:
+            # """
+            # text
+            x_coor = -obj_rct.get('Obj_DistLat')
+            text_align = 'left'
+            if x_coor > 0:
+                x_coor += obj_rct.get('Obj_Width') + 1
+            else:
+                x_coor += - obj_rct.get('Obj_Width') - 1
+                text_align = 'right'
+
+            patches.append(ax.text(
+                x_coor,  # x
+                obj_rct.get('Obj_DistLong'),  # + obj_rct.get('Obj_Length') / 2,  # y
+                # str(str(obj_rct.get('Obj_ID')) + ' ' + str(obj_class.get(obj_rct.get('Obj_Class')))),  # text
+                str(dyn_prop.get(obj_rct.get('Obj_DynProp'))),  # text
+                ha=text_align,
             ))
-        )
+            # """
+
+            # get line details
+            line = obj.get('line')
+
+            # line to path
+            patches.append(
+                ax.add_patch(plt.Polygon(
+                    [[line.get('x1'), line.get('y1')],
+                     [line.get('x2'), line.get('y2')]],
+                    closed=False,
+                    facecolor=None,
+                    fill=False,
+                    # facecolor='blue',
+                    edgecolor=line_color
+                    # alpha=0.2,
+                ))
+            )
 
     # Target obj
     if target_obj is not None:
@@ -776,6 +847,21 @@ def animate(i):
             ,
         )
     )
+
+    # ART Target dist
+    art_dist = obs.get('art_dist')
+    if art_dist > 0:
+        patches.append(
+            ax.add_patch(plt.Polygon(
+                [[-10, art_dist], [10, art_dist]],
+                closed=False,
+                facecolor='None',
+                edgecolor='red',
+                fill=False,
+                linewidth=2
+            ))
+        )
+
 
     """
     patches.append(ax.add_patch(plt.Rectangle(
