@@ -118,3 +118,10 @@ This script will be start by a service.
 - start the can_logger for raw data recording
 - start the radar_can_relay to forward speed and yaw to the radar
 
+## log history
+
+- 0-80 raw vehicle can
+- 80+ with radar log (first without speed and yaw)
+- 100+ CAN_ID hex fix and speed/yaw relay
+- 102 swap can lines by wire 1 is not vehicle -> ToDo change in config
+

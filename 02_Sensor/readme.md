@@ -157,7 +157,7 @@ Front view
 temporary wiring
 <br>
 Now it's time for a coffe and do some data collection runs in the night when its hard to see the external radar sensor.
-I dont need trouble with the officials: ;) 
+I don't need trouble with race control. ;) 
 
 ### Speed and Yaw relay
 

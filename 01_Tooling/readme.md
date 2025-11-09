@@ -39,7 +39,7 @@ Data could be useful to for analysis later.
 
 <img src="pi_with_can_hat.jpeg">
 
-Material:
+### Material:
 - Pi 3 (is still cheap)
 - 2 channel hat
   - Waveshare dual CAN hat+ with Power supply 
@@ -52,9 +52,23 @@ Material:
     - can3 Vehicle CAN_B (comfort)
     - can4 spare
 
-Software:
+### Software:
 - can_logger -> records raw CAN data in Busmaster log file format to view & replay later
 - Syncthing -> to upload the data automatically it a connection (Hotspot) is available
+
+### Pinout
+
+CAN pinning on a DSUB 9 connector
+
+- CAN0
+  - Pin 2 - can low
+  - Pin 7 - can high
+- CAN1
+  - Pin 1 - can low
+  - Pin 8 - can high
+- Power
+  - Pin 3 - GND
+  - Pin 9 - Vcc+
 
 ## Radar viewer
 
