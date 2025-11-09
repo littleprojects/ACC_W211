@@ -14,17 +14,23 @@ from lib.Logger import Logger
 # module name for LOGGING and CONFIG
 module_name = 'RADAR_RELAY'
 # just the Version of this script, to display and log; update this at major changes
-module_version = '0.0.1'
+module_version = '0.0.2'
 
 config = {
-    # 'bus_interface': 'VN1610',
-    'bus_interface': 'vCAN',
+    'bus_interface': 'VN1610',
+    #'bus_interface': 'vCAN',
 
     'loglevel': 'INFO',  # debug
     # 'loglevel':                 'DEBUG',             # debug
     'can_0_dbc': 'dbc/CAN_C.dbc',   # vehicle CAN
     'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc', # radar CAN
+
+    # filter
+    'yaw_filter_size': 3    # moving average filter (min: 1)
 }
+
+# create moving average list
+yaw_filter_list = [0] * config['yaw_filter_size']
 
 log = Logger(module_name).logger
 log.setLevel(utils.parse_log_level(config['loglevel']))
@@ -91,8 +97,16 @@ def relay_yaw(can_msg):
 
     yaw = can_msg.get('GIER_ROH')   # deg/s
 
-    # Todo YAW Offset is not curret
+    # YAW correction
     # yaw += 131
+
+    # smooth data
+    # add to list at end of list
+    yaw_filter_list.append(yaw)
+    # delete fist element
+    yaw_filter_list.pop(0)
+    # calc average
+    yaw = sum(yaw_filter_list) / len(yaw_filter_list)
 
     yaw_msg_data = db_1.encode_message('YawRateInformation', {
         # ToDo -> offset correction first
