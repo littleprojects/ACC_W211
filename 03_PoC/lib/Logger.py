@@ -21,6 +21,11 @@ class Logger:
         self.logger.addHandler(console_handler)
 
         log_file = os.path.join('log/Log_' + name + '.txt')
+        dir_path = os.path.dirname(log_file)
+
+        # create folder if not exist
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
 
         # setup logfile
         file_handler = RotatingFileHandler(log_file, maxBytes=1 * 1024 * 1024, backupCount=1)
