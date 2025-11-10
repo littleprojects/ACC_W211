@@ -38,7 +38,7 @@ def log_string(msg):
     log = time_str(time.time())
     log += ' Rx'
     log += ' ' + msg.channel
-    log += ' 0x' + str(hex(msg.arbitration_id))
+    log += ' ' + str(hex(msg.arbitration_id))
     if msg.is_remote_frame:
         log += ' x '
     else:
