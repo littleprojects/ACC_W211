@@ -26,7 +26,7 @@ config = {
     'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc', # radar CAN
 
     # filter
-    'yaw_filter_size': 3    # moving average filter (min: 1)
+    'yaw_filter_size': 5    # moving average filter (min: 1)
 }
 
 # create moving average list
@@ -95,7 +95,10 @@ def relay_speed(vehicle_msg):
 # 0x301 yaw
 def relay_yaw(can_msg):
 
-    yaw = can_msg.get('GIER_ROH')   # deg/s
+    yaw = can_msg.get('GIER_ROH')   # rad/s
+
+    # rad/sec to deg/s (1rad = 180/PI) # 180/PI = 57.2958
+    yaw = yaw * 57.2958
 
     # YAW correction
     # yaw += 131
@@ -129,7 +132,7 @@ i = 1
 
 try:
 
-    log.info('Start CAN loop')
+    log.info('Start CAN loop - wait for can msgs')
 
     # CAN Loop
     while True:
@@ -153,7 +156,7 @@ try:
 
                 i += 1
 
-            if i % 1000 == 0:
+            if i % 500 == 0:
                 log.info('Msgs: ' + str(i))
                 i += 1  # +1 so it will not show this multiple times
 
