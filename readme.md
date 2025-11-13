@@ -49,14 +49,14 @@ This was a Jumpstart!
 
 ## Tooling
 
-Notes about the Tooling in need to do this.
-
 * USB CAN Interface -> Vector VN1610. Bus other would also work
 * CAN Logging and interpreting SW -> Busmaster
 * small ecu with CAN interface for PoC
+  * PI with a CAN hat
 
 <img src="01_Tooling/pi_with_can_hat.jpeg">
 Pi with CAN hat for CAN logging and PoC testing
+<br>
 
 ## Radar Sensor
 
@@ -84,6 +84,8 @@ Fits good at the original sensor position.
 <img src="02_Sensor/radar_test_setup_2.jpeg"><br>
 Temporary radar integration to collect radar data.
 
+<img src="01_Tooling/radar_view_1.jpg">
+git A live radar view with object filter, target selector and driving path estimation
 
 <hr>
 
