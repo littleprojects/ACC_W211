@@ -1,8 +1,116 @@
-# Requiremnts
-
-Limiter and ACC are controlled by the ACC ecu program.
 
 # ACC
+
+An Adaptive Cruise Control (ACC) is a vehicle speed controller how adjust to the traffic situation. 
+
+International Standard:
+- ISO 15622 (Transport information and control System - Adaptive Cruise Control Systems)
+  - First standard with basic function description
+  - Use of braking is open -> but currently very common
+- ISO 22179 (Intelligent transport systems - Full speed ragen adaptive cruise control (FSRA))
+  - expansion to low speeds
+
+The main function of the ACC is the speed control to a set target speed.
+And the most important feature is the adaption of the vehicle speed to speed of next vehicle in front.
+The ACC have to keep a minimum distance to vehicle in front based related (*Time gap*) to the current speed.
+If the target vehicle leaves the driving corridor, the vehicle will resume to the set target speed.
+
+**Time gap** to front vehicle:
+
+t = d/v
+
+* t - Time gap
+* d - clearance distance
+* v - vehicle speed
+
+
+**History of the ACC development**
+
+The function was firstly documented in 1981.
+The introdution of EURO III requires a installation of electronik throttle.
+This was very usefull for the common cruise control function.
+A benefit was also the integration os the ESP system how allows active braking and access to a yaw sensor for curve path estimation. 
+
+The first cars was available around 2000 on the market.
+And from 2005 also with low speed support and "Stop & Go" function.
+
+## Requirements
+
+From ISO 15622
+
+Free Driving
+- Keep speed constant and ensure high comfort
+  - Low jerks and no oscillations
+- Use the brake to reduce speed if the target speed was set lower or when driving downhill
+
+Following Mode
+- Regulate speed by adopting the speed of the vehicle ahead, with damping to avoid copying its speed fluctuations
+- Maintain the set time gap to the target time gap
+- Smooth fallback during cut-in events
+- Ensure stability during convoy driving with other ACC vehicles
+- Provide sufficient acceleration for smooth merging and catching up
+- Provide adequate deceleration for following in flowing traffic
+- Automatically detect target objects when approaching or during lane changes of vehicles ahead within a defined distance range using a specified target search corridor
+
+During Approach
+- Quickly adjust to the target distance during slow approach
+- During fast approach, provide a predictable deceleration profile to help the driver assess whether manual intervention is needed due to insufficient ACC deceleration
+- When "diving" into the safety distance, the vehicle should fall back appropriately
+
+Functional Limits
+- No control at very low speeds and handover to the driver (ISO 15622: ≤ 5 m/s (18 kph), no positive acceleration)
+- Minimum target speed above 7m/s (30kph)
+- The time gap must not fall below 1s in steady-state conditions 
+- Driver intervention has priority
+- Deactivation upon brake pedal actuation
+- Override upon accelerator pedal actuation
+- Driver sets the target speed (v_set) and target time gap (t_set)
+- Proper handover in case of system failure, especially during a deceleration process
+- Acceleration must remain within the limits of a_min = -3.5 m/s² to a_max = 2.5 m/s²
+
+<img src="../00_Reverseengineering/ACC_limits.png">
+
+**Additional Requirements for Full Speed Range ACC (ISO 22179)**
+
+During Following
+- Control down to a speed of 0 km/h (complete stop), especially during low-speed driving
+
+During Stopping
+- Maintain a stopping distance of 2–5 m
+- Apply higher deceleration at low speeds
+- Ensure safe standstill using an appropriate braking system
+- In case of system shutdown without driver intervention while stationary, a transition to a safe holding state is required
+
+Functional Limits
+- over V_high_min = 20 m/s (72 kph)
+  - a_max(V_high) = 2 m/s²
+  - a_min(V_high) = -3,5 m/s²
+  - y_max(V_high) = 2,5 m/s³
+- below V_low_max = 5 m/s (18 kph)
+  - a_max(V_low) = 4 m/s²
+  - a_min(V_low) = -5 m/s²
+  - y_max(V_low) = 5 m/s³
+
+<img src="../00_Reverseengineering/ACC_limits_FSR.png">
+
+## System structure
+
+Functional Modules of ACC
+- ACC State Management
+- Control Elements
+- Display Elements
+- Self-Diagnosis
+- Environmental Sensing
+- Target Object Selection
+- Path Determination
+- Vehicle Dynamics Sensing
+- Following Control
+- Special Situation Handling
+- Speed Control
+- Acceleration Control
+- Braking Control
+- Powertrain Control
+
 
 ## State machine
 
