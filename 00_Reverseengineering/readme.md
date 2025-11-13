@@ -6,6 +6,96 @@
 - https://github.com/rnd-ash/W203-canbus/tree/master
 - https://w220.wiki/Distronic
 
+## W211 ACC
+
+<img src="SCU.jpg">
+
+The fist version of the *Distronic* is based on a SCU (Sensor and Control Unit).
+The Sensor data analys was also integrated in the ACC controll unit.
+Later versions and the most comon architecture are seperate units. This makes it very hard to replace the sensor, because we also need to replace the control unit completly.
+
+**Challenge accepted**
+
+The Distronic Controll Unit talks over the CAN_C (Engine CAN) with the ESP.
+
+On the Control unit is also the Speed limiter function implemented. It don't make sense because a limiter and cruise control is available without the Radar & ACC control unit.
+*German engineering... :)*
+
+### ACC ECU
+
+Is calld internal as N63/1 (DTR - Distronic)
+
+The Distronic is connected via CAN to the CAN C (Engine Bus) and to the Radar Sensor via Serial and Coaxial cable.
+
+<img src="DTR_Network.jpeg">
+
+So the DTR gehts the Radar RAW data, to the digitalisation and Speed control just via CAN and is located under the passenger seat.
+
+Connection via CAN
+- CAN C: 
+    - 500kb
+    - Cable: 
+        - Solid Green - CAN_H PIN 
+        - Green/white - CAN_LOW
+        - CAN C (Engine CAN)
+    - Access at the ACC ECU or under entry at the left (driver) side (Green cables) -> for debug and reverse engineering
+- Power
+    - 12V from Cirtuit 87
+    - GND
+
+Source https://w220.wiki/Distronic
+
+### Radar Sensor
+
+<img src="radar.jpg">
+
+**Old sensor**
+- doppler radar at 24Ghz
+- Sensor range: 0 - 150m
+- measure of speed differences form -50 to 200kph
+- Field of view: 3 bream with 3 deg = 9 deg total
+    - main corridor 3 deg = a line with at 100m
+    - adapt this by 3 deg per side
+- sends the sensor data over a high frequency coaxial cable to the ACC CU
+
+<img src="600px-Distronic_Retrofit_025.jpg">
+
+Source https://w220.wiki/Distronic
+
+**Continental 408-21**
+Premium Long Range Radar
+
+<img src="../02_Sensor/408.jpg">
+
+- Range up to 260m
+- -400 to 200 kph relativ speed measureing
+- 3° and 9° FOW. and 45° in short range
+- Robust and cost efficent
+- EU and USA 
+- Connector: Tyco MQS BU-GEH KPL 8P (C-114-18063-128 - Coding A)
+
+Take a look at folder 02_Sensor for more details.
+
+Needes Signals:
+- Vehicle moving direction (0 stanstill, 1 forward, 2 reverse) -> Available
+- Vehicle Speed in m/s -> available, calc needed
+- vehicle Yaw rate (°/s) -> available
+  - Sensor Raw value vs mesured deg (Roundabout test)
+  - 300 = 180°
+  - 600 = 360°
+- GIER_ROH / 1.6666 = ° or GIER_ROH * 0.6 = °
+  - 0.6 is very close to 57,2958 (180/PI) what is used to transform rad into deg
+  - yaw rate is given in rad/s with factor 0.001
+
+- check mounting position to be sure. But should be in rage
+- dimensions and cable connector
+- check radar Cover.
+        - Field of view, 
+        - 10mm distance to cover
+        - Tilt angle 10° < x < 30°
+        - Material (ABS)
+
+
 ## ACC Function
 
 - Works from 30 kph up to 180 kph
@@ -107,66 +197,7 @@ If you press Resume, Up or Down over 30 kph. The ACC switch on and CAS goes off
 
 ## Vehicle Interface
 
-### ACC ECU
 
-Is calld internal as N63/1 (DTR - Distronic)
-
-The Distronic is connected via CAN to the CAN C (Engine Bus) and to the Radar Sensor via Serial and Coaxial cable.
-
-So the DTR gehts the Radar RAW data, to the digitalisation and Speed control just via CAN.
-
-- Is located under the passenger seat
-- Connection via CAN
-- CAN: 
-    - 500kb
-    - Cable: 
-        - Solid Green - CAN_H PIN 
-        - Green/white - CAN_LOW
-        - CAN C (Engine CAN)
-    - Access at the ACC ECU or under entry at the left (driver) side (Green cables) -> for debug and reverse engineering
-- Power
-    - 12V from Cirtuit 87
-    - GND
-
-Source https://w220.wiki/Distronic
-
-### Radar Sensor
-
-**Old sensor**
-- Sensor range: 0 - 150m
-- measure of speed differences form -50 to 200kph
-- Field of view: 3 bream with 3 deg = 9 deg total
-    - main corridor 3 deg = a line with at 100m
-    - adapt this by 3 deg per side
-
-Source https://w220.wiki/Distronic
-
-**Continental 408-21**
-Premium Long Range Radar
-
-- Range up to 260
-- -400 to 200 kph relativ speed measureing
-- 3° and 9° FOW. and 45° in short range
-- Robust and cost efficent
-- EU and USA 
-- Connector: Tyco MQS BU-GEH KPL 8P (C-114-18063-128 - Coding A)
-
-Needes Signals:
-- Vehicle moving direction (0 stanstill, 1 forward, 2 reverse) -> Available
-- Vehicle Speed in m/s -> available, calc needed
-- vehicle Yaw rate (°/s) -> available
-  - Sensor Raw value vs mesured deg (Roundabout test)
-  - 300 = 180°
-  - 600 = 360°
-> GIER_ROH / 1.6666 = ° or GIER_ROH * 0.6 = °
-
-- check mounting position to be sure. But should be in rage
-- dimensions and cable connector
-- check radar Cover.
-        - Field of view, 
-        - 10mm distance to cover
-        - Tilt angle 10° < x < 30°
-        - Material (ABS)
 
 # CAN
 

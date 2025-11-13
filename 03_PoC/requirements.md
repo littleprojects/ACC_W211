@@ -246,16 +246,17 @@ ART 0x258
 SOLL_ABSTAND is linked to Speed (kph) and ART_ABSTAND (0-200)
 
 ART_ABSTAND
-200 = short
-100 = normal
-0 = wide
+* 200 = short
+* 100 = normal
+* 0 = wide
 
-min distance 3.5m
+* min distance 3.5m
 
-factor_var = ART_ABSTAND / -100 # turn 200->-2; 100->-1; 0->0
-SOLL_ABSTAND [m] = round(Speed * (0,475 - factor_var * 0,2476 ) + 3.5) 
+>factor_var = ART_ABSTAND / -100 # change 200-> -2; 100-> -1; 0-> 0
 
-Or a 3D Look Up Table
+>SOLL_ABSTAND_m = round(Speed_kph * (0,475 - factor_var * 0,2476 ) + 3.5) 
+
+Or use a 2D Look Up Table (Speed, ART_ABSTAND) with interpolation between set points.
 
 Warn if distance below 0.8 sec
 ```
