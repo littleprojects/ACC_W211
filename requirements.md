@@ -216,6 +216,21 @@ Note: distances below 0.5 sec is punishable. These are 9 Meter a 50kph or 18m at
 
 **Range**
 
+In ISO 15622 describe the sensor range as follows:
+
+Minimal object detection range:
+>d_min0 = max(2m (0,25 s * v_low))
+
+Minimal object and range estimation range:
+>d_min1 = t_min(v_low) * v_low
+
+A distance of 10m is assumed here. At this distance, it is assumed that the driver will be asked to take over in this situation and will do so.
+
+Upper sensor range limit
+>d_to_max = min((v * 3,6s), 120 m)
+
+<img src="00_Reverseengineering/ACC_limits-distance_range.png">
+
 **Corner Radius**
 
 ## Ouput
