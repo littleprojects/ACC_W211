@@ -25,6 +25,8 @@ The modern radar uses a frequency sweep. So it changes the frequency permanent t
 
 **Don't try this at home.**
 
+**Project is under development**
+
 <hr>
 
 I set this project up in seval steps
@@ -118,6 +120,8 @@ A live radar object viewer with object filter, target selector and driving path 
 
 **License**
 
-This project is licensed under the MIT License.
+No License set now. 
+So all rights reserved.
+Because it is currently under development. 
 
 This project includes third-party libraries.
