@@ -68,7 +68,7 @@ Functional Limits
 - Proper handover in case of system failure, especially during a deceleration process
 - Acceleration must remain within the limits of a_min = -3.5 m/s² to a_max = 2.5 m/s²
 
-<img src="../00_Reverseengineering/ACC_limits.png">
+<img src="00_Reverseengineering/ACC_limits.png">
 
 **Additional Requirements for Full Speed Range ACC (ISO 22179)**
 
@@ -91,7 +91,7 @@ Functional Limits
   - a_min(V_low) = -5 m/s²
   - y_max(V_low) = 5 m/s³
 
-<img src="../00_Reverseengineering/ACC_limits_FSR.png">
+<img src="00_Reverseengineering/ACC_limits_FSR.png">
 
 ## System structure
 
@@ -111,21 +111,16 @@ Functional Modules of ACC
 - Braking Control
 - Powertrain Control
 
+<img src="00_Reverseengineering/ACC_Functional_model.png">
 
 ## State machine
 
-INIT
-* startup
-Not Ready (Disabled)
-* Ready Checker (No -> Not Ready)
-Ready
-* Ready Checker (No -> NotReady, Yes -> go on)
-* warning calc
-* Enable condition (No -> Rady, Yes -> Active)
-Activ
-* Ready Checker (No -> NotReady, Yes -> go on)
-* warning calc
-* Diable condition (No -> Active, Yes -> Ready)
+<img src="00_Reverseengineering/ACC_statemachine.png">
+ACC onlye state machine
+<br>
+<br>
+<img src="00_Reverseengineering/ACC-Lim_statemachine.png">
+Add Limiter
 
 ## Input
 
@@ -161,18 +156,50 @@ Activ
       * DRTGTM = 2 (Driving direction reverse)
 
 ### Enable Condition
-* Ready Check ok
+
+When ALL conditions are positive the ACC is allowed to activate
+* Ready Check
+  * All msgs in time
+  * Vehicle and sensor states ok
 * Speed over 30 kph and <180
+* Is in D gear
+* RPM is ok (not below idle)
+* ESP ok
+* ESP not active
+* parking brake released
+* No ACC System error
 * Set Speed (Up, Down, resume)
 
-### Diable Condition
-* cruise control switch push forward
-* break manually
-* speed is below 30 kph
+### Disable Condition
+
+ACC will be deactivated if ONE conditions is active 
+
+* brake manually
+* cruise control switch push forward (off)
+* speed is below v_min
 * Ready Check negativ
-* to hard breaking
+* Gear not D
+* ESP active
+* park brake active
+* to hard braking from ACC
 * to fast steering
-* to big Steering angle
+* to big Steering angle (lateral acceleration)
+
+*Full Speed Range enable and disable conditions are not included now --> problem of my future me
+
+## Controls
+
+Controls are needed to hand over to the ACC system and set the desired speed and distance.
+
+Some cars have a button to switch from "ACC off" to "ACC stand-by" state. The w211 dont have this.
+If all checks are positive the ACC goes into "stand-by" automatically. 
+
+- Switch to activate the ACC
+  - often used to set current or resume speed and increase speed after activation
+- Switch to deactivate the ACC
+- switch to increase speed
+- switch to decrease speed 
+- options to adjust the time gap
 
 ### Warning calc
 * if warnings are active
@@ -183,7 +210,13 @@ Activ
 if distance_to_vehicle <= warn_dist(speed_kph) for 3 sec and warning_tone_active:
   send warning  
 
-Note: distances below 0.5 sec is punishable. This are 9 Meter a 50kph or 18m at 100hph
+Note: distances below 0.5 sec is punishable. These are 9 Meter a 50kph or 18m at 100hph
+
+### Object detection rage
+
+**Range**
+
+**Corner Radius**
 
 ## Ouput
 
@@ -273,3 +306,37 @@ warn_dist (speed):
 * diable with button
 * diable at kick down
 
+
+
+
+
+
+# Ideas
+
+### additional Feature Ideas:
+- disable (passiv) acc during hard cornes (if steering angle is <>x°) resume if steering is back in normal range
+- umschalten zwischen ACC und Tempomat
+- Niveau anpassung nach geschwindigkeit >70 Low 1 >120 Low2
+
+Unterschied zu Distronic PLUS
+- Bremst bis zu 4m/s²
+- Bremst bis zum Stillstand
+- Kann wieder anfahren nachdem man das Gas angetippt hat
+
+Driver Information (On CAN 3 Information)
+- Infos about ACC or Vehicle
+- Driver analysis (take a break, Driver Droisiness, detection -> reset distance if driver have bad reactions)
+
+DTR will NOT engage or switch of when:
+- fuel level is low
+- Enging temp (water, oil) is to high
+
+Ice / cold warning:
+- beep and show a information when temperature is or drops below 2 °c
+
+Infos 0x1A4
+- Display data about the car on the display
+- Oil_T, Wat_t, Gearbox, Brakeweare, V_bat...
+
+Comfort
+- Auto switch on of Seat heating or cooling depending on outside and inside Temp at start.

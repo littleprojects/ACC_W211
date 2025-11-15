@@ -19,9 +19,11 @@ The modern radar uses a frequency sweep. So it changes the frequency permanent t
 
 ## Limitations
 
-This is just a Proof of Concept!
+**This is just a Proof of Concept!**
 
-Don't use this on the public road!
+**Don't use this on public road!**
+
+**Don't try this at home.**
 
 <hr>
 
@@ -31,7 +33,10 @@ I set this project up in seval steps
 
 This is about to learn how the ACC in the Car works.
 
-Write down the basic functions and technical details how the ACC in the Car works.
+**The worst thing first:** The Radar don't have a own compute unit. This is integrated in the ACC control unit.
+It's a SCU (Sesor and Control Unit). For this reason, I also need to replace the Sensor and the control unit.
+
+<img src="02_Sensor/Distronic_049.jpg">
 
 The ACC talks with the vehicle about a single CAN line (CAN_C - Engine CAN).
 With a CAN Database I can read out all needed information from the vehicle and what is send by the ACC control unit.
@@ -47,10 +52,19 @@ https://github.com/rnd-ash/mb-w211-pc
 
 This was a Jumpstart!
 
+Details are here: [Reverse engineering](00_Reverseengineering/readme.md).
+
+## Requirements
+
+Take a look at the [requirements](requirements.md).
+
+Paperwork and math. Here is the magic explaind.
+It's the foundation for project.
+
 ## Tooling
 
 * USB CAN Interface -> Vector VN1610. Bus other would also work
-* CAN Logging and interpreting SW -> Busmaster
+* CAN logging and interpreting SW -> Busmaster
 * small ecu with CAN interface for PoC
   * PI with a CAN hat
 
@@ -74,18 +88,21 @@ Fits good at the original sensor position.
 
 ## Development progress
 
-- [x] CAR CAN reverse engineering
-- [x] Simple Cruise Control to proof the concept
-- [x] Drinking coffe 
+- [x] CAR CAN reverse-engineering
+- [ ] Requirements and engineering - in progress
+- [x] Simple Cruise Control to proof the concept - its working
+- [x] Drinking coffe
 - [x] Radar sensor selection
 - [ ] Radar integration - in progress
 - [ ] ...
+
+<hr>
 
 <img src="02_Sensor/radar_test_setup_2.jpeg"><br>
 Temporary radar integration to collect radar data.
 
 <img src="01_Tooling/radar_view_1.jpg">
-git A live radar view with object filter, target selector and driving path estimation
+A live radar object viewer with object filter, target selector and driving path estimation
 
 <hr>
 

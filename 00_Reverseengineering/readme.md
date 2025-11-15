@@ -129,33 +129,6 @@ DTR will NOT engage:
 - ESP, ABS,, Brake Gearbox or Engine shows an error
 - Chrash Signal
 
-### additional Feature Ideas:
-- disable (passiv) acc during hard cornes (if steering angle is <>x°) resume if steering is back in normal range
-- umschalten zwischen ACC und Tempomat
-- Niveau anpassung nach geschwindigkeit >70 Low 1 >120 Low2
-
-Unterschied zu Distronic PLUS
-- Bremst bis zu 4m/s²
-- Bremst bis zum Stillstand
-- Kann wieder anfahren nachdem man das Gas angetippt hat
-
-Driver Information (On CAN 3 Information)
-- Infos about ACC or Vehicle
-- Driver analysis (take a break, Driver Droisiness, detection -> reset distance if driver have bad reactions)
-
-DTR will NOT engage or switch of when:
-- fuel level is low
-- Enging temp (water, oil) is to high
-
-Ice / cold warning:
-- beep and show a information when temperature is or drops below 2 °c
-
-Infos 0x1A4
-- Display data about the car on the display
-- Oil_T, Wat_t, Gearbox, Brakeweare, V_bat...
-
-Comfort
-- Auto switch on of Seat heating or cooling depending on outside and inside Temp at start.
 
 ### Controll inputs
 
@@ -197,7 +170,12 @@ If you press Resume, Up or Down over 30 kph. The ACC switch on and CAS goes off
 
 ## Vehicle Interface
 
-
+CAN C (Chassis or engine CAN)
+- 500kb
+- Connector: driver side under the sill cover
+- Green white cables
+  - Solid Green CAN_H
+  - Green/white CAN_L
 
 # CAN
 
@@ -353,9 +331,7 @@ and to have some setpoint during touring down without throttle, a torque speed m
 
 | Speed [kph] | Torque [Nm] |
 |-------------|-------------| 
-| 30 | 206,7       |
-| 50 | 213,5 |
+| 30          | 206,7       |
+| 50          | 213,5       |
 | 60          | 217,9       |
-| 100 | 241,5       |
-
-
+| 100         | 241,5       |
