@@ -227,11 +227,59 @@ Minimal object and range estimation range:
 A distance of 10m is assumed here. At this distance, it is assumed that the driver will be asked to take over in this situation and will do so.
 
 Upper sensor range limit
->d_to_max = min((v * 3,6s), 120 m)
+>d_to_0 = 50m
+>t_to = 2s
+>d_to_max = d_to_0 * v_ms * t_to
 
 <img src="00_Reverseengineering/ACC_limits-distance_range.png">
 
 **Corner Radius**
+
+Todo ... :D
+
+
+**Target Selection**
+
+curvature estimation is possible from
+- Steering angle
+- yaw rate
+- lateral acceleration
+- wheel speeds
+
+Example:
+
+>Corner_Radius = speed[m/s] / yaw [rad/s] 
+
+A robust method to for the object detection is the detection range of **1-1,2 m** from the estimated path.
+
+Methods to optimize the target selection:
+- variable adaptive road size
+  - need lane detection for road size estimation
+    - camera based or over standing/oncoming objects
+  - adjust range to path from lane width and position in line
+  - are there lanes left or right, if not, ignore them in the target selection
+
+
+- a position and time based hysteresis function
+  - trace probability [%] 
+  - target probability [%]
+  - combination of both >40% = target
+    - weighting is adjustable
+    - can be go up to 100%
+    - reduced by not detection time or not in lane anymore
+    - below 20% = no target anymore
+
+
+
+- object filtering
+  - ignoring oncoming & standing objects
+    - edge case: stopping objects
+  - to far objects to avoid false detection
+
+- sort by
+  - shortest long distance
+  - dist to path
+  - min acceleration
 
 ## Ouput
 

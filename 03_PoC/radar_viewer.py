@@ -3,6 +3,16 @@ Prof of Concept:
 
 Read out the radar information and display it
 This script print the CAN data and parse it with a CAN Database (DBC)
+
+Target selector:
+
+Stage1:
+Find the closest obj on path - instable and find and lose target quickly
+Stage2:
+Lock in and out of obj by time and dist
+Stage3:
+Obj history analyse, is it toggeling arount driving path at higher distance
+
 """
 
 import can
@@ -15,12 +25,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
+from lib import utils
+
 import threading
 
 # module name for printGING and CONFIG
 module_name = 'RADAR_VIEW'
 # just the Version of this script, to display and print; update this at major changes
-module_version = '0.0.1'
+module_version = '0.0.2'
 
 config = {
     # 'bus_interface': 'VN1610',
@@ -34,12 +46,18 @@ config = {
     'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc',
 
     # Filter
-    'filter_dist_2 vehicle': 100,    # objects how are far away from vehicle (Look at Lat pos)
-    'filter_dist_2_path': 10,       # object how are far away from the driving path
+    'filter_dist_2_vehicle': 100,  # objects how are far away from vehicle (Look at Lat pos)
+    'filter_dist_2_path': 10,  # object how are far away from the driving path
     'filter_dyn_prop_list': [0x1, 0x3, 0x4],  # see dyn_prop list
 
     # display
-    'skip_hidden_objs': False
+    'skip_hidden_objs': False,
+
+    # target lock in/out
+    'dist_t_path': 1,   # [m]
+    'lock_in_increase': 10,     #
+    'lock_in_decrease': 4,     #
+    'lock_in_active': 30,    #
 }
 
 dyn_prop = {
@@ -67,36 +85,37 @@ obj_class = {
 print('Init ' + module_name + ' ' + module_version)
 
 print(('Load DBC: ' + config['can_0_dbc']))
-# vehicle CAN
-db_0 = cantools.database.load_file(config['can_0_dbc'])
-# radar CAN
-db_1 = cantools.database.load_file(config['can_1_dbc'])
+db_0 = cantools.database.load_file(config['can_0_dbc'])     # vehicle CAN
+db_1 = cantools.database.load_file(config['can_1_dbc'])     # radar CAN
 
 # CAN Bus-Instanz
 print(('Start CAN: ' + config['bus_interface']))
-# vehicle CAN
-bus0 = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name=config['bus_interface'])
-# radar CAN
-bus1 = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])
+bus0 = can.interface.Bus(channel='0', interface='vector', bitrate=500000, app_name=config['bus_interface'])  # vehicle CAN
+bus1 = can.interface.Bus(channel='1', interface='vector', bitrate=500000, app_name=config['bus_interface'])  # radar CAN
 
 # main obj list
 obs = {'status': {},
        'obj': {},
        'radius': 0,
+       'curvature': 0,
        'speed': 0,
        'art_dist': 0,
+       'art_target_dist': 0,
        'rad_dist': 0,
-       }
+
+       'lock_in_list': {},
+       #'target_history': {}
+    }
 
 # temporary object list
 new_obj = {}
 
-fig = plt.figure(figsize=(6, 6))
+fig = plt.figure(figsize=(7, 7))
 plt.axis('equal')
 
 # plt.axis([-100, 100, 0, 200]) # full size
-# plt.axis([-50, 50, 0, 100]) # half size
-plt.axis([-30, 30, 0, 60])  # small size
+plt.axis([-50, 50, 0, 100])  # half size
+# plt.axis([-30, 30, 0, 60])  # small size
 
 plt.grid()
 
@@ -104,7 +123,6 @@ ax = plt.gca()
 
 
 def yaw2r(yaw_ds, speed_kph):
-
     # exit at standstill
     if yaw_ds == 0 or speed_kph == 0:
         # radius 0 = straight
@@ -128,8 +146,9 @@ def point_to_segment_distance(P, A, B):
     return distance, closest
 
 
-def point_to_polyline_distance(P, polyline):
-    """Berechnet den minimalen Abstand von Punkt P zu einem Linienzug und gibt den nächsten Punkt zurück
+def point_to_polyline_distance(P, polyline, obj_width=0):
+    """returns minimal distance and point from point P to path
+    P should be the center of the object, half obj width will be subtracted from the distance
     P = (2, 3)
     polyline = [(0, 0), (5, 0), (5, 5)]
     """
@@ -141,6 +160,9 @@ def point_to_polyline_distance(P, polyline):
         if dist < min_distance:
             min_distance = dist
             closest_point = cp
+
+    min_distance = min_distance - obj_width/2
+
     return min_distance, closest_point
     # return dist, cp
 
@@ -148,13 +170,13 @@ def point_to_polyline_distance(P, polyline):
 def corner_coordinates(radius, offset=0):
     # is straight
     if radius == 0:
-        return [[0 + offset, 0], [0 + offset, 260]]
+        return [[0 + offset, -5], [0 + offset, 260]]
 
     if radius > 0:
         points = []
         for i in range(0, 100):
-            x = round(-radius + offset + radius * math.cos(i / 50), 2)
-            y = round(radius * math.sin(i / 50), 2)
+            x = round(-radius + offset + radius * math.cos(i / 50), 3)
+            y = round((radius * math.sin(i / 50) - 5), 3)
 
             points.append([x, y])
 
@@ -170,8 +192,8 @@ def corner_coordinates(radius, offset=0):
     if radius < 0:
         points = []
         for i in range(0, 100):
-            x = round((-radius + offset + radius * math.cos(i / 50)), 2)
-            y = round((-radius * math.sin(i / 50)), 2)
+            x = round((-radius + offset + radius * math.cos(i / 50)), 3)
+            y = round((-radius * math.sin(i / 50)) - 5, 3)
 
             points.append([x, y])
 
@@ -185,25 +207,137 @@ def corner_coordinates(radius, offset=0):
 
 
 # filter
-def obj_filter(obj):
-
-    # coordinates missing
+def obj_skip(obj):
     if obj.get('Obj_DistLong') is None or \
             obj.get('Obj_DistLat') is None:
-        return True
-
-    # distance
-    if obj.get('Obj_DistLong') > config.get('filter_dist_2 vehicle'):
         return True
 
     # dynamic
     if obj.get('Obj_DynProp') in config.get('filter_dyn_prop_list'):
         return True
 
+    return False
+
+
+def obj_hide(obj):
+
+    # max range by speed 50m at 0 kph, 100m at 50 kph
+    if obj.get('Obj_DistLong') > (50 + obs['speed']/2):
+        return True
+
+    # max distance
+    if obj.get('Obj_DistLong') > config.get('filter_dist_2_vehicle'):
+        return True
+
+    # hide oncoming traffic
+    if obj.get('Obj_VrelLong') * -3.6 > obs['speed']:
+        return True
+
+    # slow traffic DANGER
+    if obj.get('Obj_VrelLong') * -3.6 > obs['speed'] * 0.9:
+        return True
+
     # high lat, long speed
     # points
 
     return False
+
+
+def update_lock_in_list(obj):
+    """
+    obj = {
+            'obj_id': key,
+            'line': {'x1': x, 'y1': y, 'x2': cp[0].item(), 'y2': cp[1].item(), },
+            'dist': obj_dist,
+            'obj': obj,
+            'type': obj_type
+        }
+    """
+
+    #now_ts = utils.ts_ms()
+
+    obj_id = obj['obj_id']
+    obj_dist = obj['dist']
+
+    list_item = obs['lock_in_list'].get(obj_id)
+
+    # obj is not in list
+    if list_item is None:
+        # create a new one
+        list_item = obj
+        # add score field
+        list_item.update({'score': 0})
+
+    #print('-------------')
+    #print(list_item)
+
+    score = list_item.get('score')
+    type = list_item.get('type')
+
+    # update score if obj is close to path
+    if type > 0 and obj_dist < config['dist_t_path']:
+        # increase score -> have to bigger the decreasing
+        score += config['lock_in_increase']
+        # limit max score
+        if score > 100:
+            score = 100
+
+    # update list item
+    list_item.update(obj)
+    list_item['score'] = score
+
+    # update lock list
+    obs['lock_in_list'].update({obj_id: list_item})
+
+def get_lock_in_target(obj_list):
+    """
+        list_item = {
+                'obj_id': key,
+                'line': {'x1': x, 'y1': y, 'x2': cp[0].item(), 'y2': cp[1].item(), },
+                'dist': obj_dist,
+                'obj': obj,
+                'type': obj_type,
+                'score': 0
+            }
+        """
+
+    target_obj = None
+    min_dist = 1000
+
+    for item in obj_list:
+
+        list_item = obs['lock_in_list'].get(item.get('obj_id'))
+
+        # get score
+        score = list_item.get('score')
+
+        if score > config['lock_in_active']:
+            # compare distance
+            obj = list_item.get('obj')
+            long_dist = obj.get('Obj_DistLong')
+
+            if long_dist < min_dist:
+                target_obj = list_item
+                min_dist = long_dist
+
+    # clean up list
+    clean_up_id_list = []
+
+    for key in obs['lock_in_list']:
+        # decrease score
+        score = obs['lock_in_list'][key]['score']
+        if score > 0:
+            obs['lock_in_list'][key]['score'] = score - config['lock_in_decrease']
+
+        if score <= 0:
+            clean_up_id_list.append(key)
+
+    # clean list
+    for id_item in clean_up_id_list:
+        del obs['lock_in_list'][id_item]
+
+    # Todo: delete old objects
+    return target_obj
 
 
 def target_selector(radius, object_list, dist):
@@ -231,20 +365,18 @@ def target_selector(radius, object_list, dist):
         #    target_obj = obj
 
         # skip incomplete objs
-        if obj.get('Obj_DistLong') is None or \
-                obj.get('Obj_DistLat') is None:
+        if obj_skip(obj):
             continue
 
         # filter function
         hide_obj = False
 
-        if obj_filter(obj):
+        if obj_hide(obj):
             hide_obj = True
 
             # skip
             if config.get('skip_hidden_objs'):
                 continue
-
 
         # set defaults if data missing
         # todo: do in function
@@ -258,21 +390,23 @@ def target_selector(radius, object_list, dist):
             obj['Obj_OrientationAngle'] = 0
 
         if obj.get('Obj_Class') is None:
-            obj['Obj_Class'] = '?'
+            obj['Obj_Class'] = 0
 
         # print('---------')
         # print(obj)
 
         # object coordinates
-        x = -obj.get('Obj_DistLat')  # - obj.get('Obj_Width') / 2  # obj center
+        x = -obj.get('Obj_DistLat')  # + obj.get('Obj_Width') / 2  # obj center
         y = obj.get('Obj_DistLong')
+        w = obj.get('Obj_Width')
 
-        # get the shortest distance and closest point
-        obj_dist, cp = point_to_polyline_distance((x, y), drive_line)
+        # get the shortest distance and closest point from vehicle CENTER to drive path
+        obj_dist, cp = point_to_polyline_distance((x+w/2, y), drive_line, w)
 
         # filter obj with too much distance to path
         if obj_dist > config.get('filter_dist_2_path'):
             hide_obj = True
+            # skip this obj
             continue
 
         # obj type 0 = hide, 1 = normal, 2 = in lane, 3 target
@@ -280,7 +414,8 @@ def target_selector(radius, object_list, dist):
 
         # is obj edge close to path
         # Todo: dist_to_path can variate over dist_to_ego
-        if abs(obj_dist) < dist : #  obj.get('Obj_Width') / 2):
+        if abs(obj_dist) < dist:  # obj.get('Obj_Width') / 2):
+        #if (abs(obj_dist)-(obj.get('Obj_Width') / 2)) < dist:  # obj.get('Obj_Width') / 2):
             obj_type = 2
 
         if hide_obj:
@@ -290,6 +425,7 @@ def target_selector(radius, object_list, dist):
         list_item = {
             'obj_id': key,
             'line': {'x1': x, 'y1': y, 'x2': cp[0].item(), 'y2': cp[1].item(), },
+            'dist': obj_dist,
             'obj': obj,
             'type': obj_type
         }
@@ -297,21 +433,27 @@ def target_selector(radius, object_list, dist):
         # add to list
         obj_list.append(list_item)
 
+        # stage1 ------------------------------------------------------------------
         # target selection with the smallest distance on driving path (type 1)
         if obj_type == 2 and y < min_dist:
             target = list_item
             # set new min dist
             min_dist = y
 
+        # stage2 ------------------------------------------------------------------
+        # lock in by time and dist
+        update_lock_in_list(list_item)
+
         # Todo login obj in after time as target
         # Todo logout after time or dist
 
-            #print(y)
+        # print(y)
 
     # print(dist_list)
-    #print('---')
+    # print('---')
 
     # Todo: floor target dist
+    target = get_lock_in_target(obj_list)
 
     return obj_list, target
 
@@ -332,7 +474,7 @@ def obj_0_status(msg):
     # run cleanup -> do in animation when it is needed
     # obj_cleanup()
 
-    #print(msg)
+    # print(msg)
 
     # errors to check
     error_list = [
@@ -359,6 +501,7 @@ def obj_0_status(msg):
     'RadarState_RadarPowerCfg':     0 'Standard',  
     'RadarState_MotionRxState': 3 'Speed and yaw rate missing', 
     """
+
 
 def obj_0_status_2(msg):
     # cut_obj_list(msg['Obj_NofObjects'])
@@ -392,19 +535,33 @@ def obj_update(msg):
 def yaw_update(msg):
     # read yaw from can msg
     yaw = msg.get('GIER_ROH')
+    # error handling
+    if yaw is None:
+        return
+
+    # rad/sec to deg/s (1rad = 180/PI) # 180/PI = 57.2958
+    yaw = yaw * 57.2958
 
     # offset correction
     # yaw += 131.234 # obsolete since dbc update
-    #print(round(yaw, 3))
+    # print(round(yaw, 3))
+
+    # calibration factor
+    #yaw = yaw * 1.01
 
     # Todo: update only on moving -> test
-    #if yaw == 0 or obs['speed'] == 0:
+    # if yaw == 0 or obs['speed'] == 0:
     #    return
 
     # yaw to radius
     radius = yaw2r(yaw, obs['speed'])
 
-    #print(radius)
+    # print(radius)
+    # curvature
+    if radius == 0:
+        obs['curvature'] = 0
+    else:
+        obs['curvature'] = 1/radius
 
     # update radius
     obs['radius'] = radius
@@ -416,6 +573,8 @@ def speed_update(msg):
 
 def art_update(msg):
     obs['art_dist'] = msg.get('ABST_R_OBJ')
+    obs['art_target_dist'] = msg.get('SOLL_ABST')
+
 
 # delete old and incomplete objs
 def obj_cleanup(delay_ms=500):
@@ -482,7 +641,8 @@ def radar_can_reader():
 
                 # radar status msg
                 if msg_id == '0x201':
-                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interpret signals to string
+                    decode_msg = db_1.decode_message(msg.arbitration_id, msg.data,
+                                                     decode_choices=False)  # dont interpret signals to string
                     obj_0_status(decode_msg, )
 
                 # start of obj list
@@ -494,7 +654,7 @@ def radar_can_reader():
                     # plt.pause(0.001)
 
                 # obj info
-                if msg_id == '0x60b' or msg_id == '0x60c' or msg_id == '0x60d' or msg_id == '0x60e':
+                if msg_id == '0x60b' or msg_id == '0x60c' or msg_id == '0x60d':  #  or msg_id == '0x60e'
                     decode_msg = db_1.decode_message(msg.arbitration_id, msg.data, decode_choices=False)
                     obj_update(decode_msg)
                     # plt.pause(0.01)
@@ -510,7 +670,7 @@ def radar_can_reader():
                 if i % 100 == 0:
                     # plt.pause(0.001)
                     # update_ani()
-                    #plt.pause(0.001)
+                    # plt.pause(0.001)
                     # print(obs)
                     pass
 
@@ -521,8 +681,8 @@ def radar_can_reader():
                     print('Msgs: ' + str(i))
 
             # bus idle
-            #else:
-                #plt.pause(0.001)
+            # else:
+            # plt.pause(0.001)
 
 
     except KeyboardInterrupt:
@@ -556,17 +716,20 @@ def vehicle_can_reader():
 
                 # yaw rate msg
                 if msg_id == '0x300' and msg.dlc == 8:
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data,
+                                                     decode_choices=False)  # dont interprese signals to string
                     yaw_update(decode_msg)
 
                 # speed msg
                 if msg_id == '0x412':
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data,
+                                                     decode_choices=False)  # dont interprese signals to string
                     speed_update(decode_msg)
 
                 # ART msg
                 if msg_id == '0x258':
-                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data, decode_choices=False) # dont interprese signals to string
+                    decode_msg = db_0.decode_message(msg.arbitration_id, msg.data,
+                                                     decode_choices=False)  # dont interprese signals to string
                     art_update(decode_msg)
 
     except KeyboardInterrupt:
@@ -586,6 +749,17 @@ thread_v_can.start()
 def init():
     # initialize an empty list of obj
     return []
+
+
+def get_score(id):
+
+    if obs['lock_in_list'].get(id) is None:
+        return 0
+
+    if obs['lock_in_list'][id].get('score') is None:
+        return 0
+
+    return obs['lock_in_list'][id].get('score')
 
 
 # Todo: exit handler
@@ -727,7 +901,7 @@ def animate(i):
     obj_list = obs.get('obj').copy()
 
     # run target_selector MAGIC create the target selector list
-    ts_list, target_obj = target_selector(obs.get('radius'), obj_list, dist=1.5)
+    ts_list, target_obj = target_selector(obs.get('radius'), obj_list, dist=config['dist_t_path'])
 
     # target_obj = None
 
@@ -771,10 +945,6 @@ def animate(i):
             # color=someColors[i % 5]
         )))
 
-
-
-
-
         # if hidden - no text, no line
         if fill:
             # """
@@ -791,7 +961,9 @@ def animate(i):
                 x_coor,  # x
                 obj_rct.get('Obj_DistLong'),  # + obj_rct.get('Obj_Length') / 2,  # y
                 # str(str(obj_rct.get('Obj_ID')) + ' ' + str(obj_class.get(obj_rct.get('Obj_Class')))),  # text
-                str(dyn_prop.get(obj_rct.get('Obj_DynProp'))),  # text
+                # str(dyn_prop.get(obj_rct.get('Obj_DynProp'))),  # text Dyn prop calls
+                #str(obj_rct.get('Obj_VrelLong') * 3.6),  # V rel lon  ms 2 kph
+                str(get_score(obj_rct.get('Obj_ID'))),
                 ha=text_align,
             ))
             # """
@@ -841,14 +1013,23 @@ def animate(i):
             21,  # x
             2,  # y
             # text
-            'kph ' + str(obs.get('speed')) + '\n'\
+            'kph ' + str(obs.get('speed')) + '\n' \
+            'r  ' + str(round(obs.get('radius')))
+            ,
+        )
+    )
+    patches.append(
+        ax.text(
+            -39,  # x
+            2,  # y
+            # text
             'art  ' + str(round(obs.get('art_dist'), 1)) + '\n' \
             'rad ' + str(round(obs.get('rad_dist'), 1))
             ,
         )
     )
 
-    # ART Target dist
+    # ART Target object distance
     art_dist = obs.get('art_dist')
     if art_dist > 0:
         patches.append(
@@ -862,6 +1043,19 @@ def animate(i):
             ))
         )
 
+    # ART target distance
+    art_tar_dist = obs.get('art_target_dist')
+    if art_tar_dist > 0:
+        patches.append(
+            ax.add_patch(plt.Polygon(
+                [[-10, art_tar_dist], [10, art_tar_dist]],
+                closed=False,
+                facecolor='None',
+                edgecolor='green',
+                fill=False,
+                linewidth=2
+            ))
+        )
 
     """
     patches.append(ax.add_patch(plt.Rectangle(
@@ -871,18 +1065,12 @@ def animate(i):
         angle=i,
         color=someColors[i % 5])))
     """
-    #fig.canvas.draw()
 
     return patches
 
-'''
-blit=True
-Static Background: All non-changing elements of the plot (like axes, labels, or static lines) are rendered once and stored as a background image.
-Dynamic Updates: For each frame, only the parts of the plot that change (like moving points or lines) are redrawn on top of the static background.
-Efficiency: This reduces the computational load, making animations faster and smoother. 
-'''
+
 anim = animation.FuncAnimation(fig, animate, init_func=init, interval=100, save_count=2, blit=True)
-#plt.show(block=False)
+
 plt.show()
 
 # plt.pause(0.001)
