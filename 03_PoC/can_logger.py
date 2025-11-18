@@ -10,21 +10,33 @@ BusMaster Layout
 import os
 import can
 import time
+import logging
 import datetime
 
 from lib.Storage import Storage
+from lib.Logger import Logger
 
-print('sleep a bit')
+# module name for LOGGING and CONFIG
+module_name = 'CAN_LOGGER'
+# just the Version of this script, to display and log; update this at major changes
+module_version = '0.3'
+
+log = Logger(module_name).logger
+log.setLevel(logging.INFO)
+
+log.info('Init ' + module_name + ' ' + module_version)
+
+log.info('sleep a bit to delay startup')
 
 # sleep a while, so the  system can start up correctly
-time.sleep(10)
+time.sleep(30)
 
 
 def date_time_str(ts=time.time()):
     try:
         return str(datetime.datetime.fromtimestamp(ts).strftime('%d-%m-%Y %H:%:M%S.%f')[:-3])
     except:
-        print('DATETIME ERROR')
+        log.error('DATETIME ERROR - set default: 2025-09-05 01:02:03.4')
         return str('2025-09-05 01:02:03.4')
 
 
@@ -35,23 +47,23 @@ def time_str(ts=time.time()):
 def log_string(msg):
     # example string
     # 17:28:32:1469 Rx 1 0x308 s 8 80 02 A5 00 00 78 A7 38
-    log = time_str(time.time())
-    log += ' Rx'
-    log += ' ' + msg.channel
-    log += ' ' + str(hex(msg.arbitration_id))
+    log_str = time_str(time.time())
+    log_str += ' Rx'
+    log_str += ' ' + msg.channel
+    log_str += ' ' + str(hex(msg.arbitration_id))
     if msg.is_remote_frame:
-        log += ' x '
+        log_str += ' x '
     else:
-        log += ' s '
-    log += str(msg.dlc) + ' '
-    log += ' '.join(f'{byte:02X}' for byte in msg.data)
-    log += '\n'
+        log_str += ' s '
+    log_str += str(msg.dlc) + ' '
+    log_str += ' '.join(f'{byte:02X}' for byte in msg.data)
+    log_str += '\n'
 
     # log_file.write(f"{msg.timestamp} {msg.arbitration_id:X} {msg.dlc} {' '.join(f'{byte:02X}' for byte in msg.data)}\n")
 
-    return log
+    return log_str
 
-print('Start CAN Logger')
+log.info('Start CAN Logger')
 
 file_name = 'can_log/can_log_'  # + Counter I
 file_type = '.log'
@@ -70,10 +82,10 @@ file = file_name + str(i) + file_type
 # create folder to file
 os.makedirs(os.path.dirname(file), exist_ok=True)
 
-print('log to: ' + file)
+log.info('log to: ' + file)
 
 # init can
-#print('CAN setup')
+#log.info('CAN setup')
 #os.system('sudo ifconfig can0 down')
 #os.system('sudo ip link set can0 type can bitrate 50000')
 #os.system('sudo ifconfig can0 txqueuelen 65536')
@@ -84,7 +96,7 @@ print('log to: ' + file)
 #os.system('sudo ifconfig can1 txqueuelen 65536')
 #os.system('sudo ifconfig can1 up')
 
-print('CAN connect')
+log.info('CAN connect')
 
 # connect to can
 bus0 = can.interface.Bus(channel='can0', interface='socketcan', bitrate=500000)
@@ -97,7 +109,8 @@ j = 1
 with open(file, 'w') as log_file:
     # header
     try:
-        print('write header')
+        log.debug('write file header')
+
         log_file.write('''***BUSMASTER Ver 3.2.2***
 ***PROTOCOL CAN***
 ***NOTE: PLEASE DO NOT EDIT THIS DOCUMENT***
@@ -114,9 +127,9 @@ with open(file, 'w') as log_file:
 
 ''')
     except:
-        print('CANT WRITE HEADER')
+        log.error('CANT WRITE HEADER')
 
-print('wait for CAN frames')
+log.info('wait for CAN frames')
 
 # loooooooooooooooooooooooooooop
 try:
@@ -139,16 +152,16 @@ try:
         j += 1
 
         if i > 1000:
-            print('' + str(i) + ' Msgs recorded')
+            log.info('' + str(i) + ' Msgs recorded')
             i = 1
             j = 1
 
         if j > 20000:
             i = 1
-            print('waiting')
+            log.info('waiting')
 except KeyboardInterrupt:
-    print('shutdown bus')
+    log.info('shutdown bus')
     bus0.shutdown()
     bus1.shutdown()
 
-print('EXIT')
+log.info('EXIT')
