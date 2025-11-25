@@ -57,15 +57,22 @@ Details are here: **[Reverse engineering](00_Reverseengineering/readme.md)**
 ## Requirements
 
 See **[Requirements](requirements.md)**.  
-This section contains the mathematical foundation and documentation for the project.  
-It includes extracts from **ISO 15622** and **ISO 22179**.
+This section contains the 
+- **requirments**
+- **systems engineering**
+- extracts from **ISO 15622** and **ISO 22179**
+- mathematical stuff
+- a short history outlook
+- and documentation 
+
+for the project.
 
 ---
 
-## Safety
+## Safety ⚠
 
 Refer to the **[Safety Analysis](Safety.md)**.  
-This section provides an overview of the **HARA** (Hazard Analysis and Risk Assessment) in accordance with *ISO 26262*.
+This section provides an overview of the **HARA** (Hazard Analysis and Risk Assessment) in accordance with **ISO 26262**.
 
 ---
 
