@@ -1,121 +1,120 @@
-# W211 ACC 
+# W211 Adaptive Cruise Control (ACC) Replacement
 
-This project is about to replace the ACC (Adaptive Cruise Control) on an MB W211.
+This project aims to replace the Adaptive Cruise Control (ACC) system on the Mercedes-Benz W211.  
+The system is also known as ART (German for "AbstandsRegelTempomat") or Distronic.
 
-Also called ART (AbstandsRegelTempomat) or Distronic.
+---
 
 ## Motivation
 
-The w211 radar runs on 24GHz and is disrupted by other radar modern radar systems quite ofter.
-The most new car use radar at 24GHz for BlindSpotWarning (BSW).
-These systems interfere with the W211 radar and the ACC throws an error and stop working.
-In this situation, the ACC/CC cant be used or reactivated for a while. It's impossible to drive with the ACC in traffic anymore.
+The original W211 radar operates at 24 GHz and is often disrupted by modern radar systems.  
+Most new vehicles use 24 GHz radar for Blind Spot Warning (BSW).  
+These systems interfere with the W211 radar, causing the ACC to throw an error and stop working.  
+In traffic, the ACC/CC cannot be used or reactivated for a while, making it impractical.
 
-<img src="00_Reverseengineering/error_msg_4.jpeg">
-Error Message
+<img src="00_Reverseengineering/error_msg_4.jpeg" alt="ACC error message"><br>
+Distronic error message 4 - External interference
 
-The modern radar uses a frequency sweep. So it changes the frequency permanent to be more robust.
-
+Modern radar systems use frequency sweeps, continuously changing frequency to improve robustness.
 
 ## Limitations
 
-**This is just a Proof of Concept!**
+⚠️ **This is only a Proof of Concept!**  
+- Do not use on public roads.  
+- Do not attempt at home.  
+- Project is under active development.  
 
-**Don't use this on public road!**
+---
 
-**Don't try this at home.**
+## Project Steps
 
-**Project is under development**
+### Reverse Engineering
 
-<hr>
+Goal: Understand how the ACC in the W211 works.
 
-I set this project up in seval steps
+**Challenge:** The radar does not have its own compute unit.  
+It is integrated into the ACC control unit (SCU – Sensor and Control Unit).  
+Therefore, both the sensor and the control unit must be replaced.
 
-## Reverse engineering
+<img src="02_Sensor/Distronic_049.jpg" alt="Original Distronic sensor"><br>
+Original Distronic sensor
 
-This is about to learn how the ACC in the Car works.
-
-**The worst thing first:** The Radar don't have a own compute unit. This is integrated in the ACC control unit.
-It's a SCU (Sesor and Control Unit). For this reason, I also need to replace the Sensor and the control unit.
-
-<img src="02_Sensor/Distronic_049.jpg">
-
-The ACC talks with the vehicle about a single CAN line (CAN_C - Engine CAN).
-With a CAN Database I can read out all needed information from the vehicle and what is send by the ACC control unit.
-
+The ACC communicates with the vehicle via a single CAN line (CAN_C – Engine CAN).  
+Using a CAN database, all relevant signals can be decoded.  
 Is it possible to replace the ACC with a new controller and sensor?
 I think so -> lets try with a Proof of Concept (a simple cruise control at first)
 
-Many thanks to the website:
-https://w220.wiki/Distronic#Distronic
+Many thanks to the websites:
+- https://w220.wiki/Distronic#Distronic
+- https://github.com/rnd-ash/mb-w211-pc
 
-And:
-https://github.com/rnd-ash/mb-w211-pc
+This was a Jump start!
 
-This was a Jumpstart!
+Details are here: **[Reverse engineering](00_Reverseengineering/readme.md)**
 
-Details are here: [Reverse engineering](00_Reverseengineering/readme.md).
+---
 
 ## Requirements
 
-Take a look at the [requirements](requirements.md).
+See **[requirements](requirements.md)**.  
+This section contains the mathematical foundation and documentation for the project.
 
-Paperwork and math. Here is the magic explaind.
-It's the foundation for project.
+---
 
 ## Tooling
 
-* USB CAN Interface -> Vector VN1610. Bus other would also work
-* CAN logging and interpreting SW -> Busmaster
-* small ecu with CAN interface for PoC
-  * PI with a CAN hat
+- USB CAN interface → Vector VN1610 (others may work)  
+- CAN logging and interpretation software → Busmaster  
+- Small ECU with CAN interface for PoC  
+  - Raspberry Pi with CAN hat 
 
 <img src="01_Tooling/pi_with_can_hat.jpeg">
 Pi with CAN hat for CAN logging and PoC testing
 <br>
 
+---
+
 ## Radar Sensor
 
-What radar sensor can replace the original W211 rada.
-
-The **Continental 408-21** looks good. 
-- more range than 
-- very robust
-- easy interface over CAN
-- a bit older but not so expensive
-- wide short range
+Candidate replacement for the original W211 radar: **Continental 408-21**  
+- Greater range  
+- Robust performance  
+- Simple CAN interface  
+- Affordable (older generation)  
+- Wide short-range coverage  
 
 <img src="02_Sensor/408.jpeg">
 Fits good at the original sensor position.
 
-## Development progress
+---
 
-**Proof of Concept**
-- [x] CAR CAN reverse engineering
-  - [x] collection raw data for evaluation
-- [x] Requirements and engineering – mostly completed
-- [x] Simple cruise control to prove the concept – working
-- [x] Drinking coffee
-- [x] Radar sensor selection
-- [x] Radar integration – temporary
-  - [x] Target selector – up and running
-  
-  
-**Pilot / Minimum Viable Product** - Bring everything together
-- [x] Basic framework (CAN handling)
-- [ ] Driver inputs and state machine
-- [ ] Radar and tracking module
-- [ ] Controller modules
-  - [ ] Distance control module (`a_dist`)
-  - [ ] Speed control module (`a_speed`)
-  - [ ] Warning module
-  - [ ] Dynamic limiter module (curve adaptation, `a_max`)
-- [ ] Coordinator module `min(a_dist, a_speed, a_max)`
-- [ ] Longitudinal control module (vehicle model, `a → M`)
-- [ ] Permanent hardware integration
-- [ ] ...
+## Development Progress
 
-<hr>
+### Proof of Concept
+- [x] CAN reverse engineering  
+  - [x] Collect raw data for evaluation  
+- [x] Requirements and engineering – mostly completed  
+- [x] Simple cruise control to prove the concept – working  
+- [x] Radar sensor selection  
+- [x] Temporary radar integration  
+  - [x] Target selector – up and running  
+
+### Pilot / Minimum Viable Product
+- [x] Basic framework (CAN handling)  
+- [ ] Driver inputs and state machine  
+- [ ] Radar and tracking module  
+- [ ] Controller modules  
+  - [ ] Distance control (`a_dist`)  
+  - [ ] Speed control (`a_speed`)  
+  - [ ] Warning module  
+  - [ ] Dynamic limiter (curve adaptation, `a_max`)  
+- [ ] Coordinator module `min(a_dist, a_speed, a_max)`  
+- [ ] Longitudinal control (vehicle model, `a → M`)  
+- [ ] Permanent hardware integration  
+
+---
+
+## Pictures
 
 # Pictures
 
@@ -134,22 +133,20 @@ Function model
 <img src="00_Reverseengineering/ACC_dist_controller.png"><br>
 Distance controller model
 
-<hr>
+---
 
-**Credits**
+## Credits
 
-* To the good documentation of the ART/Distronic system
-  * https://w220.wiki/Distronic
-* CAN Bus data
-  * https://github.com/rnd-ash/mb-w211-pc
-  * https://github.com/rnd-ash/W203-canbus/tree/master
+- Documentation of ART/Distronic system: 
+  - https://w220.wiki/Distronic  
+- CAN bus data:  
+  - https://github.com/rnd-ash/mb-w211-pc  
+  - https://github.com/rnd-ash/W203-canbus/tree/master  
 
-<hr>
+---
 
-**License**
+## License
 
-No License set now. 
-So all rights reserved.
-Because it is currently under development. 
-
-This project includes third-party libraries.
+Currently no license set → all rights reserved.  
+Project is under development.  
+Includes third-party libraries.

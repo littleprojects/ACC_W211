@@ -1,97 +1,121 @@
 
-# ACC
+# Adaptive Cruise Control (ACC)
 
-An Adaptive Cruise Control (ACC) is a vehicle speed controller how adjust to the traffic situation. 
+An Adaptive Cruise Control (ACC) system is a vehicle speed controller that adjusts to the surrounding traffic situation.
 
-International Standard:
-- ISO 15622 (Transport information and control System - Adaptive Cruise Control Systems)
-  - First standard with basic function description
-  - Use of braking is open -> but currently very common
-- ISO 22179 (Intelligent transport systems - Full speed ragen adaptive cruise control (FSRA))
-  - expansion to low speeds
+## International Standards
 
-The main function of the ACC is the speed control to a set target speed.
-And the most important feature is the adaption of the vehicle speed to speed of next vehicle in front.
-The ACC have to keep a minimum distance to vehicle in front based related (*Time gap*) to the current speed.
-If the target vehicle leaves the driving corridor, the vehicle will resume to the set target speed.
+- **ISO 15622** – Transport Information and Control Systems – Adaptive Cruise Control Systems  
+  - First standard with a basic functional description  
+  - Use of braking is optional in the standard, but today widely implemented  
 
-**Time gap** to front vehicle:
+- **ISO 22179** – Intelligent Transport Systems – Full Speed Range Adaptive Cruise Control (FSRA)  
+  - Extension of ACC functionality to low-speed ranges, including stop-and-go traffic  
+
+---
+
+## Functional Overview
+
+The primary function of ACC is to control vehicle speed to a set target value.  
+Its most important feature is adapting the vehicle speed to the speed of the preceding vehicle.  
+
+- ACC must maintain a minimum distance to the vehicle ahead, expressed as a **time gap** relative to current speed.  
+- If the target vehicle leaves the driving corridor, the ACC resumes control to the set target speed.
+
+**Time gap formula:**
 
 t = d/v
 
-* t - Time gap
-* d - clearance distance
-* v - vehicle speed
+- *t* – time gap  
+- *d* – clearance distance  
+- *v* – vehicle speed
 
 
 **History of the ACC development**
 
 The function was firstly documented in 1981.
-The introdution of EURO III requires a installation of electronik throttle.
-This was very usefull for the common cruise control function.
+The introduction of EURO III requires an installation of electronic throttle.
+This was very useful for the common cruise control function.
 A benefit was also the integration os the ESP system how allows active braking and access to a yaw sensor for curve path estimation. 
 
 The first cars was available around 2000 on the market.
 And from 2005 also with low speed support and "Stop & Go" function.
 
-## Requirements
+---
 
-From ISO 15622
+## History of ACC Development
 
-Free Driving
-- Keep speed constant and ensure high comfort
-  - Low jerks and no oscillations
-- Use the brake to reduce speed if the target speed was set lower or when driving downhill
+- First documented concepts appeared in 1981.  
+- The introduction of EURO III regulations required electronic throttle control, enabling cruise control functions.  
+- Integration with ESP (Electronic Stability Program) allowed active braking and access to yaw sensors for curve path estimation.  
+- First production vehicles with ACC appeared around 2000.  
+- From 2005 onwards, ACC systems included low-speed support and “Stop & Go” functionality.  
 
-Following Mode
-- Regulate speed by adopting the speed of the vehicle ahead, with damping to avoid copying its speed fluctuations
-- Maintain the set time gap to the target time gap
-- Smooth fallback during cut-in events
-- Ensure stability during convoy driving with other ACC vehicles
-- Provide sufficient acceleration for smooth merging and catching up
-- Provide adequate deceleration for following in flowing traffic
-- Automatically detect target objects when approaching or during lane changes of vehicles ahead within a defined distance range using a specified target search corridor
+---
 
-During Approach
-- Quickly adjust to the target distance during slow approach
-- During fast approach, provide a predictable deceleration profile to help the driver assess whether manual intervention is needed due to insufficient ACC deceleration
-- When "diving" into the safety distance, the vehicle should fall back appropriately
+## Requirements (based on ISO 15622)
 
-Functional Limits
-- No control at very low speeds and handover to the driver (ISO 15622: ≤ 5 m/s (18 kph), no positive acceleration)
-- Minimum target speed above 7m/s (30kph)
-- The time gap must not fall below 1s in steady-state conditions 
-- Driver intervention has priority
-- Deactivation upon brake pedal actuation
-- Override upon accelerator pedal actuation
-- Driver sets the target speed (v_set) and target time gap (t_set)
-- Proper handover in case of system failure, especially during a deceleration process
-- Acceleration must remain within the limits of a_min = -3.5 m/s² to a_max = 2.5 m/s²
+### Free Driving
+- Maintain constant speed and ensure high comfort  
+  - Low jerk and no oscillations  
+- Use braking to reduce speed when target speed is set lower or when driving downhill  
+
+### Following Mode
+- Regulate speed by adapting to the vehicle ahead, with damping to avoid copying fluctuations  
+- Maintain the set time gap to the target time gap  
+- Smooth fallback during cut-in events  
+- Ensure stability during convoy driving with other ACC-equipped vehicles  
+- Provide sufficient acceleration for smooth merging and catching up  
+- Provide adequate deceleration for following in flowing traffic  
+- Automatically detect target objects during approach or lane changes within a defined search corridor  
+
+### During Approach
+- Quickly adjust to the target distance during slow approach  
+- Provide a predictable deceleration profile during fast approach to support driver assessment  
+- When entering the safety distance, the vehicle shall fall back appropriately  
+
+### Functional Limits
+- No control at very low speeds; handover to driver (ISO 15622: ≤ 5 m/s / 18 km/h, no positive acceleration)  
+- Minimum target speed above 7 m/s (30 km/h)  
+- Time gap must not fall below 1 s in steady-state conditions  
+- Driver intervention has priority  
+- Deactivation upon brake pedal actuation  
+- Override upon accelerator pedal actuation  
+- Driver sets target speed (*v_set*) and target time gap (*t_set*)  
+- Proper handover in case of system failure, especially during deceleration  
+- Acceleration limits:  
+  - Minimum: \(a_{min} = -3.5 \, m/s^2\)  
+  - Maximum: \(a_{max} = 2.5 \, m/s^2\)  
 
 <img src="00_Reverseengineering/ACC_limits.png">
 
-**Additional Requirements for Full Speed Range ACC (ISO 22179)**
+---
 
-During Following
-- Control down to a speed of 0 km/h (complete stop), especially during low-speed driving
+## Additional Requirements for Full Speed Range ACC (ISO 22179)
 
-During Stopping
-- Maintain a stopping distance of 2–5 m
-- Apply higher deceleration at low speeds
-- Ensure safe standstill using an appropriate braking system
-- In case of system shutdown without driver intervention while stationary, a transition to a safe holding state is required
+### Following Mode
+- The ACC shall control vehicle speed down to 0 km/h (complete stop), particularly in low-speed driving conditions.
 
-Functional Limits
-- over V_high_min = 20 m/s (72 kph)
-  - a_max(V_high) = 2 m/s²
-  - a_min(V_high) = -3,5 m/s²
-  - y_max(V_high) = 2,5 m/s³
-- below V_low_max = 5 m/s (18 kph)
-  - a_max(V_low) = 4 m/s²
-  - a_min(V_low) = -5 m/s²
-  - y_max(V_low) = 5 m/s³
+### Stopping Mode
+- The ACC shall maintain a stopping distance of 2–5 m behind the preceding vehicle.
+- The ACC shall apply higher deceleration values at low speeds to ensure safe stopping.
+- The ACC shall ensure a safe standstill using the appropriate braking system.
+- In case of system shutdown without driver intervention while stationary, the ACC shall transition to a safe holding state.
+
+### Functional Limits
+- For speeds above \(V_{high\_min} = 20 \, m/s \) (72 km/h):
+  - Maximum acceleration: \(a_{max}(V_{high}) = 2 \, m/s^2\)
+  - Minimum deceleration: \(a_{min}(V_{high}) = -3.5 \, m/s^2\)
+  - Maximum jerk: \(y_{max}(V_{high}) = 2.5 \, m/s^3\)
+
+- For speeds below \(V_{low\_max} = 5 \, m/s \) (18 km/h):
+  - Maximum acceleration: \(a_{max}(V_{low}) = 4 \, m/s^2\)
+  - Minimum deceleration: \(a_{min}(V_{low}) = -5 \, m/s^2\)
+  - Maximum jerk: \(y
 
 <img src="00_Reverseengineering/ACC_limits_FSR.png">
+
+---
 
 ## System structure
 
