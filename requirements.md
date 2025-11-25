@@ -172,8 +172,7 @@ When ALL conditions are positive the ACC is allowed to activate
 
 ### Disable Condition
 
-ACC will be deactivated if ONE conditions is active 
-
+ACC will be deactivated if ONE conditions is active
 * brake manually
 * cruise control switch push forward (off)
 * speed is below v_min
@@ -186,6 +185,17 @@ ACC will be deactivated if ONE conditions is active
 * to big Steering angle (lateral acceleration)
 
 *Full Speed Range enable and disable conditions are not included now --> problem of my future me
+
+### Override / Passive Conditions
+
+The ACC shall enter a passive state under the following conditions:
+* The driver requests more torque via the accelerator pedal than the current ACC demand.
+
+The ACC shall resume under one the following conditions:
+* The accelerator pedal position is below the last ACC demand.
+* The accelerator pedal is no longer pressed.
+* The vehicle speed is equal to or below the target speed.
+
 
 ## Controls
 
