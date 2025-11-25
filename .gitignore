@@ -2,7 +2,6 @@
 *.asc
 *.zip
 *.pdf
-03_PoC/log/
 *.mdf
 *.mf4
 ~*
@@ -13,7 +12,12 @@
 *.dbf
 *.config
 test_*.py
+*.drawio
+*.cfx
+
+03_PoC/log/
 03_PoC/test/
+Docu/
 
 
 
