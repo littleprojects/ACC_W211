@@ -268,20 +268,63 @@ Methods to optimize the target selection:
     - can be go up to 100%
     - reduced by not detection time or not in lane anymore
     - below 20% = no target anymore
+  - can be supported by a blurry path contours
+    - object gain more probability in lane center
+    - object lose probability outside lane
+    - zones between are a bit blurry/unclear 
 
+**Object filtering**
+- ignoring oncoming & standing objects
+  - edge case: stopping objects
+- to far objects to avoid false detection
 
+**Sort by**
+- shortest long distance
+- dist to path
+- min acceleration
 
-- object filtering
-  - ignoring oncoming & standing objects
-    - edge case: stopping objects
-  - to far objects to avoid false detection
+**Limits of Target selection**
 
-- sort by
-  - shortest long distance
-  - dist to path
-  - min acceleration
+- curve entry or exit in front how brings vehicles from other lane into the driving path
+- 
 
-## Ouput
+**ACC Problems**
+
+overtaking a slow vehicle
+- ACC would react early to adopt the speed but this interrupts the overtake-procedure early
+  - a late brake have to be harder and is not smooth anymore
+  - to set the direction indicator early can 
+- late detection of cut in vehicles or slow loosing cut out vehicles
+
+## Time Gap Controller
+
+The most important value for the distance adaptation is the relative speed deference of the vehicles.
+
+But some basics first
+>t_set = 1s time gap
+
+In theory, the following vehicle have to copy the position of the vehicle in front. Just one second (t_set) later.
+The acceleration and deceleration will be the same and the time gap is always given.
+ 
+>x_i+1(t) = x_i(t - t_set)
+
+WTF - an explanation
+
+>x_i+1(t) is the next vehicle (i+1) in front of us time t (t) 
+> 
+>x_i(t - t_set) is our ACC vehicle (i) do the same stuff just one second later (t - t_set)
+
+Yeah, this already an ideal controller for an ACC. **But just in theory.** Real live is sometimes much more complex... 
+
+Let's take a closer look at the relative speed difference v_rel.
+
+>x_i+1(t) = v_rel / t_v = (x_i(t) - x_i+1(t)) / t_v
+
+This is a nice try. But don't work with a variable t_v.
+We have to add an adaptive distance correction.
+
+>x_i+1(t) = v_rel - ((d_set - d) / t_d ) / t_v
+
 
 ### CAN Msg
 

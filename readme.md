@@ -82,7 +82,7 @@ The **Continental 408-21** looks good.
 - more range than 
 - very robust
 - easy interface over CAN
-- little bit older but not so expensiv
+- a bit older but not so expensive
 - wide short range
 
 <img src="02_Sensor/408.jpeg">
@@ -90,21 +90,49 @@ Fits good at the original sensor position.
 
 ## Development progress
 
-- [x] CAR CAN reverse-engineering
-- [ ] Requirements and engineering - in progress
-- [x] Simple Cruise Control to proof the concept - its working
-- [x] Drinking coffe
+**Proof of Concept**
+- [x] CAR CAN reverse engineering
+  - [x] collection raw data for evaluation
+- [x] Requirements and engineering – mostly completed
+- [x] Simple cruise control to prove the concept – working
+- [x] Drinking coffee
 - [x] Radar sensor selection
-- [ ] Radar integration - in progress
+- [x] Radar integration – temporary
+  - [x] Target selector – up and running
+  
+  
+**Pilot / Minimum Viable Product** - Bring everything together
+- [x] Basic framework (CAN handling)
+- [ ] Driver inputs and state machine
+- [ ] Radar and tracking module
+- [ ] Controller modules
+  - [ ] Distance control module (`a_dist`)
+  - [ ] Speed control module (`a_speed`)
+  - [ ] Warning module
+  - [ ] Dynamic limiter module (curve adaptation, `a_max`)
+- [ ] Coordinator module `min(a_dist, a_speed, a_max)`
+- [ ] Longitudinal control module (vehicle model, `a → M`)
+- [ ] Permanent hardware integration
 - [ ] ...
 
 <hr>
 
+# Pictures
+
 <img src="02_Sensor/radar_test_setup_2.jpeg"><br>
 Temporary radar integration to collect radar data.
 
-<img src="01_Tooling/radar_view_1.jpg">
+<img src="01_Tooling/radar_view_1.jpg"><br>
 A live radar object viewer with object filter, target selector and driving path estimation
+
+<img src="00_Reverseengineering/ACC-LIM_statemachine.png"><br>
+State machine
+
+<img src="00_Reverseengineering/ACC_Functional_model.png"><br>
+Function model
+
+<img src="00_Reverseengineering/ACC_dist_controller.png"><br>
+Distance controller model
 
 <hr>
 

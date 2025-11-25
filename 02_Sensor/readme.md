@@ -1,5 +1,10 @@
 # Radar Sensor
 
+Here we take a look at the radar sensor.  
+We will examine the performance of the old sensor.  
+
+The new sensor should deliver the same or better performance.
+
 ## W211
 
 Technical facs of the W211 Radar
@@ -15,16 +20,30 @@ source: https://w220.wiki/Distronic#Distronic
 
 <img src="600px-Distronic_Retrofit_025.jpg">
 
-## Conti 408-21
+## Conti ARS 408-21
 
 Premium Long Range Radar at 77Ghz
 
-<img src="408.jpg">
+**I chose the Conti 408-21 because:**
+- it is better than the old radar sensor
+- it has a CAN interface
+- the cost is acceptable
+- same size and could be placed at the original sensor position with small adaptations
+- and most importantly, it is available for purchase
 
+>**Addendum:**<br>
+The ACC investigations recommend a maximum sensor range of 120 m,  
+due to excessive false detections at greater distances without reliable lane detection.
+With this information, the Conti radar **ARS 404-21 Entry**, with a maximum scan range of 170 m, could also be suitable.
+
+<img src="ARS_404_408.jpg"><br>
+Picture of a Conti ARS 404-21 and 408-21 radar
+
+**ARS 408-21 Technical data**
 - Range from 170 up 250m
-- -400 to 200kph relativ speed detection
+- -400 to 200kph relative speed detection
 - CAN Bus interface at 500kb
-- can used in 
+- can be used in 
     - European Union
     - USA
     - Canada
@@ -32,12 +51,12 @@ Premium Long Range Radar at 77Ghz
     - South Korea
     - Australia
     - Japan and further countries
-- made for instustrie and automitive applications
+- made for industry and automotive applications
 - Sensor works from 9-32V DC
 
 
-<img src="408_FoV.jpg">
-*distance on X axsis x10
+<img src="408_FoV.jpg"><br>
+*distance on x axis factor 10
 
 
 This sensor outperform the old one.
@@ -46,6 +65,15 @@ And is easy to integrate. Just 4 Wires are needed to bring the sensor to live.
 - GND
 - CAN-H
 - CAN-L
+
+
+## 24 GHz vs. 77 GHz
+
+The old sensor works in the 24 GHz band. This is ideal for distances in close range 0,5m up to 100m. 
+That's why a lot of side and corner radar system working now in the 24 Ghz band.
+This radar don't work well below 1m. That's why they don't have replaced the ultrasonic close range park sensors.
+
+With the long distance sensor it's needed to move to the 77-81 GHz spectrum.
 
 # Integration
 
