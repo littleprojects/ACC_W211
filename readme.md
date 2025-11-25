@@ -56,8 +56,16 @@ Details are here: **[Reverse engineering](00_Reverseengineering/readme.md)**
 
 ## Requirements
 
-See **[requirements](requirements.md)**.  
-This section contains the mathematical foundation and documentation for the project.
+See **[Requirements](requirements.md)**.  
+This section contains the mathematical foundation and documentation for the project.  
+It includes extracts from **ISO 15622** and **ISO 22179**.
+
+---
+
+## Safety
+
+Refer to the **[Safety Analysis](Safety.md)**.  
+This section provides an overview of the **HARA** (Hazard Analysis and Risk Assessment) in accordance with *ISO 26262*.
 
 ---
 
@@ -100,7 +108,7 @@ Fits good at the original sensor position.
   - [x] Target selector – up and running  
 
 ### Pilot / Minimum Viable Product
-- [x] Basic framework (CAN handling)  
+- [x] PoC review and refactor - in progress
 - [ ] Driver inputs and state machine  
 - [ ] Radar and tracking module  
 - [ ] Controller modules  
