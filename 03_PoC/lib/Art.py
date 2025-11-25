@@ -18,6 +18,7 @@ ART/DTS Class
     #- Wiederaufnahme +1 beim V_Ziel sollte 0 sein
     #- Up bei neustart geht auf next biggest speed -> should set current speed
     #- reactivation after overwrite have trouble
+    - check overwrite/passive
 
 """
 

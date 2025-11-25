@@ -151,13 +151,14 @@ try:
         # idle counter
         j += 1
 
-        if i > 1000:
+        if i % 10000 == 0:
             log.info('' + str(i) + ' Msgs recorded')
-            i = 1
+            #i = 1
             j = 1
 
         if j > 20000:
             i = 1
+            j = 1
             log.info('waiting')
 except KeyboardInterrupt:
     log.info('shutdown bus')

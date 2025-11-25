@@ -46,18 +46,18 @@ config = {
     'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc',
 
     # Filter
-    'filter_dist_2_vehicle': 100,  # objects how are far away from vehicle (Look at Lat pos)
-    'filter_dist_2_path': 10,  # object how are far away from the driving path
+    'filter_dist_2_vehicle': 110,  # [m] 100-120 objects how are far away from vehicle (Look at Lat pos)
+    'filter_dist_2_path': 10,  # [m] object how are far away from the driving path
     'filter_dyn_prop_list': [0x1, 0x3, 0x4],  # see dyn_prop list
 
     # display
     'skip_hidden_objs': False,
 
     # target lock in/out
-    'dist_t_path': 1,   # [m]
-    'lock_in_increase': 10,     #
-    'lock_in_decrease': 4,     #
-    'lock_in_active': 30,    #
+    'dist_t_path': 1,   # [m] 1-1,2m
+    'lock_in_increase': 10,     # [%]
+    'lock_in_decrease': 4,     # [%]
+    'lock_in_active': 30,    # [%]
 }
 
 dyn_prop = {
@@ -402,6 +402,7 @@ def target_selector(radius, object_list, dist):
 
         # get the shortest distance and closest point from vehicle CENTER to drive path
         obj_dist, cp = point_to_polyline_distance((x+w/2, y), drive_line, w)
+        # Todo: dist from rear obj coordinates
 
         # filter obj with too much distance to path
         if obj_dist > config.get('filter_dist_2_path'):
