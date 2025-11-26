@@ -19,16 +19,44 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 
 ## Limitations
 
-⚠️ **This is only a Proof of Concept!**  
+⚠️ **This is only a Proof of Concept!** ⚠️
 - Do not use on public roads.  
 - Do not attempt at home.  
 - Project is under active development.  
 
 ---
 
+## Development Progress
+
+### Proof of Concept
+- ✅ CAN reverse engineering  
+  - ✅ Collect raw data for evaluation  
+- ✅ Requirements and engineering – mostly completed  
+- ✅ Simple cruise control to prove the concept – working  
+- ✅ Radar sensor selection  
+- ✅ Temporary radar integration  
+  - ✅ Target selector – up and running  
+
+🏆 PoC is working and the engineering is done - lets bring everything together
+
+### Pilot / Minimum Viable Product
+- [ ] PoC review and refactor - 🚧 under construction 🚧
+- [ ] Driver inputs and state machine  
+- [ ] Radar and tracking module  
+- [ ] Controller modules  
+  - [ ] Distance control (`a_dist`)  
+  - [ ] Speed control (`a_speed`)  
+  - [ ] Warning module  
+  - [ ] Dynamic limiter (curve adaptation, `a_max`)  
+- [ ] Coordinator module `min(a_dist, a_speed, a_max)`  
+- [ ] Longitudinal control (vehicle model, `a → M`)  
+- [ ] Permanent hardware integration  
+
+---
+
 ## Project Steps
 
-### Reverse Engineering
+### Reverse Engineering 🔍
 
 Goal: Understand how the ACC in the W211 works.
 
@@ -76,7 +104,7 @@ This section provides an overview of the **HARA** (Hazard Analysis and Risk Asse
 
 ---
 
-## Tooling
+## Tooling 🔧
 
 - USB CAN interface → Vector VN1610 (others may work)  
 - CAN logging and interpretation software → Busmaster  
@@ -91,7 +119,7 @@ Pi with CAN hat for CAN logging and PoC testing
 
 ## Radar Sensor
 
-Candidate replacement for the original W211 radar: **Continental 408-21**  
+Candidate replacement for the original W211 radar: **Continental ARS 408-21**  
 - Greater range  
 - Robust performance  
 - Simple CAN interface  
@@ -100,32 +128,6 @@ Candidate replacement for the original W211 radar: **Continental 408-21**
 
 <img src="02_Sensor/408.jpeg">
 Fits good at the original sensor position.
-
----
-
-## Development Progress
-
-### Proof of Concept
-- [x] CAN reverse engineering  
-  - [x] Collect raw data for evaluation  
-- [x] Requirements and engineering – mostly completed  
-- [x] Simple cruise control to prove the concept – working  
-- [x] Radar sensor selection  
-- [x] Temporary radar integration  
-  - [x] Target selector – up and running  
-
-### Pilot / Minimum Viable Product
-- [x] PoC review and refactor - in progress
-- [ ] Driver inputs and state machine  
-- [ ] Radar and tracking module  
-- [ ] Controller modules  
-  - [ ] Distance control (`a_dist`)  
-  - [ ] Speed control (`a_speed`)  
-  - [ ] Warning module  
-  - [ ] Dynamic limiter (curve adaptation, `a_max`)  
-- [ ] Coordinator module `min(a_dist, a_speed, a_max)`  
-- [ ] Longitudinal control (vehicle model, `a → M`)  
-- [ ] Permanent hardware integration  
 
 ---
 
