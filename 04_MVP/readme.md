@@ -3,7 +3,7 @@
 ## Installation
 
 ````commandline
-pip install pytest
+pip install can cantools asammdf
 ````
 
 ## Preparation

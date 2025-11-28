@@ -122,21 +122,6 @@ def interval(state: dict, key: str, interval_time: int, cur_ts: int | None = Non
     return False
 
 
-def parse_log_level(log_level_str: str) -> int:
-    """
-    Map a string to a logging level.
-    Defaults to INFO if unknown.
-    """
-    log_levels = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-        "CRITICAL": logging.CRITICAL,
-    }
-    return log_levels.get(log_level_str.upper(), logging.INFO)
-
-
 def dbc_signal(dbc, signal_name: str, msg_id: int | None = None):
     """
     Find a signal in a DBC by name and optional message ID.

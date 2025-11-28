@@ -1,0 +1,63 @@
+
+[READY_CHECK]
+#loglevel = debug
+
+
+[MVP]
+
+# -----------------------------------------------------------------------
+# ACC MAIN Settings
+
+# ACC minimum activation speed
+# default is 30 kph
+#acc_min_speed = 30
+
+# ACC switch off speed
+# default is 20 kph
+#acc_off_speed = 20
+
+# -----------------------------------------------------------------------
+# CAN Interface Settings
+
+# CAN INTERFACE selection
+# hardware interface default parameter
+#can_app_name = VN1610
+#can_interface = vector
+
+# -----------------------------------------------------------------------
+# MDF log file
+
+# mdf_log default is False
+#mdf_log = True
+
+# mdf_log_file default is log/Acc_' + utils.date_time_str() + '.mf4
+#mdf_log_file = log/Acc_log.mf4
+
+# saves data after each ACC deactivation -> just use during debugging, needs resources
+#mdf_auto_save = True
+
+# -----------------------------------------------------------------------
+# DEVELOPMENT SETTINGS
+
+# Add a comment to the logs
+#comment = Test
+
+# Loglevel (default is INFO)
+# for debugging set it to "debug"
+#loglevel = debug
+
+# Logging status output time in seconds
+# default is 10 sec
+# can be disabled with 0
+stats_update_time = 5
+
+# disables sending CAN MSGS
+# default is True
+#can_0_send = False
+
+# CAN Interface
+# Default (real) CAN interface
+#can_app_name = VN1610
+# simulating CAN
+can_app_name = vCAN
+
