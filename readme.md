@@ -13,7 +13,7 @@ These systems interfere with the W211 radar, causing the ACC to throw an error a
 In traffic, the ACC/CC cannot be used or reactivated for a while, making it impractical.
 
 <img src="00_Reverseengineering/error_msg_4.jpeg" alt="ACC error message"><br>
-Distronic error message 4 - External interference
+Distronic error message - External interference
 
 Modern radar systems use frequency sweeps, continuously changing frequency to improve robustness.
 
@@ -58,6 +58,8 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 
 ### Reverse Engineering 🔍
 
+Details are here: **[Reverse engineering](00_Reverseengineering/readme.md)**
+
 Goal: Understand how the ACC in the W211 works.
 
 **Challenge:** The radar does not have its own compute unit.  
@@ -78,11 +80,9 @@ Many thanks to the websites:
 
 This was a Jump start!
 
-Details are here: **[Reverse engineering](00_Reverseengineering/readme.md)**
-
 ---
 
-## Requirements
+### Requirements
 
 See **[Requirements](requirements.md)**.  
 This section contains the 
@@ -97,14 +97,16 @@ for the project.
 
 ---
 
-## Safety ⚠
+### Safety ⚠
 
 Refer to the **[Safety Analysis](Safety.md)**.  
 This section provides an overview of the **HARA** (Hazard Analysis and Risk Assessment) in accordance with **ISO 26262**.
 
 ---
 
-## Tooling 🔧
+### Tooling 🔧
+
+Details here: **[Tooling](01_Tooling/readme.md)**. 
 
 - USB CAN interface → Vector VN1610 (others may work)  
 - CAN logging and interpretation software → Busmaster  
@@ -117,7 +119,9 @@ Pi with CAN hat for CAN logging and PoC testing
 
 ---
 
-## Radar Sensor
+### Radar Sensor
+
+Details here: **[Sensor](02_Sensor/readme.md)**. 
 
 Candidate replacement for the original W211 radar: **Continental ARS 408-21**  
 - Greater range  
@@ -130,8 +134,6 @@ Candidate replacement for the original W211 radar: **Continental ARS 408-21**
 Fits good at the original sensor position.
 
 ---
-
-## Pictures
 
 # Pictures
 
