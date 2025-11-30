@@ -17,6 +17,10 @@ It only works with CAN Database in the free .dbf format.
 But is also include a hidden converter to create .dbf from .dbc
 Tools -> Format Converter -> Other Converters -> DBC to DBF Conversion
 
+## Wiring
+
+<img src="can_wiring.png">
+
 ## CAN software
 
 **BUSMASTER** is an excelent CAN BUS software. 
