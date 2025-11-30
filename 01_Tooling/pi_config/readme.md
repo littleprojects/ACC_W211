@@ -14,6 +14,11 @@ dtoverlay=spi1-3cs
 dtoverlay=mcp2515,spi1-1,oscillator=16000000,interrupt=22
 dtoverlay=mcp2515,spi1-2,oscillator=16000000,interrupt=13
 
+# Note:
+# Channel missmatch
+# socket CAN0 is CAN2 on CAN-HAT
+# socket CAN1 is CAN1 on CAN-HAT
+
 alternative:
 dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=22
 dtoverlay=mcp2515-can1,oscillator=16000000,interrupt=13
