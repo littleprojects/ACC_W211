@@ -177,6 +177,10 @@ CAN C (Chassis or engine CAN)
   - Solid Green CAN_H
   - Green/white CAN_L
 
+<img src="can_c_connector_x30_5.jpg">
+
+
+
 # CAN
 
 ## inputs
