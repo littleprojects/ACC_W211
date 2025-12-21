@@ -322,6 +322,19 @@ Most values have a factor of 0,5 or 0,1.
 * T_AUSSEN = can_raw_value * 0.5 - 40
 * VB       = can_raw_value * 0.01
 * vLRW     = can_raw_value * 0.5 - 2048
+* GIER_ROH = unit, factor and offset needed.
+  * try with deg/s. Offset = 128 and factor close to 0.6
+  * I drove some roundabout to get 180° and 360°.
+    * need to integrate GIER_ROH over time to see the if it  fits.
+  * factor of 0.6 
+  * later I figured out factor 0.6 is about **180/PI = 57,2955** and is used to convert RED to DEG -> UNIT is RAD now. Offset and factor found fast
+  * UNIT: RAD (makes more sense now)
+* AY_S (lateral acceleration)
+  * only 8bit. offset at 123 -> ist unsigned  = -123 to 123.
+    * Got the hint positive values are left...
+  * Factor?
+  * Unit? m/s² or g
+  * I can calc AY from speed and radius.
 
 **And the ACC ECU controls the LIMITER to -> more work...**
 But more or less the same functions.
@@ -339,3 +352,4 @@ and to have some setpoint during touring down without throttle, a torque speed m
 | 50          | 213,5       |
 | 60          | 217,9       |
 | 100         | 241,5       |
+
