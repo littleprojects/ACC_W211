@@ -7,22 +7,25 @@ The new sensor should deliver the same or better performance.
 
 ## W211
 
-Technical facs of the W211 Radar
+Technical facts of the W211 Radar
 
 <img src="Distronic_Retrofit_049.jpg">
 source: https://w220.wiki/Distronic#Distronic
 <br>
 <br>
 
-- Sensing up 150m
-- 3° main coin sensing
-- 9° in Total
+- Sensing up to 150m
+- 3° main cone sensing
+- 9° in total
 
 <img src="600px-Distronic_Retrofit_025.jpg">
 
 ## Conti ARS 408-21
+*ARS - Automotive Radar Sensor*
 
 Premium Long Range Radar at 77Ghz
+
+https://www.continental-aftermarket.com/media/3751/continental_longrangeradar_salessheet_v1.pdf
 
 **I chose the Conti 408-21 because:**
 - it is better than the old radar sensor
@@ -41,6 +44,8 @@ Picture of a Conti ARS 404-21 and 408-21 radar
 
 **ARS 408-21 Technical data**
 - Range from 170 up 250m
+- works in all weather conditions
+- 17Hz update rate
 - -400 to 200kph relative speed detection
 - CAN Bus interface at 500kb
 - can be used in 
@@ -59,8 +64,8 @@ Picture of a Conti ARS 404-21 and 408-21 radar
 *distance on x axis factor 10
 
 
-This sensor outperform the old one.
-And is easy to integrate. Just 4 Wires are needed to bring the sensor to live.
+This sensor outperforms the old one.
+And it is easy to integrate. Just 4 wires are needed to bring the sensor to life.
 - Power + direct from battery
 - GND
 - CAN-H
@@ -69,11 +74,11 @@ And is easy to integrate. Just 4 Wires are needed to bring the sensor to live.
 
 ## 24 GHz vs. 77 GHz
 
-The old sensor works in the 24 GHz band. This is ideal for distances in close range 0,5m up to 100m. 
-That's why a lot of side and corner radar system working now in the 24 Ghz band.
-This radar don't work well below 1m. That's why they don't have replaced the ultrasonic close range park sensors.
+The old sensor works in the 24 GHz band. This is ideal for distances in close range 0.5m up to 100m. 
+That's why a lot of side and corner radar systems work now in the 24 GHz band.
+This radar doesn't work well below 1m. That's why they haven't replaced the ultrasonic close range park sensors.
 
-With the long distance sensor it's needed to move to the 77-81 GHz spectrum.
+With the long distance sensor we need to move to the 77-81 GHz spectrum.
 
 # Integration
 
@@ -114,7 +119,7 @@ set radar config
 
 0x200 Radar config
 
-| Siganl          | Config            |
+| Signal          | Config            |
 |-----------------|-------------------|
 | MaxDistance [m] | 250               |
 | SensorID        | 0                 |
@@ -166,7 +171,7 @@ set radar config
  | filtercfg_min_vxdepart    | 0.0      |
  | filtercfg_max_vxdepart    | 128.0    |
 
-## Radar inegration
+## Radar integration
 
 ### Test setup for testing and data collection
 
@@ -184,13 +189,15 @@ Front view
 <img src="radar_test_setup_3.jpeg"><br>
 temporary wiring
 <br>
-Now it's time for a coffe and do some data collection runs in the night when its hard to see the external radar sensor.
+Now it's time for a coffe and do some data collection runs in the night when it's hard to see the external radar sensor.
 I don't need trouble with race control. ;) 
 
 ### Speed and Yaw relay
 
 The radar needs a speed and yaw input. This will do the "can_relay" script.
-It reads speed and yaw from the vehicle CAN. Do some calc km/h->m/s and send it to the radar CAN.
+It reads speed and yaw from the vehicle CAN. Do some calculations km/h->m/s and send it to the radar CAN.
+* 0x300 Speed in m/s
+* 0x301 Yaw rate in deg/s
 
 
 
