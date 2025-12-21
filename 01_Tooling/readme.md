@@ -51,16 +51,19 @@ Data could be useful for analysis later.
 
 ### Material:
 - Pi 3 (is still cheap)
-- 2 channel hat
-  - Waveshare dual CAN hat+ with Power supply 
-  - can1 Vehicle CAN_C (engine & ART/ACC)
-  - can2 Radar
-  - power comes from the lighter socket nearby
+- 2 channel CAN hat
+  - Waveshare dual CAN hat plus Power supply
+  - https://www.waveshare.com/wiki/2-CH_CAN_HAT%2B
+  - CAN1 (Pin13) Vehicle CAN_C (engine & ART/ACC)
+  - CAN2 (Pin22) Radar
+  - POWER 7-36V
+    - comes from the lighter socket nearby
     - I bridge ground from power to CAN GND
-- optional extension for later
+- optional CAN extension for later
   - Waveshare dual CAN hat
-    - can3 Vehicle CAN_B (comfort)
-    - can4 spare
+    - https://www.waveshare.com/wiki/2-CH_CAN_HAT
+    - CAN3 (Pin23) Vehicle CAN_B (comfort)
+    - CAN4 (Pin25) spare
 
 ### Software:
 - can_logger -> records raw CAN data in Busmaster log file format to view & replay later

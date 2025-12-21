@@ -3,26 +3,39 @@
 
 ## Hardware
 https://www.waveshare.com/wiki/2-CH_CAN_HAT%2B
+
+https://www.waveshare.com/wiki/2-CH_CAN_HAT
+
 https://copperhilltech.com/blog/beginners-guide-to-using-socketcan-with-raspberry-pi-and-pican-board/
 
-config
+### config file:
+
 nano /boot/firmware/config.txt
 
-dtparam=spi=on
-dtoverlay=i2c0 
-dtoverlay=spi1-3cs
-dtoverlay=mcp2515,spi1-1,oscillator=16000000,interrupt=22
-dtoverlay=mcp2515,spi1-2,oscillator=16000000,interrupt=13
+>dtparam=spi=on
+>
+>dtoverlay=i2c0 
+>
+>dtoverlay=spi1-3cs
+>
+>dtoverlay=mcp2515,spi1-1,oscillator=16000000,interrupt=22
+>
+>dtoverlay=mcp2515,spi1-2,oscillator=16000000,interrupt=13
 
-# Note:
-# Channel missmatch
-# socket CAN0 is CAN2 on CAN-HAT
-# socket CAN1 is CAN1 on CAN-HAT
+#### Note:
+Channel missmatch
+socket CAN0 is CAN2 on CAN-HAT+
+socket CAN1 is CAN1 on CAN-HAT+
 
 alternative:
 dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=22
 dtoverlay=mcp2515-can1,oscillator=16000000,interrupt=13
 
+#### CAN-HAT
+check sequence
+>dtoverlay=mcp2515,spi1-3,oscillator=16000000,interrupt=23
+>
+>dtoverlay=mcp2515,spi1-4,oscillator=16000000,interrupt=25
 
 
 ## CAN
