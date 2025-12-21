@@ -37,7 +37,7 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 - ✅ Temporary radar integration  
   - ✅ Target selector – up and running  
 
-🏆 PoC is working and the engineering is done - lets bring everything together
+🏆 PoC is working and the engineering is done - let's bring everything together
 
 ### Pilot / Minimum Viable Product
 - [ ] PoC review and refactor - 🚧 under construction 🚧
@@ -72,7 +72,7 @@ Original Distronic sensor
 The ACC communicates with the vehicle via a single CAN line (CAN_C – Engine CAN).  
 Using a CAN database, all relevant signals can be decoded.  
 Is it possible to replace the ACC with a new controller and sensor?
-I think so -> lets try with a Proof of Concept (a simple cruise control at first)
+I think so -> let's try with a Proof of Concept (a simple cruise control at first)
 
 Many thanks to the websites:
 - https://w220.wiki/Distronic#Distronic
@@ -86,11 +86,11 @@ This was a Jump start!
 
 See **[Requirements](requirements.md)**.  
 This section contains the 
-- **requirments**
+- **requirements**
 - **systems engineering**
 - extracts from **ISO 15622** and **ISO 22179**
 - mathematical stuff
-- a short history outlook
+- a short historical outlook
 - and documentation 
 
 for the project.
@@ -131,7 +131,7 @@ Candidate replacement for the original W211 radar: **Continental ARS 408-21**
 - Wide short-range coverage  
 
 <img src="02_Sensor/408.jpeg">
-Fits good at the original sensor position.
+Fits well at the original sensor position.
 
 ---
 
