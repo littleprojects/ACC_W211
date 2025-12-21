@@ -2,44 +2,50 @@
 
 ## CAN interface
 
-To access the CAN Bus of the car is a CAN interface needed.
+To access the CAN Bus of the car, a CAN interface is needed.
 
-I choose a Vector VN1610.
+I chose a Vector VN1610. I support two CAN lines in a compact housing.
 
 Because:
 - USB interface
-- it comes with two CAN line at one SUBD9 connector
-- Good software support (cloud use it with Vector software - but Freeware works also)
+- it comes with two CAN lines at one SUBD9 connector
+- Good software support (could use it with Vector software - but Freeware works also)
 - and I had one flying around in my garage
-- dont forget to install the driver (XL-Driver Lib)
+- don't forget to install the driver (XL-Driver Lib)
 
 It only works with CAN Database in the free .dbf format. 
-But is also include a hidden converter to create .dbf from .dbc
+But it also includes a hidden converter to create .dbf from .dbc
 Tools -> Format Converter -> Other Converters -> DBC to DBF Conversion
 
 ## Wiring
 
 <img src="can_wiring.png">
 
-## CAN software
+## CAN Software
 
-**BUSMASTER** is an excelent CAN BUS software. 
+**BUSMASTER** is an excellent CAN BUS software. 
 - quick to learn
 - It helps a lot to read out the CAN and correct the CAN Database
 - **CAN logging**
 - CAN debugging, parsing and visualisation
 - **CAN replay**
 
-Also ASAMMDF (Python) comes with a good GUI and a loot of tools.
+Also ASAMMDF (Python) comes with a good GUI and a lot of tools.
 
-When you install a Vector software. A very usefull comes with it.
-**CANdb++** a very intuitive tools to create and mantain CAN Database
+When you install a Vector software, a very useful tool comes with it.
+**CANdb++** a very intuitive tool to create and maintain CAN Database
+
+### SIL (Software In The Loop)
+
+I use Busmaster to replay CAN logs to test my software. 
+Here I can check and compare the software quickly to the original vehicle behavior.
+Just the controller doesn't have real feedback. The I (Integrator) will not work here and screw up with the time. But that's perfect to test also this situation and safety measures (anti wind up strategies). 
 
 ## CAN onboard logger
 
-I install in the car a CAN logger to collect daily raw data from normal system behavior.
-If I replace the ART-ECU and sensor, I can not original system data anymore easy.
-Data could be useful to for analysis later.  
+I installed in the car a CAN logger to collect daily raw data from normal system behavior.
+If I replace the ART-ECU and sensor, I cannot get original system data anymore easily.
+Data could be useful for analysis later.  
 
 <img src="pi_with_can_hat.jpeg">
 
@@ -58,7 +64,7 @@ Data could be useful to for analysis later.
 
 ### Software:
 - can_logger -> records raw CAN data in Busmaster log file format to view & replay later
-- Syncthing -> to upload the data automatically it a connection (Hotspot) is available
+- Syncthing -> to upload the data automatically if a connection (Hotspot) is available
 
 ### Pinout
 
