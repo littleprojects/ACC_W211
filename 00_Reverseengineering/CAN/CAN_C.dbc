@@ -239,6 +239,7 @@ BO_ 1040 KLA_410h: 8 Vector__XXX
 BO_ 1628 BS_65Ch: 8 Vector__XXX
 
 BO_ 808 BS_328h: 8 Vector__XXX
+ SG_ AY_S : 16|8@1+ (0.1,0) [0|0] "m/s²" Vector__XXX
  SG_ SBCSH_AKT : 44|1@1+ (1,0) [0|0] "" Vector__XXX
  SG_ BRE_AKT_E : 47|1@1+ (1,0) [0|0] "" Vector__XXX
 
@@ -472,6 +473,7 @@ CM_ SG_ 568 S_MINUS_B "Tempomatwählhebel: Setzen und verzögern Stufe0";
 CM_ SG_ 568 VMAX_AKT "Bedienung variable Geschwindigkeitsbegrenzung";
 CM_ SG_ 568 WH_UP "Tempomatwählhebel unplausibel";
 CM_ BO_ 1040 "Klima Automatik";
+CM_ SG_ 808 AY_S "lat accelration at center of gravity (+ = Left)";
 CM_ SG_ 808 SBCSH_AKT "Stauassistent/Hillholder aktiv (nur 211/230)";
 CM_ SG_ 808 BRE_AKT_E "Bremsdruckregelung möglich";
 CM_ SG_ 768 GIER_ROH "Rohsignal Gierrate ohne Abgleich/Filterung (+ = links) 
