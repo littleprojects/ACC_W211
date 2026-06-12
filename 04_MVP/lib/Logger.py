@@ -1,7 +1,7 @@
 
 
-import logging
 import os
+import logging
 from logging.handlers import RotatingFileHandler
 
 
@@ -42,14 +42,15 @@ class Log:
             self.logger.addHandler(console_handler)
 
             # File Handler
-            log_file = os.path.join(log_dir, f"Log_{name}.txt")
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            if log_dir is not None:
+                log_file = os.path.join(log_dir, f"Log_{name}.txt")
+                os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
-            file_handler = RotatingFileHandler(
-                log_file, maxBytes=1 * 1024 * 1024, backupCount=2, encoding="utf-8"
-            )
-            file_handler.setFormatter(formatter)
-            self.logger.addHandler(file_handler)
+                file_handler = RotatingFileHandler(
+                    log_file, maxBytes=1 * 1024 * 1024, backupCount=2, encoding="utf-8"
+                )
+                file_handler.setFormatter(formatter)
+                self.logger.addHandler(file_handler)
 
     def _get_formatter(self) -> logging.Formatter:
         """Erzeugt ein einheitliches Format für alle Handler."""
