@@ -3,6 +3,21 @@
 This project aims to replace the Adaptive Cruise Control (ACC) system on the Mercedes-Benz W211.  
 The system is also known as ART (German for "AbstandsRegelTempomat") or Distronic.
 
+This Distronic (DTR) function with Rader Sensor (B29) is available from 1998 to 2008 for the Modeles:
+* S W215, C215, **W220**
+* E E240, **W211**
+* SL R230
+* CLK **W209**
+* CLS W219, C119 
+* and later for the ML **W163**
+
+Check: https://w220.wiki/Distronic
+
+Videos:
+* 1998 DTS explaination: https://www.youtube.com/watch?v=OvIG9nqlcUI
+* DISTRONIC overview: https://www.youtube.com/watch?v=20x9FopDHFM
+
+
 ---
 
 ## Motivation
@@ -153,6 +168,13 @@ Function model
 Distance controller model
 
 ---
+## AI Note
+
+NO VIBECODE
+
+AI use is limited. 100% organic code. So pleases excuse my many typos.
+
+
 
 ## Credits
 
@@ -162,7 +184,7 @@ Distance controller model
   - https://github.com/rnd-ash/mb-w211-pc  
   - https://github.com/rnd-ash/W203-canbus/tree/master  
 
----
+
 
 ## License
 
