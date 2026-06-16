@@ -41,10 +41,12 @@ config = {
 
     # log
     'loglevel': 'INFO',  # info, debug; with debug also config info will be printed out
+    #'loglevel': 'DEBUG',  # info, debug; with debug also config info will be printed out
 }
 
 # Init Logger
 log = Logger.Log('CAN_REPLAY', log_dir=None).get_logger()
+log.setLevel(config['loglevel'])
 
 log.info('Init CAN REPLAY')
 
@@ -144,7 +146,7 @@ def read_file(file):
         config['loop'] = 0
         return
     
-    line_count = 1
+    line_count = 0
     last_ts = 0
 
     #try:
@@ -161,25 +163,36 @@ def read_file(file):
                 
                 # parese line
                 msg = read_line(line_cleanded)
+
+                #log.debug(msg)
                 
                 if msg is not None:
 
                     # if msg['ch'] == '1':
                     can0.send_message(msg)
 
+                    log.debug('Msg sended')
+
                     new_ts = msg['ts']
                     # delay
                     if last_ts > 0:                        
-                        delay_ms = (new_ts - last_ts)
-                        time.sleep(delay_ms)
-                        log.debug(msg)
-                        log.debug(delay_ms)
+                        delay_s = (new_ts - last_ts)
+                        # cut to long delays
+                        if delay_s > 0.05:
+                            delay_s = 0.05
+                        
+                        #log.debug(msg)
+                        log.debug('sleep: ' + str(delay_s))
+                        time.sleep(delay_s)
 
                     last_ts = new_ts
-            line_count += 1
+                    line_count += 1
 
-            if line_count % 1000 == 0:
-                log.info(str(line_count) + ' msg send')
+                    log.debug('---')
+
+                    # write out a log
+                    if line_count == 1 or line_count % 500 == 0:
+                        log.info(str(line_count) + ' msg send')
 
     #except Exception as e:
     #    log.error(e)
