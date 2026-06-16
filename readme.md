@@ -3,7 +3,7 @@
 This project aims to replace the Adaptive Cruise Control (ACC) system on the Mercedes-Benz W211.  
 The system is also known as ART (German for "AbstandsRegelTempomat") or Distronic.
 
-This Distronic (DTR) function with Rader Sensor (B29) is available from 1998 to 2008 for the Modeles:
+This Distronic (DTR) function with Radaer Sensor (B29) is available from 1998 to 2008 for the Models:
 * S W215, C215, **W220**
 * E E240, **W211**
 * SL R230
@@ -14,7 +14,7 @@ This Distronic (DTR) function with Rader Sensor (B29) is available from 1998 to 
 Check: https://w220.wiki/Distronic
 
 Videos:
-* 1998 DTS explaination: https://www.youtube.com/watch?v=OvIG9nqlcUI
+* 1998 DTS explanation: https://www.youtube.com/watch?v=OvIG9nqlcUI
 * DISTRONIC overview: https://www.youtube.com/watch?v=20x9FopDHFM
 
 
@@ -52,7 +52,7 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 - ✅ Temporary radar integration  
   - ✅ Target selector – up and running  
 
-🏆 PoC is working and the engineering is done - let's bring everything together
+🏆 PoC is working and the engineering is done - let's bring everything together.
 
 ### Pilot / Minimum Viable Product
 - [ ] PoC review and refactor - 🚧 under construction 🚧
@@ -87,13 +87,13 @@ Original Distronic sensor
 The ACC communicates with the vehicle via a single CAN line (CAN_C – Engine CAN).  
 Using a CAN database, all relevant signals can be decoded.  
 Is it possible to replace the ACC with a new controller and sensor?
-I think so -> let's try with a Proof of Concept (a simple cruise control at first)
+I think so -> let's try with a Proof of Concept (a simple cruise control at first).
 
 Many thanks to the websites:
 - https://w220.wiki/Distronic#Distronic
 - https://github.com/rnd-ash/mb-w211-pc
 
-This was a Jump start!
+This was a jump start!
 
 ---
 
@@ -156,7 +156,7 @@ Fits well at the original sensor position.
 Temporary radar integration to collect radar data.
 
 <img src="01_Tooling/radar_view_1.jpg"><br>
-A live radar object viewer with object filter, target selector and driving path estimation
+A live radar object viewer with object filter, target selector, and driving path estimation.
 
 <img src="00_Reverseengineering/ACC-LIM_statemachine.png"><br>
 State machine
@@ -172,9 +172,7 @@ Distance controller model
 
 NO VIBECODE
 
-AI use is limited. 100% organic code. So pleases excuse my many typos.
-
-
+AI use is limited. 100% organic code. So please excuse my many typos.
 
 ## Credits
 
@@ -183,8 +181,6 @@ AI use is limited. 100% organic code. So pleases excuse my many typos.
 - CAN bus data:  
   - https://github.com/rnd-ash/mb-w211-pc  
   - https://github.com/rnd-ash/W203-canbus/tree/master  
-
-
 
 ## License
 
