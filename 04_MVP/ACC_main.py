@@ -20,13 +20,15 @@ import time
 import threading
 
 from lib import utils
-from queue import Queue
+#from queue import Queue
 from lib.Can import Can
 from lib.Mdf import Mdf
 #from lib.Timer import Timer
 from lib.Config import Config
 from lib import Logger
 #from lib.Can_handler import CanHandler
+
+from lib.Art_Data import ArtData
 
 # module name for LOGGING and CONFIG
 module_name = 'MVP'
@@ -44,8 +46,8 @@ default_config = {
 
     # CAN settings
     'can_interface': 'vector',
-    'can_app_name': 'VN1610',  # Hardware interface
-    # 'can_app_name': 'vCAN',  # virtual CAN interface
+    #'can_app_name': 'VN1610',  # Hardware interface
+    'can_app_name': 'vCAN',  # virtual CAN interface
 
     # Vehicle CAN
     'can_0_channel': '0',
@@ -160,33 +162,41 @@ if config.comment is not None:
 # MDF
 mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
 
-# init CAN Queue's and Flags/Events
-# Vehicle CAN
-q_can_c_in = Queue()
-q_can_c_out = Queue()
-# Radar CAN
-q_radar_in = Queue()
-q_radar_out = Queue()
+art_data = ArtData(config, log)
 
 # Stop thread event flag
 stop_event = threading.Event()
-# NEW MSG FLAG
-flag_new_msg = threading.Event()
 
-
+# timed interval task scheduler
 def run_task(interval, func, stop_event_flag):
     """runs func at interval [sec], until stop_event is set"""
+
+    # Todo: check if this is the best way to do this, maybe use Timer class
     while not stop_event_flag.is_set():
         func()
         time.sleep(interval)
 
+# decorator class to repeat a function at a given interval
+class RepeatTimer(threading.Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
 
 def task_10hz():
     log.debug('10Hz Tick')
-    # do the MAGIC
+
+    # do the MAGIC 10 times per second
     try:
         pass
         #can_handler.send_art_msg()
+        # Process the CAN msgs
+
+        # ART Calc
+
+        # send the CAN msgs
+
+        # log to MDF
+
     except Exception as e:
         log.exception(e)
 
@@ -204,16 +214,21 @@ can_0.connect()
 can_1.connect()
 
 # threat so send and receive CAN msgs
-thread_can_0 = threading.Thread(target=can_0.loop, args=(q_can_c_in, q_can_c_out))
-thread_can_1 = threading.Thread(target=can_1.loop, args=(q_radar_in, q_radar_out))
+thread_can_0 = threading.Thread(target=can_0.loop, args=(art_data.q_can_c_in, art_data.q_can_c_out))
+thread_can_1 = threading.Thread(target=can_1.loop, args=(art_data.q_radar_in, art_data.q_radar_out))
 
 thread_can_0.start()
 thread_can_1.start()
 
 # timed threads
-thread_10hz = threading.Thread(target=run_task, args=(0.1, task_10hz, stop_event))
-thread_status = threading.Thread(target=run_task, args=(config.stats_update_time, task_status_log, stop_event))
+#thread_10hz = threading.Thread(target=run_task, args=(0.1, task_10hz, stop_event))
+#thread_status = threading.Thread(target=run_task, args=(config.stats_update_time, task_status_log, stop_event))
 
+# Timer dont repeat
+thread_10hz = RepeatTimer(0.1, task_10hz)
+thread_status = RepeatTimer(config.stats_update_time, task_status_log)
+
+# start Threads
 thread_10hz.start()
 thread_status.start()
 
@@ -265,6 +280,10 @@ if __name__ == "__main__":
 
     # shutdown
     log.info('Stop Threads')
+    # stop Timer
+    thread_10hz.cancel()
+    thread_status.cancel()
+    # wait for Threads to finish
     thread_10hz.join()
     thread_status.join()
     thread_can_0.join()
