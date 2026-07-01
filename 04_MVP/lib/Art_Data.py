@@ -18,6 +18,7 @@ ToDo:
 
 """
 
+import copy
 import threading
 
 from enum import Enum
@@ -36,6 +37,9 @@ class ArtData:
 
     def __init__(self, config, log):
 
+        self.config = config
+        self.log = log
+
         # init CAN Queue's and Flags/Events
         # Vehicle CAN
         self.q_can_c_in = Queue()
@@ -47,27 +51,137 @@ class ArtData:
         # NEW MSG FLAG
         # self.flag_new_msg = threading.Event() not in use now
 
-        self.state = ArtState.OFF # statemachine
-        self.last_state = self.state    #
-        
-        self.config = config
-        self.log = log
+        # state machine
+        self._state = ArtState.OFF # statemachine
+        #self._last_state = self._state    
+        self._lock_state = threading.Lock()  # threading lock variable for state changes
 
-        # init CAN Queue's and Flags/Events
-        # Vehicle CAN
+        # default Values
+        self._CONST_default_values = {
+            # ART_250
+            'DYN_UNT': 0,  # dynamic downshift suppression
+            'BL_UNT': 0,  # breathtaking suppression
+            'ART_BRE': 0,  # ART breaks
+            'ART_OK': 0,  # ART ok
+            'SLV_ART': 0,  # shift lines adaptation
+            'CAS_REG': 0,  # City assist is active
+            'MDYN_ART': 0,  # dynamic engine moment
+            'MPAR_ART': 0,  # parity
+            'ART_REG': 0,  # ART is active
+            'LIM_REG': 0,  # limiter is activ
+            'M_ART': 0,  # [Nm] engine moment
+            'BZ250h': 0,  # msg counter 4bit = 0-15
+            'MBRE_ART': 0,  # [Nm] break moment
+            'GMIN_ART': 0,  # minimum gear
+            'GMAX_ART': 0,  # maximum gear
+            'AKT_R_ART': 0,  # shift down request from art
 
-        # Todo: INIT Queues and Flags here
-        self.q_can_c_in = Queue()
-        self.q_can_c_out = Queue()
-        # Radar CAN
-        self.q_radar_in = Queue()
-        self.q_radar_out = Queue()
+            # ART_258
+            'ART_ERROR': 0,  # ART error code
+            'ART_INFO': 0,  # ART info light
+            'ART_WT': 0,  # ART warning sound
+            'S_OBJ': 0,  # standing object detected
+            'ART_DSPL_EIN': 0,  # ART display on
+            'V_ART': 0,  # [kph] ART set speed
+            'ABST_R_OBJ': 0,  # [m] distance to relevant object
+            'SOLL_ABST': 0,  # [m] distance to relevant object
+            'TM_EIN_ART': 0,  # ART cruise control activ
+            'ART_DSPL_BL': 0,  # blink speed control
+            'ART_SEG_EIN': 0,  # show speed segments on display
+            'OBJ_ERK': 0,  # object detected
+            'ART_EIN': 0,  # ART on
+            'ART_DSPL_LIM': 0,  # show: --- on display
+            'ART_VFBR': 0,  # show: ART off
+            'ART_DSPL_PGB': 0,  # show: winter tire speed reached
+            'V_ZIEL': 0,  # [kph] target speed on segment display
+            'ASSIST_FKT_AKT': 0,  # active function - always 0
+            'AAS_LED_BL': 0,  # LED blinking
+            'OBJ_AGB': 0,  # object offer adaptive cc - always 0
+            'ART_ABW_AKT': 0,  # warnings are switched on TODO load from memory
+            'ART_REAKT': 0,  # reactivation of ART after error
+            'ART_UEBERSP': 0,  # ART passive
+            'ART_DSPL_NEU': 0,  # show ART display again for a short time
+            'ASSIST_ANZ_V2': 0,  # assist display request - always 0
+            'CAS_ERR_ANZ_V2': 0,  # CAS display request - always 0
 
+            # Values  for the ACC controller
+        }
+
+        # ART values to send out
+        # init as a copy of the default values
+        self._art_values = copy.deepcopy(self._CONST_default_values)
+        self._BZ250h = 0  # Message counter 0-15 (BZ = BotschaftZähler)
+        self._lock_art_values = threading.Lock()  # threading lock variable for ART values
+
+        # CAN C signals and messages
+        self._vehicle_msgs = {
+            'msgs': {},  # msg timestamps in [ms]
+            'signals': {},  # signals as dict
+        }
+        self._lock_vehicle_msgs = threading.Lock()  # threading lock variable for vehicle CAN msgs
+
+        # Radar CAN signals and messages
+        self._radar_msgs = {
+            'msgs': {},  # msg timestamps in [ms]
+            'signals': {},  # signals as dict
+        }
+        self._lock_radar_msgs = threading.Lock()  # threading lock variable for radar CAN msgs
+
+        # storage for persistent data
+        self._persistent_data = {
+            'warning_state': 0,
+        }
+
+    # ------ State Machine Methods -----------------------------
     def get_state(self):
-        # Todo: thread protection
-        return self.state
+        # thread protection
+        with self._lock_state:
+            return self._state
 
-    def set_state(new_state):
-        # Todo state change if statemachine and thread protection
-        # trigger event at state change or just return TRUE if a statechange happened
-        pass
+    def set_state(self, new_state):
+        # thread protection
+        with self._lock_state:
+
+            # state change detection
+            if new_state != self._state:                
+                self.log.info(f"State changed from {self._state} to {new_state}")
+
+                #self._last_state = self._state  # remember last state, just in case we need it
+                self._state = new_state
+
+                # Todo trigger event at state change or just return TRUE if a statechange happened
+
+    # ------ ART Values Methods -----------------------------
+    def get_art_values(self):
+        # thread protection
+        with self._lock_art_values:
+            return copy.deepcopy(self._art_values) # return a copy of the dict
+        
+    def set_art_values(self, new_values):
+        # thread protection
+        with self._lock_art_values:
+            self._art_values.update(new_values)  # update the dict with new values
+
+    # ------ Vehicle CAN C Methods -----------------------------
+    def get_vehicle_msgs(self):
+        # thread protection
+        with self._lock_vehicle_msgs:
+            return copy.deepcopy(self._vehicle_msgs)  # return a copy of the dict
+        
+    def set_vehicle_msgs(self, new_msgs):
+        # thread protection
+        with self._lock_vehicle_msgs:
+            self._vehicle_msgs.update(new_msgs)  # update the dict with new values
+
+    # ------ Radar CAN Methods -----------------------------
+    def get_radar_msgs(self):
+        # thread protection
+        with self._lock_radar_msgs:
+            return copy.deepcopy(self._radar_msgs)  # return a copy of the dict
+
+    def set_radar_msgs(self, new_msgs):
+        # thread protection
+        with self._lock_radar_msgs:
+            self._radar_msgs.update(new_msgs)  # update the dict with new values
+
+        
