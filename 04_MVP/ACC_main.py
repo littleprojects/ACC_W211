@@ -20,15 +20,13 @@ import time
 import threading
 
 from lib import utils
-#from queue import Queue
+from lib import Logger
 from lib.Can import Can
 from lib.Mdf import Mdf
-#from lib.Timer import Timer
 from lib.Config import Config
-from lib import Logger
-#from lib.Can_handler import CanHandler
-
 from lib.Art_Data import ArtData
+from lib.Can_Handler import CanHandler
+
 
 # module name for LOGGING and CONFIG
 module_name = 'MVP'
@@ -116,30 +114,29 @@ default_config = {
     # Limiter Settings
     'lim_max_speed': 250,       # [kph] max speed allowed with limiter
     'lim_min_speed': 10,        # [kph] min speed of limiter
-}
 
-"""
-needed_msg_id_list = [
-    # mandatory msgs
-    0x200,  # BS (Break System) - drive direction, ESP
-    0x300,  # BS - enable ART
-    0x236,  # ART_LRW - Steering
-    0x238,  # ART_MRM - Buttons
-    0x240,  # EZS - Buttons
-    0x212,  # MS - Enable ART
-    0x308,  # MS - Data
-    0x312,  # MS - Moments
-    0x412,  # Kombi - speed
-    # other msgs
-    0x408,  # Kombi
-    0x328,  # BS
-    0x218,  # GS - Gearbox System
-    0x418,  # GS
-    0x210,  # MS (Motor System) - Pedal
-    0x608,  # MS
-    0x328,  # BS
-]
-"""
+
+    # CAN filter list
+    'filter_msg_id_can_c': [
+        # mandatory msgs
+        0x200,  # BS (Break System) - drive direction, ESP
+        0x300,  # BS - enable ART
+        0x236,  # ART_LRW - Steering
+        0x238,  # ART_MRM - Buttons
+        0x240,  # EZS - Buttons
+        0x212,  # MS - Enable ART
+        0x308,  # MS - Data
+        0x312,  # MS - Moments
+        0x412,  # Kombi - speed
+        # other msgs
+        0x408,  # Kombi
+        0x328,  # BS
+        0x218,  # GS - Gearbox System
+        0x418,  # GS
+        0x210,  # MS (Motor System) - Pedal
+        0x608,  # MS
+    ]
+}
 
 # Init Logger
 log = Logger.Log(module_name).get_logger()
@@ -164,17 +161,21 @@ mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
 
 art_data = ArtData(config, log)
 
+# Thread list to manage (start/stop) all threads
+thread_list = []
+
 # Stop thread event flag
 stop_event = threading.Event()
 
+# replaced by RepeatTimer class
 # timed interval task scheduler
-def run_task(interval, func, stop_event_flag):
-    """runs func at interval [sec], until stop_event is set"""
-
-    # Todo: check if this is the best way to do this, maybe use Timer class
-    while not stop_event_flag.is_set():
-        func()
-        time.sleep(interval)
+#def run_task(interval, func, stop_event_flag):
+#    """runs func at interval [sec], until stop_event is set"""
+#
+#    # Todo: check if this is the best way to do this, maybe use Timer class
+#    while not stop_event_flag.is_set():
+#        func()
+#        time.sleep(interval)
 
 # decorator class to repeat a function at a given interval
 class RepeatTimer(threading.Timer):
@@ -204,7 +205,9 @@ def task_10hz():
 def task_status_log():
     # request status update
     log.debug('Request Status log')
-    #can_handler.status_log()
+    log.info('CAN_C ' + can_c_parser.status())
+    log.info('ART ' + art_data.status())
+    log.info(art_data.get_vehicle_msgs())
 
 # init CAN Communication
 can_0 = Can(config.can_interface, config.can_0_channel, config.can_0_bitrate, log, config.can_app_name, stop_event)
@@ -214,11 +217,13 @@ can_0.connect()
 can_1.connect()
 
 # threat so send and receive CAN msgs
-thread_can_0 = threading.Thread(target=can_0.loop, args=(art_data.q_can_c_in, art_data.q_can_c_out))
-thread_can_1 = threading.Thread(target=can_1.loop, args=(art_data.q_radar_in, art_data.q_radar_out))
+thread_can_0 = threading.Thread(target=can_0.loop, args=(art_data.q_can_c_in, art_data.q_can_c_out)) # daemon=True
+thread_can_0.name = 'CAN C read/write Loop'
+thread_list.append(thread_can_0)
 
-thread_can_0.start()
-thread_can_1.start()
+thread_can_1 = threading.Thread(target=can_1.loop, args=(art_data.q_radar_in, art_data.q_radar_out)) # daemon=True
+thread_can_1.name = 'CAN R read/write Loop'
+thread_list.append(thread_can_1)
 
 # timed threads
 #thread_10hz = threading.Thread(target=run_task, args=(0.1, task_10hz, stop_event))
@@ -226,22 +231,29 @@ thread_can_1.start()
 
 # Timer dont repeat
 thread_10hz = RepeatTimer(0.1, task_10hz)
+thread_10hz.name = '10Hz Tick'
+thread_list.append(thread_10hz)
+
 thread_status = RepeatTimer(config.stats_update_time, task_status_log)
+thread_status.name = 'Status Log'
+thread_list.append(thread_status)
 
-# start Threads
-thread_10hz.start()
-thread_status.start()
-
-
-"""
-# CAN HANDLER
-can_handler = CanHandler(config,
+# CAN HANDLER - CAN parser 
+can_c_parser = CanHandler(config,
                          log,
-                         mdf,
-                         q_can_c_in,
-                         q_can_c_out,
-                         needed_msg_id_list)
-"""
+                         art_data.q_can_c_in,
+                         art_data.q_can_c_out,
+                         config.can_0_dbc,
+                         art_data.set_vehicle_msgs,
+                         config.filter_msg_id_can_c
+                         )
+
+
+
+# start thread from list
+for thread in thread_list:
+    log.info('Start Thread: ' + thread.name)
+    thread.start()
 
 def main_loop():
 
@@ -249,7 +261,12 @@ def main_loop():
 
         while not stop_event.is_set():
 
-            # Todo check CAN Queues to parse and send CAN msgs
+            # check for new messages and process them
+            #can_handler.new_msg()  # process the CAN msgs
+
+            # check CAN Queues to parse and send CAN msgs
+            can_c_parser.parse_msgs()  # process the CAN msgs
+
             """             
             # new CAN msgs?
             if flag_new_msg.is_set():
@@ -263,7 +280,7 @@ def main_loop():
             """
 
             # create some cpu idle time
-            time.sleep(0.0001)
+            time.sleep(0.01)
 
     # interrupt to stop the processes
     except KeyboardInterrupt:
@@ -271,6 +288,7 @@ def main_loop():
         stop_event.set()
 
 
+# MAIN 
 if __name__ == "__main__":
     # do the magic
     try:
@@ -278,16 +296,21 @@ if __name__ == "__main__":
     except Exception as e:
         log.exception(e)
 
-    # shutdown
+    # shutdown threads
     log.info('Stop Threads')
-    # stop Timer
-    thread_10hz.cancel()
-    thread_status.cancel()
-    # wait for Threads to finish
-    thread_10hz.join()
-    thread_status.join()
-    thread_can_0.join()
-    thread_can_1.join()
+    for thread in thread_list:        
+        try:
+            if hasattr(thread, 'cancel'):
+                log.debug('Stop Timer: ' + thread.name)
+                thread.cancel()  # stop Timer
+
+            log.debug('Stop Thread: ' + thread.name)
+            thread.join(timeout=1)
+
+            if thread.is_alive():
+                log.warning('Thread did not stop: ' + thread.name)
+        except Exception as e:
+            log.exception(e)
 
     log.info('Shut down bus')
     can_0.shutdown_connection()

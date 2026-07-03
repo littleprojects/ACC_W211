@@ -171,7 +171,12 @@ class ArtData:
     def set_vehicle_msgs(self, new_msgs):
         # thread protection
         with self._lock_vehicle_msgs:
-            self._vehicle_msgs.update(new_msgs)  # update the dict with new values
+            #self.log.debug(f"Vehicle CAN: {self._vehicle_msgs}")            
+            self._vehicle_msgs['msgs'].update(new_msgs['msgs'])  # update the dict with new values
+            self._vehicle_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values          
+
+            #TODO
+            # - check for cancel conditions
 
     # ------ Radar CAN Methods -----------------------------
     def get_radar_msgs(self):
@@ -182,6 +187,14 @@ class ArtData:
     def set_radar_msgs(self, new_msgs):
         # thread protection
         with self._lock_radar_msgs:
-            self._radar_msgs.update(new_msgs)  # update the dict with new values
+            self._radar_msgs['msgs'].update(new_msgs['msgs'])  # update the dict with new values
+            self._radar_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values
 
+    # ------ status log -----------------------------
+    def status(self):
+        # get signals from
+        can_c_data = self.get_vehicle_msgs()
+        out = f"ART: msgs {len(can_c_data['msgs'])}, values {len(can_c_data['signals'])} "
+        #self.log.info(out)
+        return out
         

@@ -118,7 +118,12 @@ class Can:
                 msg_data = q_out.get()
                 self.send_message(msg_data)
 
+                #self.log.debug(f"CAN_{self.channel}: Message sent from queue: {msg_data}")
+
             # Receive CAN message with timeout
             msg = self.bus.recv(timeout=0.01)  # 100 Hz polling
             if msg:
                 q_in.put(msg)
+
+                #self.log.debug(f"CAN_{self.channel}: Received message: {msg}")
+

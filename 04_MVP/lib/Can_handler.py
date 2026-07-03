@@ -1,45 +1,33 @@
 import cantools
 
 from lib import utils
-#from lib import check
-
-from lib.Art import Art
-from lib.Art import ArtState
 
 
 class CanHandler:
 
-    def __init__(self, config, log, mdf, q_cc_in, q_cc_out, needed_msg_id_list):
+    def __init__(self, config, log, q_cc_in, q_cc_out, dbc, update_function, filter_msg_id_list = None):
         # cc = Can Car
 
         self.config = config
         self.log = log
-        self.mdf = mdf
-
-        # init ART Class
-        self.Art = Art(config, log, self.mdf)
 
         # queues CAN C
         self.q_cc_in = q_cc_in
         self.q_cc_out = q_cc_out
 
+        # CAN database
+        self.dbc = None
+
+        # update function
+        self.update_function = update_function
+
         # filter List:
-        self.needed_msg_id_list = needed_msg_id_list
-
-        # data storage
-        self.vehicle_msg = {
-            'msgs': {},
-            'signals': {},
-            'ready': 0
-        }
-
-        # CAN Data
-        self.art_250_data = None
-        self.art_258_data = None
+        # white list of needed msg id's to process in hex or decimal [ 0x200, 786]
+        self.filter_msg_id_list = filter_msg_id_list
 
         # load DBC
         try:
-            self.db_0 = cantools.database.load_file(config.can_0_dbc)
+            self.dbc = cantools.database.load_file(dbc)
         except Exception as e:
             self.log.critical('Cant load DBC: ' + str(e))
 
@@ -49,33 +37,36 @@ class CanHandler:
             'out': 0
         }
 
-        # set dbc in MDF logger
-        self.mdf.dbc = self.db_0
-
-    def new_msg(self):
+    def parse_msgs(self):
 
         # decode msgs
-        new_can_msgs = False
-        new_msgs = {}
+        new_can_msgs = False        
 
         # process the msgs in q_in
         while not self.q_cc_in.empty():
+
+
+            new_msgs = {
+                'msgs': {},  # msg timestamps in [ms]
+                'signals': {},  # signals as dict
+            }
 
             msg = self.q_cc_in.get()
             self.q_cc_in.task_done()
 
             # ignore unneeded can msgs
-            if msg.arbitration_id not in self.needed_msg_id_list:
-                continue
+            if self.filter_msg_id_list is not None:
+                if msg.arbitration_id not in self.filter_msg_id_list:
+                    continue    # skip this msg
 
             vehicle_msg_id = hex(msg.arbitration_id)
 
-            # update msg timestamp
-            self.vehicle_msg['msgs'].update({vehicle_msg_id: utils.ts_ms()})
+            # set receive timestamp
+            new_msgs['msgs'].update({vehicle_msg_id: utils.timestamp_ms()})
 
             # decode msg
             try:
-                decode_msg = self.db_0.decode_message(msg.arbitration_id, msg.data)
+                decode_msg = self.dbc.decode_message(msg.arbitration_id, msg.data)
             except Exception as e:
                 # could happen if there are CAN Errors on the bus
                 self.log.critical('Cant decode msg: ' + str(e))
@@ -86,38 +77,58 @@ class CanHandler:
                 continue
 
             # new msgs received
-            new_can_msgs = True
+            #new_can_msgs = True
 
             # all signals in the msg
             for key in decode_msg.keys():
                 signal_name = key
                 signal_data = decode_msg[key]
 
-                # update msg storage all
-                # self.vehicle_msg['signals'].update({signal_name: signal_data})
                 # update new msgs
-                new_msgs.update({signal_name: signal_data})
+                new_msgs['signals'].update({signal_name: signal_data})
 
+            # update data
+            self.update_function(new_msgs)  # call the update function with the new msgs
+            
+            #self.log.debug(f"update Msg {new_msgs}")
+
+            # TODO MDF Logging
             #mdf log
-            self.mdf.add_signals(decode_msg)
+            #self.mdf.add_signals(decode_msg)
 
             # update all msgs
-            self.vehicle_msg['signals'].update(new_msgs)
+            #self.vehicle_msg['signals'].update(new_msgs)
 
-            # update stats
+            # update msg counter
             self.stats['in'] += 1
 
         # update ART at new messages
-        if new_can_msgs:
+        #if new_can_msgs:
             # send all msgs
             # self.Art.update_input(self.vehicle_msg)
 
             # send new msgs and all
-            self.Art.update_input(new_msgs, self.vehicle_msg)
+            #self.Art.update_input(new_msgs, self.vehicle_msg)
 
             # Todo?: instant update needed for quick changes -> request quick CAN response
             # maybe with a response to the update process or external event
 
+    def send_msg(self, msg_id, msg_data):
+
+        if self.config.can_0_send:
+            # write msg to output queue dict {'id': arbitration_id, 'data': msg_binary_data}
+            self.q_cc_out.put({'id': msg_id, 'data': msg_data})
+
+            self.stats['out'] += 1
+
+    def status(self):
+        # get signals from
+        out = f"Rx {self.stats['in']}, Tx {self.stats['out']} "
+        #self.log.info(out)
+        return out
+        
+
+    """
     # 10 Hz triggered
     def create_out_msgs(self):
 
@@ -127,7 +138,7 @@ class CanHandler:
         # todo CAN msg value check -> value have to fit to can msg
 
         # create ART_250 msg data
-        self.art_250_data = self.db_0.encode_message(0x250, {
+        self.art_250_data = self.dbc.encode_message(0x250, {
                 'DYN_UNT':  art_data['DYN_UNT'],    # dynamic downshift suppression
                 'BL_UNT':   art_data['BL_UNT'],     # breathtaking suppression
                 'ART_BRE':  art_data['ART_BRE'],    # ART breaks
@@ -148,7 +159,7 @@ class CanHandler:
         )
 
         # create ART_258 msg data
-        self.art_258_data = self.db_0.encode_message(0x258, {
+        self.art_258_data = self.dbc.encode_message(0x258, {
             'ART_ERROR':    art_data['ART_ERROR'],      # ART error code
             'ART_INFO':     art_data['ART_INFO'],       # ART info light
             'ART_WT':       art_data['ART_WT'],         # ART warning sound
@@ -183,7 +194,9 @@ class CanHandler:
 
         # mdf log
         self.mdf.add_signals(art_data, signal_prefix='art_')
+    """
 
+    """
     def send_art_msg(self):
 
         # create output
@@ -196,7 +209,9 @@ class CanHandler:
             self.q_cc_out.put({'id': 0x258, 'data': self.art_258_data})
 
             self.stats['out'] += 2
+    """
 
+    """
     def status_log(self):
         # get signals from
         art_stats = self.Art.status_log()
@@ -228,3 +243,4 @@ class CanHandler:
             out += f"\tCAN_0: Rx {self.stats['in']}, Tx {self.stats['out']} "
 
         self.log.info(out)
+        """
