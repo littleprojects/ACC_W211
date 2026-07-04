@@ -3,7 +3,7 @@
 ## Installation
 
 ````commandline
-pip install can cantools asammdf
+pip install can cantools asammdf flask
 ````
 
 ## Preparation
