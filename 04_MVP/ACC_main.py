@@ -27,6 +27,7 @@ from lib.Config import Config
 from lib.Art_Data import ArtData
 from lib.Can_Handler import CanHandler
 
+from lib.DataServer import DataServer
 
 # module name for LOGGING and CONFIG
 module_name = 'MVP'
@@ -135,7 +136,14 @@ default_config = {
         0x418,  # GS
         0x210,  # MS (Motor System) - Pedal
         0x608,  # MS
-    ]
+    ],
+
+    # Data Server
+    # The data server is a Flask server that can be used to display the ACC data in a web browser.
+    # NOTE: Use it only for testing and debugging, not in production. It is not secure and can be a security risk.
+    'data_server_enabled': True,  # enable/disable Flask server
+    'data_server_host': 'localhost',  # Flask server host
+    'data_server_port': 5001,  # Flask server port
 }
 
 # Init Logger
@@ -157,7 +165,7 @@ if config.comment is not None:
     log.info('Comment: ' + config.comment)
 
 # MDF
-mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
+#mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
 
 art_data = ArtData(config, log)
 
@@ -248,7 +256,14 @@ can_c_parser = CanHandler(config,
                          config.filter_msg_id_can_c
                          )
 
+# TODO can radar parser
 
+# data server Flask
+data_server = DataServer(config, log, art_data)
+thread_data_server = threading.Thread(target=data_server.run, daemon=True)
+thread_data_server.name = 'Data Server'
+if config.data_server_enabled:
+    thread_list.append(thread_data_server)
 
 # start thread from list
 for thread in thread_list:
@@ -317,6 +332,6 @@ if __name__ == "__main__":
     can_1.shutdown_connection()
 
     # write MDF log file
-    mdf.write_mdf()
+    #mdf.write_mdf()
 
     log.info('STOPPED - over and out')
