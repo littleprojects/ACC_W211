@@ -1,9 +1,4 @@
-
-[READY_CHECK]
-#loglevel = debug
-
-
-[MVP]
+[MAIN]
 
 # -----------------------------------------------------------------------
 # ACC MAIN Settings
@@ -59,5 +54,12 @@ stats_update_time = 5
 # Default (real) CAN interface
 #can_app_name = VN1610
 # simulating CAN
-can_app_name = vCAN
+#can_app_name = vCAN
+
+[CAN_2]
+
+app_name = VN1610
+
+[DATA_SERVER]
+port = 6000
 

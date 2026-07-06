@@ -22,7 +22,8 @@ import threading
 from lib import utils
 from lib import Logger
 from lib.Can import Can
-from lib.Mdf import Mdf
+from lib.Art import ART
+#from lib.Mdf import Mdf
 from lib.Config import Config
 from lib.Art_Data import ArtData
 from lib.Can_Handler import CanHandler
@@ -36,86 +37,112 @@ module_version = '0.1.0'
 
 # default module settings - all config values needs a default value
 default_config = {
-    'version': '0.1.0',  # version
-    'comment': 'refactoring',     # add a comment to this version, this will be added to the log file
-    'loglevel': 'DEBUG',  # info, debug; with debug also config info will be printed out
+
     'config_file': 'config.txt',
-    'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
-    'stats_update_time': 10,  # [sec] log stats updates - disable with 0
+    
+    'MAIN': {
+        'version': '0.1.0',  # version
+        'comment': 'refactoring',     # add a comment to this version, this will be added to the log file
+        
+        'loglevel': 'DEBUG',  # info, debug; with debug also config info will be printed out
+        
+        'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
+        'stats_update_time': 10,  # [sec] log stats updates - disable with 0
+    },
 
     # CAN settings
-    'can_interface': 'vector',
+    #'can_interface': 'vector',
     #'can_app_name': 'VN1610',  # Hardware interface
-    'can_app_name': 'vCAN',  # virtual CAN interface
+    #'can_app_name': 'vCAN',  # virtual CAN interface
 
     # Vehicle CAN
-    'can_0_channel': '0',
-    'can_0_bitrate': '500000',  # 5k baude
+    'CAN_0': {
+        #'app_name': 'VN1610',  # Hardware interface
+        'app_name': 'vCAN',  # virtual CAN interface
 
-    'can_0_dbc': 'dbc/CAN_C.dbc',  # path to DBC
-    'can_0_send': True,  # enables or disables MSG sending
+        'interface': 'vector',
+        'channel': '0',
+        'bitrate': '500000',  # 5k baude
+        'dbc': 'dbc/CAN_C.dbc',  # path to DBC
+
+        'send': True,  # enables or disables MSG sending
+    },
 
     # Radar CAN
-    'can_1_channel': '1',
-    'can_1_bitrate': '500000',  # 5k baude
-    'can_1_dbc': 'dbc/CAN_ARS408_id0.dbc', # path to DBC
-    'can_1_send': True,  # enables or disables MSG sending
+    'CAN_1': {
+        #'app_name': 'VN1610',  # Hardware interface
+        'app_name': 'vCAN',  # virtual CAN interface
+
+        'interface': 'vector',
+        'channel': '1',
+        'bitrate': '500000',  # 5k baude
+        'dbc': 'dbc/CAN_ARS408_id0.dbc', # path to DBC
+
+        'send': True,  # enables or disables MSG sending
+    },
 
     # MDF Log
-    'mdf_log': False,
-    'mdf_log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
-    'mdf_auto_save': False,     # save MDF after ACC deactivation
+    'MDF': {
+        'log': False,
+        'log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
+        'auto_save': False,     # save MDF after ACC deactivation
+    },
 
     # Display HMI
-    'art_trigger_time': 8000,  # [ms] show art display after a trigger
-    'lever_hold_time': 1000,  # [ms] button holding time to re-trigger action
-    'warning_time': 200,  # [ms] warning beep duration time
+    'HMI': {
+        'art_trigger_time': 8000,  # [ms] show art display after a trigger
+        'lever_hold_time': 1000,  # [ms] button holding time to re-trigger action
+        'warning_time': 200,  # [ms] warning beep duration time
+    },
 
     # ACC Settings & Limits
-    'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
-    'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
-    'acc_max_speed': 180,       # [kph] max speed for ACC activation
-    'acc_off_speed': 20,        # [kph] switch off ACC at this speed
-    'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
-    'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
-    'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta
-    'acc_pause_lat_acc': 2,     # [m/s²] pause ACC if side (lat) acceleration in corners is high
-    'acc_off_lat_acc': 3,       # [m/s²] switch ACC off if side (lat) acceleration in corners is too high
+    'ACC': {
+        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
+        'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
+        'acc_max_speed': 180,       # [kph] max speed for ACC activation
+        'acc_off_speed': 20,        # [kph] switch off ACC at this speed
+        'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
+        'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
+        'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta
+        'acc_pause_lat_acc': 2,     # [m/s²] pause ACC if side (lat) acceleration in corners is high
+        'acc_off_lat_acc': 3,       # [m/s²] switch ACC off if side (lat) acceleration in corners is too high
 
-    # ACC PID Controller parameter
-    'art_reg_enabled': True,  # enable/disable ART acceleration output
-    'art_bre_enabled': True,  # enable/disable ART deceleration output
-    'acc_kp': 2,
-    'acc_ki': 0.03,
-    'acc_kd': 0.02,
+        # ACC PID Controller parameter
+        'art_reg_enabled': True,  # enable/disable ART acceleration output
+        'art_bre_enabled': True,  # enable/disable ART deceleration output
+        #'acc_kp': 2,
+        #'acc_ki': 0.03,
+        #'acc_kd': 0.02,
 
-    # Error Limitation - limit max error to smooth controller
-    # Error = target_speed - current_speed
-    'pid_error_limit': True,   # enable/disable function
-    'pid_error_max': 40,        # acceleration error
-    'pid_error_min': -30,       # deceleration error
+        # Error Limitation - limit max error to smooth controller
+        # Error = target_speed - current_speed
+        #'pid_error_limit': True,   # enable/disable function
+        #'pid_error_max': 40,        # acceleration error
+        #'pid_error_min': -30,       # deceleration error
 
-    # Rate Limit by Acc - Anti wind up function - clamp output and integral
-    'acc_acceleration_limit': False,  # enable/disable acceleration limits
-    'acc_max_acceleration': 2,  # [m/s²] maximal acceleration
-    'acc_max_deceleration': 2,  # [m/s²] maximal deceleration
+        # Rate Limit by Acc - Anti wind up function - clamp output and integral
+        'acc_acceleration_limit': False,  # enable/disable acceleration limits
+        'acc_max_acceleration': 2,  # [m/s²] maximal acceleration
+        'acc_max_deceleration': 2,  # [m/s²] maximal deceleration
 
-    # Rate Limit by Nm - Anti wind up function - limit output
-    'acc_rate_limit': False,    # enable/disable Rate Limit
-    'acc_max_acc_rate': 20,     # [Nm/s] maximal acceleration rate
-    'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
+        # Rate Limit by Nm - Anti wind up function - limit output
+        'acc_rate_limit': False,    # enable/disable Rate Limit
+        'acc_max_acc_rate': 20,     # [Nm/s] maximal acceleration rate
+        'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
 
-    # Moment Limits - Anti wind up - Limit output - CAN signal limits
-    'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
-    'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
+        # Moment Limits - Anti wind up - Limit output - CAN signal limits
+        'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
+        'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
+    },
 
     # Limiter functions
-    'lim_reg_enabled': True,    # enable/disable LIMITER controller
+    'LIM': {
+        'lim_reg_enabled': False,    # enable/disable LIMITER controller
 
-    # Limiter Settings
-    'lim_max_speed': 250,       # [kph] max speed allowed with limiter
-    'lim_min_speed': 10,        # [kph] min speed of limiter
-
+        # Limiter Settings
+        'lim_max_speed': 250,       # [kph] max speed allowed with limiter
+        'lim_min_speed': 10,        # [kph] min speed of limiter
+    },
 
     # CAN filter list
     'filter_msg_id_can_c': [
@@ -141,33 +168,42 @@ default_config = {
     # Data Server
     # The data server is a Flask server that can be used to display the ACC data in a web browser.
     # NOTE: Use it only for testing and debugging, not in production. It is not secure and can be a security risk.
-    'data_server_enabled': True,  # enable/disable Flask server
-    'data_server_host': 'localhost',  # Flask server host
-    'data_server_port': 5001,  # Flask server port
+    'DATA_SERVER': {
+        'enabled': True,  # enable/disable Flask server
+        'host': 'localhost',  # Flask server host
+        'port': 5001,  # Flask server port
+    }
 }
 
 # Init Logger
 log = Logger.Log(module_name).get_logger()
-log.setLevel(Logger.parse_log_level(default_config.get('loglevel')))
+log.setLevel(Logger.parse_log_level(default_config['MAIN'].get('loglevel')))
 
 log.info('Init')
 
 # init config dict as global variable and load config from file
 # config data will load from the config file and overwrite the default values
-config = Config(module_name, default_config, log).config_obj
+config_reader = Config(default_config, log)
+config = config_reader.config_obj
 
 # update Loglevel
-log.info('Change Loglevel to: ' + config.loglevel)
-log.setLevel(Logger.parse_log_level(config.loglevel))
+log.info('Change Loglevel to: ' + config.MAIN.loglevel)
+log.setLevel(Logger.parse_log_level(config.MAIN.loglevel))
 
-log.info('Version: ' + config.version)
-if config.comment is not None:
-    log.info('Comment: ' + config.comment)
+log.info('Version: ' + config.MAIN.version)
+if config.MAIN.comment is not None:
+    log.info('Comment: ' + config.MAIN.comment)
+
+#log.debug('New Config: ' + str(config_reader.print_config()))
 
 # MDF
 #mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
 
+# Data class to handle the data exchange between the different modules
 art_data = ArtData(config, log)
+
+# ART class to handle the ART state machine and controller
+#art = ART(config, log, art_data)
 
 # Thread list to manage (start/stop) all threads
 thread_list = []
@@ -199,10 +235,15 @@ def task_10hz():
         pass
         #can_handler.send_art_msg()
         # Process the CAN msgs
+        #can_c_parser.parse_msgs()
 
         # ART Calc
+        #art.tick_10Hz()
 
         # send the CAN msgs
+        #art_msgs = art_data.get_art_values()
+        #can_c_parser.send_msg(0x250, art_msgs)
+        #can_c_parser.send_msg(0x258, art_msgs)
 
         # log to MDF
 
@@ -218,8 +259,11 @@ def task_status_log():
     log.info(art_data.get_vehicle_msgs())
 
 # init CAN Communication
-can_0 = Can(config.can_interface, config.can_0_channel, config.can_0_bitrate, log, config.can_app_name, stop_event)
-can_1 = Can(config.can_interface, config.can_1_channel, config.can_1_bitrate, log, config.can_app_name, stop_event)
+#can_0 = Can(config.can_interface, config.can_0_channel, config.can_0_bitrate, log, config.can_app_name, stop_event)
+#can_1 = Can(config.can_interface, config.can_1_channel, config.can_1_bitrate, log, config.can_app_name, stop_event)
+can_0 = Can(config.CAN_0, log, stop_event)
+can_1 = Can(config.CAN_1, log, stop_event)
+
 
 can_0.connect()
 can_1.connect()
@@ -242,7 +286,7 @@ thread_10hz = RepeatTimer(0.1, task_10hz)
 thread_10hz.name = '10Hz Tick'
 thread_list.append(thread_10hz)
 
-thread_status = RepeatTimer(config.stats_update_time, task_status_log)
+thread_status = RepeatTimer(float(config.MAIN.stats_update_time), task_status_log)
 thread_status.name = 'Status Log'
 thread_list.append(thread_status)
 
@@ -251,7 +295,7 @@ can_c_parser = CanHandler(config,
                          log,
                          art_data.q_can_c_in,
                          art_data.q_can_c_out,
-                         config.can_0_dbc,
+                         config.CAN_0.dbc,
                          art_data.set_vehicle_msgs,
                          config.filter_msg_id_can_c
                          )
@@ -259,10 +303,10 @@ can_c_parser = CanHandler(config,
 # TODO can radar parser
 
 # data server Flask
-data_server = DataServer(config, log, art_data)
+data_server = DataServer(config.DATA_SERVER, log, art_data)
 thread_data_server = threading.Thread(target=data_server.run, daemon=True)
 thread_data_server.name = 'Data Server'
-if config.data_server_enabled:
+if config.DATA_SERVER.enabled:
     thread_list.append(thread_data_server)
 
 # start thread from list

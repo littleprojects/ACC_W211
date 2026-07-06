@@ -15,24 +15,28 @@ class Can:
 
     def __init__(
         self,
-        interface: str,
-        channel: str,
-        bitrate: int,
+        can_config,
+        #interface: str,
+        #channel: str,
+        #bitrate: int,
         log,
-        app_name: str,
+        #app_name: str,
         stop_event: Event,
         retry_in_sec: int = 5,
         filter_list: Optional[list] = None,
     ):
+        
+        self.cc = can_config
         self.log = log
         self.bus: Optional[can.BusABC] = None
 
         # Connection parameters
-        self.interface = interface
-        self.channel = channel
-        self.app_name = app_name
-        self.stop_event = stop_event
-        self.bitrate = int(bitrate)
+        self.interface = self.cc.interface
+        self.channel = self.cc.channel
+        self.app_name = self.cc.app_name
+        self.bitrate = int(self.cc.bitrate)
+        
+        self.stop_event = stop_event        
         self.retry_in_seconds = int(retry_in_sec)
 
         # Filters

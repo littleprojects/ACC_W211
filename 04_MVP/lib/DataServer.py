@@ -10,15 +10,15 @@ from flask import Flask, jsonify, request
 
 
 class DataServer:
-    def __init__(self, config, log, art_data=None):
+    def __init__(self, config_DS, log, art_data=None):
         
-        self.config = config
+        self.config = config_DS
         self.log = log
         self.art_data = art_data
 
         self.app = Flask(__name__)
-        self.host = config.data_server_host
-        self.port = config.data_server_port
+        self.host = self.config.host
+        self.port = self.config.port
 
         # diable logging for Flask to avoid cluttering the console output
         log = logging.getLogger('werkzeug')

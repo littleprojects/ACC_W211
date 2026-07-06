@@ -30,8 +30,8 @@ class Config:
     Data from the config file will overwrite the default_config.
     """
 
-    def __init__(self, name: str, default_config: Dict[str, Any], log):
-        self.name = name
+    def __init__(self, default_config: Dict[str, Any], log):
+        #self.name = name
         self.default_config = default_config.copy()
         self.config: Dict[str, Any] = default_config.copy()
         self.config_obj: Dict2Obj | None = None
@@ -40,15 +40,21 @@ class Config:
         # self.log.debug(f"default_config: {self.default_config}")
 
         config_file = self.default_config.get("config_file")
+
         if config_file and os.path.exists(config_file):
-            self.log.info(f"Load config [{self.name}] from: {config_file}")
-            conf_from_file = self.read_config(config_file, self.name)
+            self.log.info(f"Load Config from: {config_file}")
+
+            conf_from_file = self.read_config(config_file)
+            
             self.log.debug(f"Config read from file: {conf_from_file}")
 
             # Merge defaults with file config
-            self.config.update(conf_from_file)
+            #self.config.update(conf_from_file)
 
-            #self.log.debug(f"Merged Config: {self.config}")
+            # merge dictionaries
+            self.config = self.recursive_merge(self.default_config, conf_from_file)
+
+            self.log.debug(f"Merged Config: {self.config}")
         elif config_file:
             self.log.warning(f"Config file not found. Please check: {config_file}")
 
@@ -57,7 +63,7 @@ class Config:
 
         # print config
         # self.print_config()
-        self.log.debug(f"config: {self.config}")
+        self.log.debug(f"Config: {self.config}")
 
         # Create object representation
         self.config_obj = Dict2Obj(self.config)
@@ -75,23 +81,47 @@ class Config:
             elif isinstance(default_value, float):
                 self.config[key] = float(value)
 
-    def read_config(self, file: str, section: str) -> Dict[str, str]:
+    def recursive_merge(self, dict1, dict2):
+        for key, value in dict2.items():
+            if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+                # Recursively merge nested dictionaries
+                dict1[key] = self.recursive_merge(dict1[key], value)
+            else:
+                # Merge non-dictionary values
+                dict1[key] = value
+        return dict1
+
+    def read_config(self, file: str):
         """
         Read the section from the config file.
         Returns a dict with params and values from the config file.
         """
+        config_dict = {}
+
         config = configparser.ConfigParser()
         config.read(file)
 
-        if config.has_section(section):
-            self.log.debug(f"Config section found: {section}")
-            return dict(config[section])
-        else:
-            self.log.warning(
-                f"Config section NOT found: file={file}; module={self.name}; "
-                f"missing group=[{section}]; using default settings!"
-            )
-            return {}
+        for section in config.sections():
+            #print(f"[{section}]")
+            config_dict[section] = {}
+
+            #config_dict[section] = config[section]
+
+            for key, val in config.items(section):
+                #print(f"{key} = {val}")
+                config_dict[section].update({key: val})
+
+        return config_dict
+
+        #if config.has_section(section):
+        #    self.log.debug(f"Config section found: {section}")
+        #    return dict(config[section])
+        #else:
+        #    self.log.warning(
+        #        f"Config section NOT found: file={file}; module={self.name}; "
+        #        f"missing group=[{section}]; using default settings!"
+        #    )
+        #    return {}
 
     def print_config(self):
         """Return a formatted string of the current config."""
