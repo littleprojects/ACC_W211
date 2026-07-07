@@ -6,15 +6,18 @@ Works with Flask to provide a RESTful API for accessing and manipulating data.
 
 import logging
 
+from lib.Logger import Log
 from flask import Flask, jsonify, request
 
 
 class DataServer:
-    def __init__(self, config_DS, log, art_data=None):
+    def __init__(self, config_DS, art_data=None):
         
         self.config = config_DS
-        self.log = log
         self.art_data = art_data
+
+        # Logger
+        self.log = Log('DS', config=self.config).get_logger()
 
         self.app = Flask(__name__)
         self.host = self.config.host

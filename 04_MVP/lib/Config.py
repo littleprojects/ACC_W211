@@ -7,6 +7,7 @@ import configparser
 from typing import Any, Dict
 
 from lib import utils
+from lib import Logger
 
 
 class Dict2Obj:
@@ -30,12 +31,14 @@ class Config:
     Data from the config file will overwrite the default_config.
     """
 
-    def __init__(self, default_config: Dict[str, Any], log):
+    def __init__(self, default_config: Dict[str, Any]):
         #self.name = name
         self.default_config = default_config.copy()
         self.config: Dict[str, Any] = default_config.copy()
         self.config_obj: Dict2Obj | None = None
-        self.log = log
+        
+        self.log = Logger.Log('CONFIG').get_logger()
+        self.log.setLevel(Logger.parse_log_level(default_config.get('loglevel', 'INFO')))
 
         # self.log.debug(f"default_config: {self.default_config}")
 

@@ -1,5 +1,7 @@
 import time
 import can
+
+from lib import Logger
 from queue import Queue
 from threading import Event
 from typing import Optional, Dict, Any
@@ -19,7 +21,7 @@ class Can:
         #interface: str,
         #channel: str,
         #bitrate: int,
-        log,
+        #log,
         #app_name: str,
         stop_event: Event,
         retry_in_sec: int = 5,
@@ -27,7 +29,6 @@ class Can:
     ):
         
         self.cc = can_config
-        self.log = log
         self.bus: Optional[can.BusABC] = None
 
         # Connection parameters
@@ -45,11 +46,14 @@ class Can:
         # Counter for sent messages
         self.sent_count = 0
 
+        # Logger
+        self.log = Logger.Log('CAN_'+self.channel, config=can_config).get_logger()
+
     def connect(self) -> Optional[can.BusABC]:
         """
         Try to connect to the CAN bus. Retries until successful.
         """
-        self.log.info(f"CAN_{self.channel}: Connecting to CAN")
+        self.log.info(f"Connecting to CAN")
         try:
             self.bus = can.interface.Bus(
                 interface=self.interface,
@@ -60,9 +64,9 @@ class Can:
             self.set_filter(self.filter_list)
             return self.bus
         except Exception as e:
-            self.log.error(f"CAN_{self.channel}: Connection failed: {e} --- retry")
+            self.log.error(f" Connection failed: {e} --- retry")
             self.shutdown_connection()
-            self.log.debug(f"CAN_{self.channel}: Retrying in {self.retry_in_seconds} seconds")
+            self.log.debug(f" Retrying in {self.retry_in_seconds} seconds")
             time.sleep(self.retry_in_seconds)
             return self.connect()
 
@@ -73,28 +77,28 @@ class Can:
         if not self.bus or not filter_list:
             return
         try:
-            self.log.debug(f"CAN_{self.channel}: Setting filters {filter_list}")
+            self.log.debug(f"Setting filters {filter_list}")
             self.bus.set_filters(filter_list)
         except Exception as e:
-            self.log.warning(f"CAN_{self.channel}: Cannot set filters: {e}")
+            self.log.warning(f"Cannot set filters: {e}")
 
     def shutdown_connection(self) -> None:
         """
         Shut down the CAN bus connection.
         """
-        self.log.debug(f"CAN_{self.channel}: Shutting down connection")
+        self.log.debug(f"Shutting down connection")
         if self.bus:
             try:
                 self.bus.shutdown()
             except Exception as e:
-                self.log.error(f"CAN_{self.channel}: Shutdown failed: {e}")
+                self.log.error(f"Shutdown failed: {e}")
 
     def send_message(self, msg_data: Dict[str, Any]) -> None:
         """
         Send a single CAN message.
         """
         if not self.bus:
-            self.log.error(f"CAN_{self.channel}: Bus not connected, cannot send message")
+            self.log.error(f"Bus not connected, cannot send message")
             return
 
         try:
@@ -103,11 +107,15 @@ class Can:
                 data=msg_data["data"],
                 is_extended_id=False,
             )
-            self.bus.send(msg)
-            self.sent_count += 1
-            self.log.debug(f"CAN_{self.channel}: Sent message #{self.sent_count}")
+            
+            # can config allow sending
+            if self.cc.send:                
+                self.bus.send(msg)
+                self.sent_count += 1
+                self.log.debug(f"Sent message #{self.sent_count}")
+                
         except Exception as e:
-            self.log.error(f"CAN_{self.channel}: Failed to send message: {e}")
+            self.log.error(f"Failed to send message: {e}")
 
     def loop(self, q_in: Queue, q_out: Queue) -> None:
         """
@@ -122,12 +130,12 @@ class Can:
                 msg_data = q_out.get()
                 self.send_message(msg_data)
 
-                #self.log.debug(f"CAN_{self.channel}: Message sent from queue: {msg_data}")
+                #self.log.debug(f"Message sent from queue: {msg_data}")
 
             # Receive CAN message with timeout
             msg = self.bus.recv(timeout=0.01)  # 100 Hz polling
             if msg:
                 q_in.put(msg)
 
-                #self.log.debug(f"CAN_{self.channel}: Received message: {msg}")
+                #self.log.debug(f"Received message: {msg}")
 

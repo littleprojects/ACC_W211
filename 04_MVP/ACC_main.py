@@ -44,7 +44,7 @@ default_config = {
         'version': '0.1.0',  # version
         'comment': 'refactoring',     # add a comment to this version, this will be added to the log file
         
-        'loglevel': 'DEBUG',  # info, debug; with debug also config info will be printed out
+        'loglevel': 'INFO',  # info, debug; with debug also config info will be printed out
         
         'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
         'stats_update_time': 10,  # [sec] log stats updates - disable with 0
@@ -70,6 +70,7 @@ default_config = {
 
     # Radar CAN
     'CAN_1': {
+        'loglevel': 'DEBUG',
         #'app_name': 'VN1610',  # Hardware interface
         'app_name': 'vCAN',  # virtual CAN interface
 
@@ -79,6 +80,10 @@ default_config = {
         'dbc': 'dbc/CAN_ARS408_id0.dbc', # path to DBC
 
         'send': True,  # enables or disables MSG sending
+    },
+
+    'ART_DATA': {
+        'loglevel': 'INFO'
     },
 
     # MDF Log
@@ -95,8 +100,10 @@ default_config = {
         'warning_time': 200,  # [ms] warning beep duration time
     },
 
-    # ACC Settings & Limits
-    'ACC': {
+    # ART Settings & Limits
+    'ART': {
+        #'loglevel': 'debug',
+
         'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
         'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
         'acc_max_speed': 180,       # [kph] max speed for ACC activation
@@ -176,14 +183,14 @@ default_config = {
 }
 
 # Init Logger
-log = Logger.Log(module_name).get_logger()
+log = Logger.Log('Main').get_logger()
 log.setLevel(Logger.parse_log_level(default_config['MAIN'].get('loglevel')))
 
 log.info('Init')
 
 # init config dict as global variable and load config from file
 # config data will load from the config file and overwrite the default values
-config_reader = Config(default_config, log)
+config_reader = Config(default_config)
 config = config_reader.config_obj
 
 # update Loglevel
@@ -200,10 +207,10 @@ if config.MAIN.comment is not None:
 #mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
 
 # Data class to handle the data exchange between the different modules
-art_data = ArtData(config, log)
+art_data = ArtData(config.ART_DATA)
 
 # ART class to handle the ART state machine and controller
-#art = ART(config, log, art_data)
+art = ART(config.ART, art_data)
 
 # Thread list to manage (start/stop) all threads
 thread_list = []
@@ -211,18 +218,21 @@ thread_list = []
 # Stop thread event flag
 stop_event = threading.Event()
 
+"""
 # replaced by RepeatTimer class
 # timed interval task scheduler
 #def run_task(interval, func, stop_event_flag):
-#    """runs func at interval [sec], until stop_event is set"""
+#    # runs func at interval [sec], until stop_event is set
 #
 #    # Todo: check if this is the best way to do this, maybe use Timer class
 #    while not stop_event_flag.is_set():
 #        func()
 #        time.sleep(interval)
+"""
 
 # decorator class to repeat a function at a given interval
 class RepeatTimer(threading.Timer):
+    # TODO: is not 10Hz - have some delay, maybe sync to an incomming msg
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
@@ -232,13 +242,12 @@ def task_10hz():
 
     # do the MAGIC 10 times per second
     try:
-        pass
-        #can_handler.send_art_msg()
+        
         # Process the CAN msgs
-        #can_c_parser.parse_msgs()
+        can_c_parser.parse_msgs()
 
         # ART Calc
-        #art.tick_10Hz()
+        art.tick_10Hz()
 
         # send the CAN msgs
         #art_msgs = art_data.get_art_values()
@@ -261,8 +270,8 @@ def task_status_log():
 # init CAN Communication
 #can_0 = Can(config.can_interface, config.can_0_channel, config.can_0_bitrate, log, config.can_app_name, stop_event)
 #can_1 = Can(config.can_interface, config.can_1_channel, config.can_1_bitrate, log, config.can_app_name, stop_event)
-can_0 = Can(config.CAN_0, log, stop_event)
-can_1 = Can(config.CAN_1, log, stop_event)
+can_0 = Can(config.CAN_0, stop_event)
+can_1 = Can(config.CAN_1, stop_event)
 
 
 can_0.connect()
@@ -291,11 +300,11 @@ thread_status.name = 'Status Log'
 thread_list.append(thread_status)
 
 # CAN HANDLER - CAN parser 
-can_c_parser = CanHandler(config,
-                         log,
+can_c_parser = CanHandler(config.CAN_0,
+                         #log,
                          art_data.q_can_c_in,
                          art_data.q_can_c_out,
-                         config.CAN_0.dbc,
+                         #config.CAN_0.dbc,
                          art_data.set_vehicle_msgs,
                          config.filter_msg_id_can_c
                          )
@@ -303,7 +312,7 @@ can_c_parser = CanHandler(config,
 # TODO can radar parser
 
 # data server Flask
-data_server = DataServer(config.DATA_SERVER, log, art_data)
+data_server = DataServer(config.DATA_SERVER, art_data)
 thread_data_server = threading.Thread(target=data_server.run, daemon=True)
 thread_data_server.name = 'Data Server'
 if config.DATA_SERVER.enabled:
@@ -311,7 +320,7 @@ if config.DATA_SERVER.enabled:
 
 # start thread from list
 for thread in thread_list:
-    log.info('Start Thread: ' + thread.name)
+    log.debug('Start Thread: ' + thread.name)
     thread.start()
 
 def main_loop():
@@ -371,7 +380,7 @@ if __name__ == "__main__":
         except Exception as e:
             log.exception(e)
 
-    log.info('Shut down bus')
+    log.debug('Shut down bus')
     can_0.shutdown_connection()
     can_1.shutdown_connection()
 

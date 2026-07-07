@@ -21,6 +21,8 @@ ToDo:
 import copy
 import threading
 
+from lib import Logger
+
 from enum import Enum
 from queue import Queue
 import threading
@@ -35,10 +37,10 @@ class ArtState(Enum):
 
 class ArtData:
 
-    def __init__(self, config, log):
+    def __init__(self, config):
 
         self.config = config
-        self.log = log
+        self.log = Logger.Log('ArtData', config=config).get_logger()
 
         # init CAN Queue's and Flags/Events
         # Vehicle CAN
@@ -75,7 +77,7 @@ class ArtData:
             'GMIN_ART': 0,  # minimum gear
             'GMAX_ART': 0,  # maximum gear
             'AKT_R_ART': 0,  # shift down request from art
-
+            
             # ART_258
             'ART_ERROR': 0,  # ART error code
             'ART_INFO': 0,  # ART info light
@@ -110,6 +112,7 @@ class ArtData:
         # ART values to send out
         # init as a copy of the default values
         self._art_values = copy.deepcopy(self._CONST_default_values)
+
         self._BZ250h = 0  # Message counter 0-15 (BZ = BotschaftZähler)
         self._lock_art_values = threading.Lock()  # threading lock variable for ART values
 
@@ -132,7 +135,9 @@ class ArtData:
             'warning_state': 0,
         }
 
-    # ------ State Machine Methods -----------------------------
+        # TODO: load waring_state from persistent storage (STORAGE lib)
+
+    # ------ State Machine SET GET -----------------------------
     def get_state(self):
         # thread protection
         with self._lock_state:
@@ -151,7 +156,7 @@ class ArtData:
 
                 # Todo trigger event at state change or just return TRUE if a statechange happened
 
-    # ------ ART Values Methods -----------------------------
+    # ------ ART Values SET GET Methods -----------------------------
     def get_art_values(self):
         # thread protection
         with self._lock_art_values:
@@ -162,7 +167,7 @@ class ArtData:
         with self._lock_art_values:
             self._art_values.update(new_values)  # update the dict with new values
 
-    # ------ Vehicle CAN C Methods -----------------------------
+    # ------ Vehicle CAN C SET GET Methods -----------------------------
     def get_vehicle_msgs(self):
         # thread protection
         with self._lock_vehicle_msgs:
@@ -175,10 +180,9 @@ class ArtData:
             self._vehicle_msgs['msgs'].update(new_msgs['msgs'])  # update the dict with new values
             self._vehicle_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values          
 
-            #TODO
-            # - check for cancel conditions
+            #TODO check for cancel conditions
 
-    # ------ Radar CAN Methods -----------------------------
+    # ------ Radar CAN SET GET Methods -----------------------------
     def get_radar_msgs(self):
         # thread protection
         with self._lock_radar_msgs:
@@ -192,9 +196,13 @@ class ArtData:
 
     # ------ status log -----------------------------
     def status(self):
-        # get signals from
+        # get signals
         can_c_data = self.get_vehicle_msgs()
+        
         out = f"ART: msgs {len(can_c_data['msgs'])}, values {len(can_c_data['signals'])} "
+
+        # TODO: add more details like msg count, signal count, etc.
+        
         #self.log.info(out)
         return out
         

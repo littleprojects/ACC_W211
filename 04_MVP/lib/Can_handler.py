@@ -1,15 +1,18 @@
 import cantools
 
 from lib import utils
+from lib.Logger import Log
 
 
 class CanHandler:
 
-    def __init__(self, config, log, q_cc_in, q_cc_out, dbc, update_function, filter_msg_id_list = None):
+    def __init__(self, config, q_cc_in, q_cc_out, update_function, filter_msg_id_list = None):
         # cc = Can Car
 
         self.config = config
-        self.log = log
+        
+        # Logger
+        self.log = Log('CP_'+self.config.channel, config=self.config).get_logger()
 
         # queues CAN C
         self.q_cc_in = q_cc_in
@@ -27,9 +30,10 @@ class CanHandler:
 
         # load DBC
         try:
-            self.dbc = cantools.database.load_file(dbc)
+            self.dbc = cantools.database.load_file(self.config.dbc)
         except Exception as e:
             self.log.critical('Cant load DBC: ' + str(e))
+            exit()
 
         # CAN statistic
         self.stats = {
@@ -115,11 +119,12 @@ class CanHandler:
 
     def send_msg(self, msg_id, msg_data):
 
-        if self.config.can_0_send:
-            # write msg to output queue dict {'id': arbitration_id, 'data': msg_binary_data}
-            self.q_cc_out.put({'id': msg_id, 'data': msg_data})
+        # if self.config.can_0_send: # TODO: do in CAN class
 
-            self.stats['out'] += 1
+        # write msg to output queue dict {'id': arbitration_id, 'data': msg_binary_data}
+        self.q_cc_out.put({'id': msg_id, 'data': msg_data})
+
+        self.stats['out'] += 1
 
     def status(self):
         # get signals from
@@ -127,7 +132,6 @@ class CanHandler:
         #self.log.info(out)
         return out
         
-
     """
     # 10 Hz triggered
     def create_out_msgs(self):
@@ -195,12 +199,62 @@ class CanHandler:
         # mdf log
         self.mdf.add_signals(art_data, signal_prefix='art_')
     """
-
-    """
+    
+    # special function for CAN_C
     def send_art_msg(self):
 
         # create output
-        self.create_out_msgs()
+        # create ART_250 msg data
+        self.art_250_data = self.dbc.encode_message(0x250, {
+                'DYN_UNT':  art_data['DYN_UNT'],    # dynamic downshift suppression
+                'BL_UNT':   art_data['BL_UNT'],     # breathtaking suppression
+                'ART_BRE':  art_data['ART_BRE'],    # ART breaks
+                'ART_OK':   art_data['ART_OK'],     # ART ok
+                'SLV_ART':  art_data['SLV_ART'],    # shift lines adaptation
+                'CAS_REG':  art_data['CAS_REG'],    # City assist is active
+                'MDYN_ART': art_data['MDYN_ART'],   # dynamic engine moment
+                'MPAR_ART': art_data['MPAR_ART'],   # parity
+                'ART_REG':  art_data['ART_REG'],    # ART is active
+                'LIM_REG':  art_data['LIM_REG'],    # limiter is activ
+                'M_ART':    art_data['M_ART'],      # [Nm] engine moment
+                'BZ250h':   art_data['BZ250h'],     # msg counter 4bit = 0-15
+                'MBRE_ART': art_data['MBRE_ART'],   # [Nm] break moment
+                'GMIN_ART': art_data['GMIN_ART'],   # minimum gear
+                'GMAX_ART': art_data['GMAX_ART'],   # maximum gear
+                'AKT_R_ART': art_data['AKT_R_ART'],  # shift down request from art
+            }
+        )
+
+        # create ART_258 msg data
+        self.art_258_data = self.dbc.encode_message(0x258, {
+            'ART_ERROR':    art_data['ART_ERROR'],      # ART error code
+            'ART_INFO':     art_data['ART_INFO'],       # ART info light
+            'ART_WT':       art_data['ART_WT'],         # ART warning sound
+            'S_OBJ':        art_data['S_OBJ'],          # standing object detected
+            'ART_DSPL_EIN': art_data['ART_DSPL_EIN'],   # ART display on
+            'V_ART':        art_data['V_ART'],          # [kph] ART set speed
+            'ABST_R_OBJ':   art_data['ABST_R_OBJ'],     # [m] distance to relevant object
+            'SOLL_ABST':    art_data['SOLL_ABST'],      # [m] distance to relevant object
+            'TM_EIN_ART':   art_data['TM_EIN_ART'],     # ART cruise control activ
+            'ART_DSPL_BL':  art_data['ART_DSPL_BL'],    # blink speed control
+            'ART_SEG_EIN':  art_data['ART_SEG_EIN'],    # show speed segments on display
+            'OBJ_ERK':      art_data['OBJ_ERK'],        # object detected
+            'ART_EIN':      art_data['ART_EIN'],        # ART on
+            'ART_DSPL_LIM': art_data['ART_DSPL_LIM'],   # show: --- on display
+            'ART_VFBR':     art_data['ART_VFBR'],       # show: ART off
+            'ART_DSPL_PGB': art_data['ART_DSPL_PGB'],   # show: winter tire speed reached
+            'V_ZIEL':       art_data['V_ZIEL'],         # [kph] target speed on segment display
+            'ASSIST_FKT_AKT': art_data['ASSIST_FKT_AKT'],  # active function - always 0
+            'AAS_LED_BL':   art_data['AAS_LED_BL'],     # LED blinking
+            'OBJ_AGB':      art_data['OBJ_AGB'],        # object offer adaptive cc - always 0
+            'ART_ABW_AKT':  art_data['ART_ABW_AKT'],    # warnings are switched on
+            'ART_REAKT':    art_data['ART_REAKT'],      # reactivation of ART after error
+            'ART_UEBERSP':  art_data['ART_UEBERSP'],    # ART passive
+            'ART_DSPL_NEU': art_data['ART_DSPL_NEU'],   # show ART display again for a short time
+            'ASSIST_ANZ_V2': art_data['ASSIST_ANZ_V2'],  # assist display request - always 0
+            'CAS_ERR_ANZ_V2': art_data['CAS_ERR_ANZ_V2'],  # CAS display request - always 0
+            }
+        )
 
         if self.config.can_0_send:
             # write msg to output queue
@@ -209,7 +263,7 @@ class CanHandler:
             self.q_cc_out.put({'id': 0x258, 'data': self.art_258_data})
 
             self.stats['out'] += 2
-    """
+
 
     """
     def status_log(self):

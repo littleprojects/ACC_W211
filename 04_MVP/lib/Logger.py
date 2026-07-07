@@ -5,11 +5,12 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 
-def parse_log_level(log_level_str: str) -> int:
+def parse_log_level(log_level_str) -> int:
     """
     Map a string to a logging level.
     Defaults to INFO if unknown.
     """
+
     log_levels = {
         "DEBUG": logging.DEBUG,
         "INFO": logging.INFO,
@@ -19,7 +20,7 @@ def parse_log_level(log_level_str: str) -> int:
     }
 
     # UPPER case for to compare or INFO as fallback
-    return log_levels.get(log_level_str.upper(), logging.INFO)
+    return log_levels.get(str(log_level_str.upper()), logging.INFO)
 
 
 class Log:
@@ -27,7 +28,7 @@ class Log:
     Wrapper-Classe for a Logger with output- und Rotating-File-Handler.
     """
 
-    def __init__(self, name: str, level: int = logging.INFO, log_dir: str = "log"):
+    def __init__(self, name: str, level: int = logging.INFO, log_dir: str = "log", config = None):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
         self.name = name
@@ -52,11 +53,18 @@ class Log:
                 file_handler.setFormatter(formatter)
                 self.logger.addHandler(file_handler)
 
+                # set loglevel form config
+        if config is not None:
+            if hasattr(config, 'loglevel'):
+                self.logger.setLevel(parse_log_level(config.loglevel))
+
+                self.logger.debug('Set loglevel: ' + config.loglevel)
+
     def _get_formatter(self) -> logging.Formatter:
         """Erzeugt ein einheitliches Format für alle Handler."""
         return logging.Formatter(
-            fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+            fmt="%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S" # .%f (microsec)
         )
 
     def get_logger(self) -> logging.Logger:

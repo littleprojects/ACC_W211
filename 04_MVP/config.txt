@@ -61,5 +61,5 @@ stats_update_time = 5
 app_name = VN1610
 
 [DATA_SERVER]
-port = 6000
+#port = 6000
 
