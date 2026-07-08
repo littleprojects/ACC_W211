@@ -14,6 +14,7 @@ import os
 import can
 import time
 from datetime import datetime
+from lib.Config import Config
 from lib.Can import Can
 from lib import Logger
 
@@ -24,21 +25,32 @@ config = {
 
     #Todo 'filter': [],       # ignore msg list 
 
-    # CAN settings
-    'can_interface': 'vector',
-    #'can_app_name': 'VN1610',  # Hardware interface
-    'can_app_name': 'vCAN',  # virtual CAN interface
+    # Vehicle CAN
+    'CAN_0': {
+        #'app_name': 'VN1610',  # Hardware interface
+        'app_name': 'vCAN',  # virtual CAN interface
 
-    # CAN 1
-    'can_0_channel': '0',
-    'can_0_bitrate': '500000',  # 5k baude
-    'can_0_send': True,  # enables or disables MSG sending
+        'interface': 'vector',
+        'channel': '0',
+        'bitrate': '500000',  # 5k baude
+        'dbc': 'dbc/CAN_C.dbc',  # path to DBC
 
-    # CAN 2
-    'can_1_channel': '1',
-    'can_1_bitrate': '500000',  # 5k baude
-    'can_1_send': True,  # enables or disables MSG sending
+        'send': True,  # enables or disables MSG sending
+    },
 
+    # Radar CAN
+    'CAN_1': {
+        'loglevel': 'DEBUG',
+        #'app_name': 'VN1610',  # Hardware interface
+        'app_name': 'vCAN',  # virtual CAN interface
+
+        'interface': 'vector',
+        'channel': '1',
+        'bitrate': '500000',  # 5k baude
+        'dbc': 'dbc/CAN_ARS408_id0.dbc', # path to DBC
+
+        'send': True,  # enables or disables MSG sending
+    },
     # log
     'loglevel': 'INFO',  # info, debug; with debug also config info will be printed out
     #'loglevel': 'DEBUG',  # info, debug; with debug also config info will be printed out
@@ -50,14 +62,10 @@ log.setLevel(config['loglevel'])
 
 log.info('Init CAN REPLAY')
 
-can0 = Can(
-    interface=config['can_interface'],
-    channel=config['can_0_channel'],
-    bitrate=config['can_0_bitrate'],
-    log=log,
-    app_name=config['can_app_name'],
-    stop_event=None
-)
+config_reader = Config(config)
+config = config_reader.config_obj
+
+can0 = Can(config.CAN_0, None)
 
 can0.connect()
 
@@ -201,12 +209,12 @@ def read_file(file):
 
 
 
-read_file(config['file'])
+read_file(config.file)
 
 # loooooooooooop file for eeeeeever
-while config['loop']:
+while config.loop:
     log.info('REPEAT FILE')
-    read_file(config['file'])
+    read_file(config.file)
 
 log.info('Stop the bus')
 can0.shutdown_connection()

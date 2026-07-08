@@ -127,7 +127,7 @@ def dbc_signal(dbc, signal_name: str, msg_id: int | None = None):
     Find a signal in a DBC by name and optional message ID.
 
     Args:
-        dbc: DBC object (with messages).
+        dbc: DBC object (with  logging).
         signal_name: Name of the signal to search.
         msg_id: Optional message ID.
 
@@ -138,8 +138,17 @@ def dbc_signal(dbc, signal_name: str, msg_id: int | None = None):
         message = dbc.get_message_by_frame_id(msg_id)
         return next((s for s in message.signals if s.name == signal_name), None)
 
-    for message in dbc.messages:
-        signal = next((s for s in message.signals if s.name == signal_name), None)
-        if signal is not None:
-            return signal
+    try:
+        signal = dbc.get_message_by_name(signal_name)
+        return signal
+    except:
+        pass
+
     return None
+
+    
+    #for message in dbc.can.messages:
+    #    signal = next((s for s in message.signals if s.name == signal_name), None)
+    #    if signal is not None:
+    #        return signal
+    #return None
