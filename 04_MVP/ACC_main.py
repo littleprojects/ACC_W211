@@ -23,7 +23,7 @@ from lib import utils
 from lib import Logger
 from lib.Can import Can
 from lib.Art import ART
-#from lib.Mdf import Mdf
+from lib.Mdf import Mdf
 from lib.Config import Config
 from lib.Art_Data import ArtData
 from lib.Can_Handler import CanHandler
@@ -49,11 +49,6 @@ default_config = {
         'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
         'stats_update_time': 10,  # [sec] log stats updates - disable with 0
     },
-
-    # CAN settings
-    #'can_interface': 'vector',
-    #'can_app_name': 'VN1610',  # Hardware interface
-    #'can_app_name': 'vCAN',  # virtual CAN interface
 
     # Vehicle CAN
     'CAN_0': {
@@ -84,13 +79,6 @@ default_config = {
 
     'ART_DATA': {
         'loglevel': 'INFO'
-    },
-
-    # MDF Log
-    'MDF': {
-        'log': False,
-        'log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
-        'auto_save': False,     # save MDF after ACC deactivation
     },
 
     # Display HMI
@@ -180,7 +168,17 @@ default_config = {
         
         'host': 'localhost',  # Flask server host
         'port': 5001,  # Flask server port
-    }
+    },
+
+    # MDF Logger
+    'MDF': {
+        'enable': True,
+
+        'log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
+
+        'interval_save': 0,     # [add_signal calls] 0=off save every X add_signal calls
+        'auto_save': False,     # save MDF after ACC deactivation
+    },
 }
 
 # Init Logger
@@ -205,7 +203,7 @@ if config.MAIN.comment is not None:
 #log.debug('New Config: ' + str(config_reader.print_config()))
 
 # MDF
-#mdf = Mdf(config.mdf_log_file, log, recording=config.mdf_log)
+mdf = Mdf(config.MDF, dbc=config.CAN_0.dbc)
 
 # Data class to handle the data exchange between the different modules
 art_data = ArtData(config.ART_DATA)
@@ -252,12 +250,17 @@ def task_10hz():
 
         # get CAN msgs data
         art_msgs = art_data.get_art_values()
+        vehicle_msgs = art_data.get_vehicle_msgs()
+
         # send the ART CAN msgs
         can_c_parser.send_art_msg(art_msgs)
 
-        # TODO: increment counter
+        # log to MDF        
+        # NOTE: if interval or autosave is active - to this in a thread to prevent to long save times and interrumption
+        # NOTE: save CAN data when they arrive 
+        mdf.add_signals(vehicle_msgs['signals'])
+        mdf.add_signals(art_msgs)
 
-        # log to MDF
 
     except Exception as e:
         log.exception(e)
@@ -388,6 +391,6 @@ if __name__ == "__main__":
     can_1.shutdown_connection()
 
     # write MDF log file
-    #mdf.write_mdf()
+    mdf.write_mdf()
 
     log.info('STOPPED - over and out')
