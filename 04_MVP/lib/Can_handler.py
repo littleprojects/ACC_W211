@@ -200,12 +200,15 @@ class CanHandler:
         self.mdf.add_signals(art_data, signal_prefix='art_')
     """
     
-    # special function for CAN_C
-    def send_art_msg(self):
+    # special function for CAN_C only - because the msgs are only in this DBC
+    def send_art_msg(self, art_msg_data):
 
-        # create output
-        # create ART_250 msg data
-        self.art_250_data = self.dbc.encode_message(0x250, {
+        # NOTE: create ART output - ONLY in CAN_C DBC - ONLY for CAN_C
+
+        art_data = art_msg_data
+
+        # create ART_250 msg binary data
+        art_250_data = self.dbc.encode_message(0x250, {
                 'DYN_UNT':  art_data['DYN_UNT'],    # dynamic downshift suppression
                 'BL_UNT':   art_data['BL_UNT'],     # breathtaking suppression
                 'ART_BRE':  art_data['ART_BRE'],    # ART breaks
@@ -225,8 +228,8 @@ class CanHandler:
             }
         )
 
-        # create ART_258 msg data
-        self.art_258_data = self.dbc.encode_message(0x258, {
+        # create ART_258 msg binary data
+        art_258_data = self.dbc.encode_message(0x258, {
             'ART_ERROR':    art_data['ART_ERROR'],      # ART error code
             'ART_INFO':     art_data['ART_INFO'],       # ART info light
             'ART_WT':       art_data['ART_WT'],         # ART warning sound
@@ -256,13 +259,12 @@ class CanHandler:
             }
         )
 
-        if self.config.can_0_send:
-            # write msg to output queue
-            # dict {'id': arbitration_id, 'data': msg_binary_data}
-            self.q_cc_out.put({'id': 0x250, 'data': self.art_250_data})
-            self.q_cc_out.put({'id': 0x258, 'data': self.art_258_data})
+        # write msg to output queue
+        # dict {'id': arbitration_id, 'data': msg_binary_data}
+        self.q_cc_out.put({'id': 0x250, 'data': art_250_data})
+        self.q_cc_out.put({'id': 0x258, 'data': art_258_data})
 
-            self.stats['out'] += 2
+        self.stats['out'] += 2
 
 
     """

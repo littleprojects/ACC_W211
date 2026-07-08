@@ -54,8 +54,25 @@ class ART:
         
 
         # TODO: do the magic
+        self.update_bz()    # increment message counter
 
         # write data back
         self.art_data.set_art_values(self.art_values)
-        self.art_data.set_vehicle_msgs(self.vehicle_msgs)
+        
+        #self.art_data.set_vehicle_msgs(self.vehicle_msgs)
+
+    def update_bz(self):
+
+        BZ250h = self.art_values['BZ250h']
+       
+        BZ250h += 1 # increment msg counter 
+
+        # reset of overflow (4 bit = 0-15)
+        if BZ250h > 15:
+            BZ250h = 0
+
+        # update in dict
+        self.art_values['BZ250h'] = BZ250h
+
+        #self.log.debug('BZ: ' + str(BZ250h))
         

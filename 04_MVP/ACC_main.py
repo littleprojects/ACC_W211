@@ -102,21 +102,21 @@ default_config = {
 
     # ART Settings & Limits
     'ART': {
-        #'loglevel': 'debug',
+        'loglevel': 'debug',
 
-        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
-        'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
-        'acc_max_speed': 180,       # [kph] max speed for ACC activation
-        'acc_off_speed': 20,        # [kph] switch off ACC at this speed
-        'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
-        'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
-        'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta
-        'acc_pause_lat_acc': 2,     # [m/s²] pause ACC if side (lat) acceleration in corners is high
-        'acc_off_lat_acc': 3,       # [m/s²] switch ACC off if side (lat) acceleration in corners is too high
+        #'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
+        #'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
+        #'acc_max_speed': 180,       # [kph] max speed for ACC activation
+        #'acc_off_speed': 20,        # [kph] switch off ACC at this speed
+        #'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
+        #'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
+        #'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta
+        #'acc_pause_lat_acc': 2,     # [m/s²] pause ACC if side (lat) acceleration in corners is high
+        #'acc_off_lat_acc': 3,       # [m/s²] switch ACC off if side (lat) acceleration in corners is too high
 
         # ACC PID Controller parameter
-        'art_reg_enabled': True,  # enable/disable ART acceleration output
-        'art_bre_enabled': True,  # enable/disable ART deceleration output
+        #'art_reg_enabled': True,  # enable/disable ART acceleration output
+        #'art_bre_enabled': True,  # enable/disable ART deceleration output
         #'acc_kp': 2,
         #'acc_ki': 0.03,
         #'acc_kd': 0.02,
@@ -128,27 +128,27 @@ default_config = {
         #'pid_error_min': -30,       # deceleration error
 
         # Rate Limit by Acc - Anti wind up function - clamp output and integral
-        'acc_acceleration_limit': False,  # enable/disable acceleration limits
-        'acc_max_acceleration': 2,  # [m/s²] maximal acceleration
-        'acc_max_deceleration': 2,  # [m/s²] maximal deceleration
+        #'acc_acceleration_limit': False,  # enable/disable acceleration limits
+        #'acc_max_acceleration': 2,  # [m/s²] maximal acceleration
+        #'acc_max_deceleration': 2,  # [m/s²] maximal deceleration
 
         # Rate Limit by Nm - Anti wind up function - limit output
-        'acc_rate_limit': False,    # enable/disable Rate Limit
-        'acc_max_acc_rate': 20,     # [Nm/s] maximal acceleration rate
-        'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
+        #'acc_rate_limit': False,    # enable/disable Rate Limit
+        #'acc_max_acc_rate': 20,     # [Nm/s] maximal acceleration rate
+        #'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
 
         # Moment Limits - Anti wind up - Limit output - CAN signal limits
-        'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
-        'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
+        #'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
+        #'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
     },
 
     # Limiter functions
     'LIM': {
-        'lim_reg_enabled': False,    # enable/disable LIMITER controller
+        #'lim_reg_enabled': False,    # enable/disable LIMITER controller
 
         # Limiter Settings
-        'lim_max_speed': 250,       # [kph] max speed allowed with limiter
-        'lim_min_speed': 10,        # [kph] min speed of limiter
+        #'lim_max_speed': 250,       # [kph] max speed allowed with limiter
+        #'lim_min_speed': 10,        # [kph] min speed of limiter
     },
 
     # CAN filter list
@@ -177,6 +177,7 @@ default_config = {
     # NOTE: Use it only for testing and debugging, not in production. It is not secure and can be a security risk.
     'DATA_SERVER': {
         'enabled': True,  # enable/disable Flask server
+        
         'host': 'localhost',  # Flask server host
         'port': 5001,  # Flask server port
     }
@@ -249,10 +250,12 @@ def task_10hz():
         # ART Calc
         art.tick_10Hz()
 
-        # send the CAN msgs
-        #art_msgs = art_data.get_art_values()
-        #can_c_parser.send_msg(0x250, art_msgs)
-        #can_c_parser.send_msg(0x258, art_msgs)
+        # get CAN msgs data
+        art_msgs = art_data.get_art_values()
+        # send the ART CAN msgs
+        can_c_parser.send_art_msg(art_msgs)
+
+        # TODO: increment counter
 
         # log to MDF
 

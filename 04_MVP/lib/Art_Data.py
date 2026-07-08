@@ -60,7 +60,8 @@ class ArtData:
 
         # default Values
         self._CONST_default_values = {
-            # ART_250
+            
+            # ART_250 CAN Msg
             'DYN_UNT': 0,  # dynamic downshift suppression
             'BL_UNT': 0,  # breathtaking suppression
             'ART_BRE': 0,  # ART breaks
@@ -78,7 +79,7 @@ class ArtData:
             'GMAX_ART': 0,  # maximum gear
             'AKT_R_ART': 0,  # shift down request from art
             
-            # ART_258
+            # ART_258 CAN Msg
             'ART_ERROR': 0,  # ART error code
             'ART_INFO': 0,  # ART info light
             'ART_WT': 0,  # ART warning sound
@@ -160,6 +161,8 @@ class ArtData:
     def get_art_values(self):
         # thread protection
         with self._lock_art_values:
+            # TODO: signal limit checks
+            
             return copy.deepcopy(self._art_values) # return a copy of the dict
         
     def set_art_values(self, new_values):
