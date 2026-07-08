@@ -55,8 +55,9 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 🏆 PoC is working and the engineering is done - let's bring everything together.
 
 ### Pilot / Minimum Viable Product
-- [ ] PoC review and refactor - 🚧 under construction 🚧
-- [ ] Driver inputs and state machine  
+- ✅ PoC review and refactor
+- [ ] Driver inputs and state machine - 🚧 under construction 🚧
+- [ ] Simple Speed controller
 - [ ] Radar and tracking module  
 - [ ] Controller modules  
   - [ ] Distance control (`a_dist`)  
