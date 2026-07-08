@@ -138,17 +138,19 @@ def dbc_signal(dbc, signal_name: str, msg_id: int | None = None):
         message = dbc.get_message_by_frame_id(msg_id)
         return next((s for s in message.signals if s.name == signal_name), None)
 
+    """
     try:
+        # TODO: dont work
         signal = dbc.get_message_by_name(signal_name)
         return signal
     except:
         pass
 
     return None
-
+    """
     
-    #for message in dbc.can.messages:
-    #    signal = next((s for s in message.signals if s.name == signal_name), None)
-    #    if signal is not None:
-    #        return signal
-    #return None
+    for message in dbc.messages:
+        signal = next((s for s in message.signals if s.name == signal_name), None)
+        if signal is not None:
+            return signal
+    return None

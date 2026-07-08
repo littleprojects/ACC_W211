@@ -172,10 +172,13 @@ default_config = {
 
     # MDF Logger
     'MDF': {
+        'loglevel': 'debug',
         'enable': True,
 
         'log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
 
+        'dbc': 'dbc/CAN_C.dbc',  # path to DBC for signal UNIT and COMMENT lookup 
+        # TODO list of DBCs to add multiple DBCs
         'interval_save': 0,     # [add_signal calls] 0=off save every X add_signal calls
         'auto_save': False,     # save MDF after ACC deactivation
     },
@@ -203,7 +206,7 @@ if config.MAIN.comment is not None:
 #log.debug('New Config: ' + str(config_reader.print_config()))
 
 # MDF
-mdf = Mdf(config.MDF, dbc=config.CAN_0.dbc)
+mdf = Mdf(config.MDF)
 
 # Data class to handle the data exchange between the different modules
 art_data = ArtData(config.ART_DATA)
@@ -258,8 +261,8 @@ def task_10hz():
         # log to MDF        
         # NOTE: if interval or autosave is active - to this in a thread to prevent to long save times and interrumption
         # NOTE: save CAN data when they arrive 
-        mdf.add_signals(vehicle_msgs['signals'])
-        mdf.add_signals(art_msgs)
+        mdf.add_signals(vehicle_msgs['signals'], 'CAN_C_')
+        mdf.add_signals(art_msgs, 'ART_')
 
 
     except Exception as e:
