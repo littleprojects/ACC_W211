@@ -1,5 +1,12 @@
+"""
+MDF logging helper for recording CAN signals into MDF files.
+
+"""
+
 import time
 import cantools
+
+from enum import Enum
 from typing import Any, Dict, Optional
 
 from asammdf import MDF, Signal
@@ -95,11 +102,30 @@ class Mdf:
         Add multiple signals at once.
         """
         ts_now = time.time() - self.ts_start
+
+        # input check
+        if signals is None:
+            return False
         
         #try:
         for key, value in signals.items():
             #name = f"{signal_prefix}{key}"
             
+            # skip empty data
+            #if key is None:
+            #    continue
+            #if value is None:
+            #    continue
+
+            # enum detection
+            if isinstance(value, Enum):
+                continue
+
+            # TODO: if value have a dictionary-> recursiv call
+            # But its not needed now 
+            #if isinstance(value, dict):
+                #self.add_signals(value, signal_prefix+key+'_')
+
             self.add_signal(key, value, ts_now, signal_prefix)
 
         # Autosave after N messages
