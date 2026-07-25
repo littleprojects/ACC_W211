@@ -252,7 +252,7 @@ def task_10hz():
         art.tick_10Hz()
 
         # get CAN msgs data
-        art_msgs = art_data.get_art_values()
+        art_msgs = art_data.get_art_msg()
         vehicle_msgs = art_data.get_vehicle_msgs()
 
         # send the ART CAN messages
