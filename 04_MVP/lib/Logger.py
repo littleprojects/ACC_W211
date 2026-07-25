@@ -45,6 +45,8 @@ class Log:
             # File Handler
             if log_dir is not None:
                 log_file = os.path.join(log_dir, f"Log_{name}.txt")
+                # NOTE: Logfile name is hardcoded now because all submodule have there own names -> creats lot log files -> this fix will create it in one
+                #log_file = os.path.join(log_dir, f"Log_MVP.txt") # but now they cant write at one logfile :(
                 os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
                 file_handler = RotatingFileHandler(
