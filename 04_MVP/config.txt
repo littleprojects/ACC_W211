@@ -44,7 +44,7 @@
 # Logging status output time in seconds
 # default is 10 sec
 # can be disabled with 0
-stats_update_time = 5
+stats_update_time = 2
 
 # disables sending CAN MSGS
 # default is True
@@ -62,4 +62,10 @@ app_name = VN1610
 
 [DATA_SERVER]
 #port = 6000
+
+[ART]
+#loglevel = debug
+
+# ONLY for tests
+max_msg_delay = 1000
 

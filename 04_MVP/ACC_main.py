@@ -90,9 +90,9 @@ default_config = {
 
     # ART Settings & Limits
     'ART': {
-        'loglevel': 'debug',
+        'loglevel': 'info',
 
-        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
+        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off; default 500 ms
         #'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
         #'acc_max_speed': 180,       # [kph] max speed for ACC activation
         #'acc_off_speed': 20,        # [kph] switch off ACC at this speed
@@ -214,6 +214,9 @@ art_data = ArtData(config.ART_DATA)
 # ART class to handle the ART state machine and controller
 art = ART(config.ART, art_data)
 
+# register CAN Update callback
+art_data.register_can_update_callback(art.can_update)
+
 # Thread list to manage (start/stop) all threads
 thread_list = []
 
@@ -262,8 +265,8 @@ def task_10hz():
         # NOTE: if interval or autosave is active - do this in a thread to prevent long save times and interruptions
         # NOTE: save CAN data when they arrive 
         mdf.add_signals(vehicle_msgs['signals'], 'CAN_C_')
-        mdf.add_signals(art_msgs, 'CAN_C_ART_')
-        mdf.add_signals(art.art, 'ART_')
+        mdf.add_signals(art_msgs, 'ART_')
+        mdf.add_signals(art.art, 'art_')
 
 
     except Exception as e:
@@ -273,9 +276,10 @@ def task_10hz():
 def task_status_log():
     # request status update
     log.debug('Request Status log')
-    log.info('CAN_C ' + can_c_parser.status())
-    log.info('ART ' + art_data.status())
-    log.info(art_data.get_vehicle_msgs())
+    #log.info('CAN_C ' + can_c_parser.status())
+    #log.info(art_data.status())
+    #log.info(art_data.get_vehicle_msgs())
+    log.info(art.status())
 
 # init CAN Communication
 #can_0 = Can(config.can_interface, config.can_0_channel, config.can_0_bitrate, log, config.can_app_name, stop_event)

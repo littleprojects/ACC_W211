@@ -136,6 +136,9 @@ class ArtData:
             'warning_state': 0,
         }
 
+        # callbacks to notify other modules (e.g. Art.can_update)
+        self._can_update_callbacks = []
+
         # TODO: load waring_state from persistent storage (STORAGE lib)
 
     # ------ State Machine SET GET -----------------------------
@@ -184,6 +187,25 @@ class ArtData:
             self._vehicle_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values          
 
             #TODO check for cancel conditions
+            # notify registered callbacks that vehicle CAN was updated
+            for cb in list(self._can_update_callbacks):
+                try:
+                    cb(new_msgs['signals'])
+                except Exception:
+                    # swallow exceptions from callbacks to avoid breaking caller
+                    self.log.warning("Can't call callback.")
+                    pass
+
+    def register_can_update_callback(self, callback):
+        """Register a callable to be invoked when vehicle CAN msgs are updated.
+
+        The callback will be called with one argument: the new_msgs dict.
+        Example: art_data.register_can_update_callback(Art.can_update)
+        """
+        if callable(callback):
+            self._can_update_callbacks.append(callback)
+            self.log.debug('CAN update callback registered')
+
 
     # ------ Radar CAN SET GET Methods -----------------------------
     def get_radar_msgs(self):
@@ -203,9 +225,7 @@ class ArtData:
         can_c_data = self.get_vehicle_msgs()
         
         out = f"ART: msgs {len(can_c_data['msgs'])}, values {len(can_c_data['signals'])} "
-
         # TODO: add more details like msg count, signal count, etc.
         
-        #self.log.info(out)
         return out
         

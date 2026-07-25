@@ -88,6 +88,17 @@ class ART:
             'signals': {},  # signals as dict
         }
 
+    def can_update(self, new_msgs):
+        #self.log.info(new_msgs)
+
+        if self.art['ready']:
+
+            # TODO - go on
+
+            pass
+
+        
+
     def tick_10Hz(self):
         # 10 Hz tick for ART
         # - get data from ART Data
@@ -102,10 +113,10 @@ class ART:
         self.art_msg = self.art_data.get_art_msg()
         self.vehicle_msgs = self.art_data.get_vehicle_msgs()
         
-        # TODO: do the magic
-
+        # do the magic
         self.update_bz()    # increment message counter
         self.is_ready()     # ready check - are all messages there and in time
+        # TODO
 
         # write data back
         self.art_data.set_art_msg(self.art_msg)
@@ -143,7 +154,7 @@ class ART:
                 if not (msg_id in self.vehicle_msgs['msgs']):
                     all_msgs_found = False
     
-                    # self.log.debug('Checker: ID ' + msg_id + ' not found')    
+                    self.log.debug('Checker: ID ' + msg_id + ' not found')    
                     # stop loop
                     break
     
@@ -152,7 +163,7 @@ class ART:
     
                 if self.art['ready']:
                     self.art['ready'] = False
-                    self.log.debug('Checker: Msgs incomplete')
+                    self.log.warning('Checker: Msgs incomplete')
 
                     # reset default output values
                     self.reset_to_default()
@@ -174,7 +185,7 @@ class ART:
     
                 if delay > max_delay:
                     all_msg_in_time = False
-                    # self.log.debug('Checker: ' + msg_id + ' is to old - ' + str(delay) + ' ms')
+                    self.log.debug('Checker: ' + msg_id + ' is to old - ' + str(delay) + ' ms')
                     # end loop
                     break
     
@@ -231,4 +242,15 @@ class ART:
         self.art_msg['V_ART'] = target_speed # but remember target speed ;)
         self.art_msg['ART_ABW_AKT'] = abw_akt # remember warning config
 
+    def status(self):
 
+        out = ''
+
+        if not self.art['ready']:
+            out += 'NOT Ready'
+        else:
+            #out += f"Ready: " + str(self.art['ready'])
+            out += str(self.art['state']) + " "
+
+
+        return out
