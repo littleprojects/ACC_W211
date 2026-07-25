@@ -112,10 +112,10 @@ class ArtData:
 
         # ART values to send out
         # init as a copy of the default values
-        self._art_values = copy.deepcopy(self._CONST_default_values)
+        self._art_msg = copy.deepcopy(self._CONST_default_values)
 
         self._BZ250h = 0  # Message counter 0-15 (BZ = BotschaftZähler)
-        self._lock_art_values = threading.Lock()  # threading lock variable for ART values
+        self._lock_art_msg = threading.Lock()  # threading lock variable for ART values
 
         # CAN C signals and messages
         self._vehicle_msgs = {
@@ -158,17 +158,17 @@ class ArtData:
                 # Todo trigger event at state change or just return TRUE if a statechange happened
 
     # ------ ART Values SET GET Methods -----------------------------
-    def get_art_values(self):
+    def get_art_msg(self):
         # thread protection
-        with self._lock_art_values:
+        with self._lock_art_msg:
             # TODO: signal limit checks
             
-            return copy.deepcopy(self._art_values) # return a copy of the dict
+            return copy.deepcopy(self._art_msg) # return a copy of the dict
         
-    def set_art_values(self, new_values):
+    def set_art_msg(self, new_values):
         # thread protection
-        with self._lock_art_values:
-            self._art_values.update(new_values)  # update the dict with new values
+        with self._lock_art_msg:
+            self._art_msg.update(new_values)  # update the dict with new values
 
     # ------ Vehicle CAN C SET GET Methods -----------------------------
     def get_vehicle_msgs(self):
