@@ -1,18 +1,18 @@
 """
-This is a Pilot or MVP (Minimum Vialble Product) of an ACC (Adaptive Cruise Control).
+This is a pilot or MVP (Minimum Viable Product) of an ACC (Adaptive Cruise Control).
 
-# Queues are used as a thread save method to share CAN data between different threads.
+# Queues are used as a thread-safe method to share CAN data between different threads.
 
 # CAN class
-# Reads raw CAN Msgs from the bus and add it the in queue.
-# Write raw CAN Msgs from out queue to the CAN bus
+# Reads raw CAN Msgs from the bus and adds them to the input queue.
+# Writes raw CAN Msgs from the output queue to the CAN bus.
 
 # CAN_handler
-# Interprets the raw CAN Msgs in the in queue
-# And creates raw CAN Msgs for the out queue
+# Interprets the raw CAN Msgs in the input queue.
+# And creates raw CAN Msgs for the output queue.
 
 Todo:
-- set CAN MSGs filter do reduce load on can_0 (CAN_C)
+- set CAN message filters to reduce load on can_0 (CAN_C)
 
 """
 
@@ -35,15 +35,15 @@ module_name = 'MVP'
 # just the Version of this script, to display and log; update this at major changes
 module_version = '0.1.0'
 
-# default module settings - all config values needs a default value
+# default module settings - all config values need a default value
 default_config = {
 
     'config_file': 'config.txt',
-    
+
     'MAIN': {
         'version': '0.1.0',  # version
-        'comment': 'refactoring',     # add a comment to this version, this will be added to the log file
-        
+        'comment': 'refactoring',  # add a comment to this version, this will be added to the log file
+
         'loglevel': 'INFO',  # info, debug; with debug also config info will be printed out
         
         'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
@@ -57,7 +57,7 @@ default_config = {
 
         'interface': 'vector',
         'channel': '0',
-        'bitrate': '500000',  # 5k baude
+        'bitrate': '500000',  # 5k baud
         'dbc': 'dbc/CAN_C.dbc',  # path to DBC
 
         'send': True,  # enables or disables MSG sending
@@ -71,7 +71,7 @@ default_config = {
 
         'interface': 'vector',
         'channel': '1',
-        'bitrate': '500000',  # 5k baude
+        'bitrate': '500000',  # 5k baud
         'dbc': 'dbc/CAN_ARS408_id0.dbc', # path to DBC
 
         'send': True,  # enables or disables MSG sending
@@ -92,7 +92,7 @@ default_config = {
     'ART': {
         'loglevel': 'debug',
 
-        #'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
+        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off
         #'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
         #'acc_max_speed': 180,       # [kph] max speed for ACC activation
         #'acc_off_speed': 20,        # [kph] switch off ACC at this speed
@@ -172,8 +172,8 @@ default_config = {
 
     # MDF Logger
     'MDF': {
-        'loglevel': 'debug',
         'enable': True,
+        'loglevel': 'info',
 
         'log_file': 'log/ACC_' + utils.date_time_str() + '.mf4',
 
@@ -234,7 +234,7 @@ stop_event = threading.Event()
 
 # decorator class to repeat a function at a given interval
 class RepeatTimer(threading.Timer):
-    # TODO: is not 10Hz - have some delay, maybe sync to an incomming msg
+    # TODO: is not 10Hz - have some delay, maybe sync to an incoming message
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
@@ -242,10 +242,10 @@ class RepeatTimer(threading.Timer):
 def task_10hz():
     log.debug('10Hz Tick')
 
-    # do the MAGIC 10 times per second
+    # do the magic 10 times per second
     try:
         
-        # Process the CAN msgs
+        # Process the CAN messages
         can_c_parser.parse_msgs()
 
         # ART Calc
@@ -255,14 +255,15 @@ def task_10hz():
         art_msgs = art_data.get_art_values()
         vehicle_msgs = art_data.get_vehicle_msgs()
 
-        # send the ART CAN msgs
+        # send the ART CAN messages
         can_c_parser.send_art_msg(art_msgs)
 
         # log to MDF        
-        # NOTE: if interval or autosave is active - to this in a thread to prevent to long save times and interrumption
+        # NOTE: if interval or autosave is active - do this in a thread to prevent long save times and interruptions
         # NOTE: save CAN data when they arrive 
         mdf.add_signals(vehicle_msgs['signals'], 'CAN_C_')
-        mdf.add_signals(art_msgs, 'ART_')
+        mdf.add_signals(art_msgs, 'CAN_C_ART_')
+        mdf.add_signals(art.art, 'ART_')
 
 
     except Exception as e:
@@ -286,7 +287,7 @@ can_1 = Can(config.CAN_1, stop_event)
 can_0.connect()
 can_1.connect()
 
-# threat so send and receive CAN msgs
+# thread to send and receive CAN msgs
 thread_can_0 = threading.Thread(target=can_0.loop, args=(art_data.q_can_c_in, art_data.q_can_c_out)) # daemon=True
 thread_can_0.name = 'CAN C read/write Loop'
 thread_list.append(thread_can_0)
@@ -299,7 +300,7 @@ thread_list.append(thread_can_1)
 #thread_10hz = threading.Thread(target=run_task, args=(0.1, task_10hz, stop_event))
 #thread_status = threading.Thread(target=run_task, args=(config.stats_update_time, task_status_log, stop_event))
 
-# Timer dont repeat
+# Timer doesn't repeat
 thread_10hz = RepeatTimer(0.1, task_10hz)
 thread_10hz.name = '10Hz Tick'
 thread_list.append(thread_10hz)
