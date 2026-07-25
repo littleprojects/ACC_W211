@@ -8,7 +8,7 @@
 *.xlsx
 *.lnk
 .$*
-*.dbc
+#*.dbc
 *.dbf
 *.config
 test_*.py
@@ -17,6 +17,7 @@ test_*.py
 
 03_PoC/log/
 03_PoC/test/
+04_MVP/log/
 Docu/
 
 
