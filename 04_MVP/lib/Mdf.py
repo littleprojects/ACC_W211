@@ -121,10 +121,10 @@ class Mdf:
             if isinstance(value, Enum):
                 continue
 
-            # TODO: if value have a dictionary-> recursiv call
-            # But its not needed now 
-            #if isinstance(value, dict):
-                #self.add_signals(value, signal_prefix+key+'_')
+            # if value have a dictionary-> recursiv call
+            if isinstance(value, dict):
+                self.add_signals(value, signal_prefix+key+'_')
+                continue
 
             self.add_signal(key, value, ts_now, signal_prefix)
 
