@@ -186,8 +186,8 @@ def read_file(file):
                     if last_ts > 0:                        
                         delay_s = (new_ts - last_ts)
                         # cut to long delays
-                        if delay_s > 0.01:
-                            delay_s = 0.01
+                        if delay_s > 0.005:
+                            delay_s = 0.005
                         
                         #log.debug(msg)
                         log.debug('sleep: ' + str(delay_s))
