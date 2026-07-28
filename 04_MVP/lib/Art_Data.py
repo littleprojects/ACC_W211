@@ -22,10 +22,11 @@ import copy
 import threading
 
 from lib import Logger
+from lib.Storage import Storage
 
 from enum import Enum
 from queue import Queue
-import threading
+
 
 class ArtState(Enum):
     OFF = 0
@@ -100,7 +101,7 @@ class ArtData:
             'ASSIST_FKT_AKT': 0,  # active function - always 0
             'AAS_LED_BL': 0,  # LED blinking
             'OBJ_AGB': 0,  # object offer adaptive cc - always 0
-            'ART_ABW_AKT': 0,  # warnings are switched on TODO load from memory
+            'ART_ABW_AKT': 0,  # warnings are switched on NOTE: load from memory
             'ART_REAKT': 0,  # reactivation of ART after error
             'ART_UEBERSP': 0,  # ART passive
             'ART_DSPL_NEU': 0,  # show ART display again for a short time
@@ -131,15 +132,19 @@ class ArtData:
         }
         self._lock_radar_msgs = threading.Lock()  # threading lock variable for radar CAN msgs
 
-        # storage for persistent data
-        self._persistent_data = {
-            'warning_state': 0,
-        }
-
         # callbacks to notify other modules (e.g. Art.can_update)
         self._can_update_callbacks = []
 
-        # TODO: load waring_state from persistent storage (STORAGE lib)
+
+        # storage for persistent data
+        self._persistent_data = {
+            'warning_state': 0,
+        }       
+
+        # load waring_state from persistent storage (STORAGE lib)
+        self.Store = Storage(self.config.persistent_storage_file, self._persistent_data, self.log)
+        # restore last warning state
+        self._art_msg['ART_ABW_AKT'] = self.Store.data['warning_state']
 
     # ------ State Machine SET GET -----------------------------
     def get_state(self):
@@ -187,13 +192,18 @@ class ArtData:
             self._vehicle_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values          
 
             #TODO check for cancel conditions
+
+            # clean Speed
+            if 'V_ANZ' in new_msgs['signals']:
+                self._vehicle_msgs['signals']['V_ANZ'] = round(new_msgs['signals']['V_ANZ'], 1)
+
             # notify registered callbacks that vehicle CAN was updated
             for cb in list(self._can_update_callbacks):
                 try:
                     cb(new_msgs['signals'])
-                except Exception:
+                except Exception as e:
                     # swallow exceptions from callbacks to avoid breaking caller
-                    self.log.warning("Can't call callback.")
+                    self.log.warning(f"Can't call callback: {e}")
                     pass
 
     def register_can_update_callback(self, callback):
@@ -218,6 +228,14 @@ class ArtData:
         with self._lock_radar_msgs:
             self._radar_msgs['msgs'].update(new_msgs['msgs'])  # update the dict with new values
             self._radar_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values
+
+    # ------ write warning state to persitent memory -----------------------------
+
+    def save_warning_state(self, warning_state):
+
+        self._persistent_data['warning_state'] = warning_state
+
+        self.Store.write(self._persistent_data)
 
     # ------ status log -----------------------------
     def status(self):

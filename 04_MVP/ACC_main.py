@@ -46,7 +46,6 @@ default_config = {
 
         'loglevel': 'INFO',  # info, debug; with debug also config info will be printed out
         
-        'persistent_storage_file': 'pers_store.dat',  # path and file name to persistent storage file
         'stats_update_time': 10,  # [sec] log stats updates - disable with 0
     },
 
@@ -78,19 +77,20 @@ default_config = {
     },
 
     'ART_DATA': {
-        'loglevel': 'INFO'
-    },
-
-    # Display HMI
-    'HMI': {
-        'art_trigger_time': 8000,  # [ms] show art display after a trigger
-        'lever_hold_time': 1000,  # [ms] button holding time to re-trigger action
-        'warning_time': 200,  # [ms] warning beep duration time
+        'loglevel': 'INFO',
+        
+        'persistent_storage_file': 'dbc/pers_store.dat',  # path and file name to persistent storage file
+            
     },
 
     # ART Settings & Limits
     'ART': {
         'loglevel': 'info',
+
+        # HMI
+        'lever_hold_time': 1000,  # [ms] button holding time to re-trigger action
+        'art_trigger_time': 8000,  # [ms] show art display after a trigger
+        'warning_time': 200,  # [ms] warning beep duration time
 
         'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off; default 500 ms
         #'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
