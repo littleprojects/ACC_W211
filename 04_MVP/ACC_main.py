@@ -51,6 +51,7 @@ default_config = {
 
     # Vehicle CAN
     'CAN_0': {
+        'loglevel': 'INFO',
         #'app_name': 'VN1610',  # Hardware interface
         'app_name': 'vCAN',  # virtual CAN interface
 
@@ -64,7 +65,7 @@ default_config = {
 
     # Radar CAN
     'CAN_1': {
-        'loglevel': 'DEBUG',
+        'loglevel': 'INFO',
         #'app_name': 'VN1610',  # Hardware interface
         'app_name': 'vCAN',  # virtual CAN interface
 
@@ -87,15 +88,18 @@ default_config = {
     'ART': {
         'loglevel': 'info',
 
+        # input check
+        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off; default 500 ms
+
         # HMI
         'lever_hold_time': 1000,  # [ms] button holding time to re-trigger action
         'art_trigger_time': 8000,  # [ms] show art display after a trigger
         'warning_time': 200,  # [ms] warning beep duration time
 
-        'max_msg_delay': 500,       # [ms] max delay. if CAN data older: ACC switch off; default 500 ms
-        #'acc_min_speed': 30,        # [kph] minimum speed for ACC activation
-        #'acc_max_speed': 180,       # [kph] max speed for ACC activation
-        #'acc_off_speed': 20,        # [kph] switch off ACC at this speed
+        'acc_min_speed': 30,        # [kph] minimum speed for ACC activation; default 30
+        'acc_max_speed': 180,       # [kph] max speed for ACC activation; default 180
+        'acc_off_speed': 30,        # [kph] switch off ACC at this speed; default 30
+        
         #'acc_off_acc': 4,           # [m/s²] switch off ACC if acceleration is too high
         #'acc_off_dec': 3,           # [m/s²] switch off ACC if deceleration is too high
         #'acc_pause_nm_delta': 15,  # [Nm] pause if ACC_Nm - Driver_Nm > Pause_Nm_delta

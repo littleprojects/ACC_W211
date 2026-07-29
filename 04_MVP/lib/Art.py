@@ -11,6 +11,7 @@ ART/DTS Class
 """
 
 import copy
+import math
 
 from lib import utils
 
@@ -34,17 +35,22 @@ class ART:
             'last_state': 0,
 
             'ready': False,
+
+            'cas_active': 0,
             
             #'dist_factor': 100,
 
-            #'dspl_trigger_ts': 0,
+            'dt_ms': 100, # delta time 100ms = 10Hz
+            'dspl_trigger_ts': 0,
+            'info_light_duration': 0,
+            'warn_beep_duration': 0,
             
             # dict to remember the button states
             'button_states': {
                 'SFB': 0,  # Braking
                 'WH_UP': 0,  # lever NOT ok
                 'AUS': 0,  # lever OFF
-                'WA': 0,  # lever ON/RESUME/+1
+                'WA': 0,  # lever ON/RESUME/+1 (German: WiederAufnahme)
                 'S_PLUS_B': 0,  # lever UP +10
                 'S_MINUS_B': 0,  # lever DOWN -10
                 'ART_ABW_BET': 0,  # Button Warning ON/OFF
@@ -174,7 +180,7 @@ class ART:
 
                 # lever ON/RESUME/+1
                 if self.is_btn_pressed(new_msgs, 'WA', mode=2):
-                    self.lever_wa()
+                    self.lever_resume()
 
                 # lever UP/+10
                 if self.is_btn_pressed(new_msgs, 'S_PLUS_B', mode=2):
@@ -198,8 +204,7 @@ class ART:
             # for acceleration
 
             pass
-
-        
+       
 
     def tick_10Hz(self):
         # 10 Hz tick for ART
@@ -218,6 +223,8 @@ class ART:
         # do the magic
         self.update_bz()    # increment message counter
         self.is_ready()     # ready check - are all messages there and in time
+
+        self.acc_reset_trigger()
         # TODO
 
         # write data back
@@ -429,32 +436,341 @@ class ART:
 
     # --------------- INPUT Action ----------------------
 
-    # TODO
     def art_braking(self):
     
         self.log.info('BRAKING')
 
-        #if self.art.state == ArtState.ACC_active:
+        if self.art.state == ArtState.ACC_active:
             # self.level_off()
-        #    self.acc_deactivation()
+            self.acc_deactivation()
 
             # display trigger
-        #    self.acc_set_dspl_trigger()
+            self.acc_set_dspl_trigger()
 
     def art_warning_button(self):
         self.log.info('Warning Button pressed')
 
+        # if ART warning button pressed toggle warning status
+        if self.art_msg['ART_ABW_AKT'] == 0:
+            self.art_msg['ART_ABW_AKT'] = 1
+            self.log.info('Activate warnings')
+        else:
+            self.art_msg['ART_ABW_AKT'] = 0
+            self.log.info('Deactivate warnings')
+
+        self.Art_Data.save_warning_state(self.art_msg['ART_ABW_AKT'])
+
     def lever_off(self):
         self.log.info('Lever OFF pressed')
 
-    def lever_wa(self):
+        # CAS deactivation
+        if self.art['cas_active'] == 1:
+            self.cas_deactivation()
+            return
+
+        # ACC off
+        if self.art.state == ArtState.ACC_active:
+            # display trigger
+            #self.acc_set_dspl_trigger()
+            self.acc_deactivation()
+            return
+
+        # Limiter off
+        if self.art.state == ArtState.LIM_active:
+            #self.acc_set_dspl_trigger()
+            self.lim_deactivation()
+            return
+
+    # lever resume 
+    def lever_resume(self):
         self.log.info('Lever WA/Resume pressed')
+
+        # display trigger
+        self.acc_set_dspl_trigger()
+
+        # signal = self.vehicle_msgs['signals']
+
+        # ACC activation
+        if self.art.state == ArtState.ACC_standby:
+
+            # CAS handling
+            if self.cas_activation():
+                return
+
+            # RESUME Speed
+            v_set = self.art_msg['V_ART']
+
+            # set speed only if speed was not set before
+            if v_set == 0:
+                # v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+                v_set = math.floor(self.vehicle_msgs['signals']['V_ANZ'])
+
+            # and power
+            self.acc_activation(v_set)
+            return
+
+        # ACC speed adjustment
+        if self.art.state == ArtState.ACC_active:
+            #  speed +1
+            v_set = self.art_msg['V_ART'] + 1
+
+            self.acc_set_speed(v_set)
+
+        # LIM activation
+        if self.art.state == ArtState.LIM_standby:
+            self.lim_activation(self.vehicle_msgs['signals']['V_ANZ'])
+            return
+
+        # LIM speed adjustment
+        if self.art.state == ArtState.LIM_active:
+            self.art_msg['V_ART'] += 1
+            self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
 
     def lever_up(self):
         self.log.info('Lever PLUS pressed')
 
+        # display trigger
+        self.acc_set_dspl_trigger()
+
+        # signal = self.vehicle_msgs['signals']
+
+        # ACC activation
+        if self.art.state == ArtState.ACC_standby:
+
+            # CAS handling
+            if self.cas_activation():
+                return
+
+            # set speed
+            v_set = math.floor(self.vehicle_msgs['signals']['V_ANZ'])
+
+            # and power
+            self.acc_activation(v_set)
+            return
+
+        # ACC speed adjustment
+        if self.art.state == ArtState.ACC_active:
+
+            # CAS handling
+            if self.cas_activation():
+                return
+
+            #  set speed to next tens +10
+            speed = self.art_msg['V_ART'] + 1
+            v_set = math.ceil(speed / 10) * 10
+
+            self.acc_set_speed(v_set)
+
+        # LIM activation
+        if self.art.state == ArtState.LIM_standby:
+            v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+            self.lim_activation(v_set)
+            return
+
+        # LIM speed adjustment
+        if self.art.state == ArtState.LIM_active:
+            speed = self.art_msg['V_ART'] + 1
+            self.art_msg['V_ART'] = math.ceil(speed / 10) * 10
+            self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
+
     def lever_down(self):
         self.log.info('Lever MINUS pressed')
+        
+        # display trigger
+        self.acc_set_dspl_trigger()
+
+        # signal = self.vehicle_msgs['signals']
+
+        # ACC ready -> activation
+        if self.art.state == ArtState.ACC_standby:
+
+            if self.cas_activation():
+                return
+
+            # set current speed
+            v_set = math.floor(self.vehicle_msgs['signals']['V_ANZ'])
+            # and power
+            self.acc_activation(v_set)
+            return
+
+        # ACC active
+        if self.art.state == ArtState.ACC_active:
+
+            if self.cas_activation():
+                return
+
+            #  flor speed to lower tens -10
+            speed = self.art_msg['V_ART'] - 1
+            v_set = math.floor(speed / 10) * 10
+
+            self.acc_set_speed(v_set)
+
+        # LIM activation
+        if self.art.state == ArtState.LIM_standby:
+            # set current speed
+            v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
+            self.lim_activation(v_set)
+            return
+
+        # LIM speed adjustment
+        if self.art.state == ArtState.LIM_active:
+            speed = self.art_msg['V_ART'] - 1
+            self.art_msg['V_ART'] = math.floor(speed / 10) * 10
+            self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
+
+    # -------------- CAS ------------------------------
+
+    def cas_activation(self):
+        # CAS will be activated only at low speed
+        # LIM overwrites CAS
+        if self.vehicle_msgs['signals']['V_ANZ'] <= 20:
+            self.art['cas_active'] = 1
+            self.log.info('CAS on')
+
+            return True
+        return False
+
+    def cas_deactivation(self):
+        self.art['cas_active'] = 0
+        self.log.info('CAS off')
+
+    # -------------- ACC ------------------------------
+
+    def acc_activation(self, v_set):
+
+        self.acc_set_speed(v_set)
+
+        pass
+
+    def acc_deactivation(self):
+        pass
+
+    def acc_set_speed(self, v_set):
+
+        # lower limit
+        if v_set < self.config.acc_min_speed:
+            v_set = self.config.acc_min_speed
+        
+        # upper limit
+        if v_set > self.config.acc_max_speed:
+            v_set = self.config.acc_max_speed
+
+        # set
+        self.art_msg['V_ART'] = v_set
+
+        self.log.info('Set speed: ' + str(self.art_msg['V_ART']))
+
+    
+    # TODO -------------- LIM ------------------------------
+
+    def lim_activation(v_set)
+        pass
+
+    def lim_deactivation(self):
+        pass
+
+# -------------- HMI ------------------------------
+
+    def acc_set_dspl_trigger(self):
+        
+        # set art show trigger in display
+        self.art_msg['ART_DSPL_NEU'] = 1
+
+        # display switch to art page
+        self.art_msg['ART_DSPL_EIN'] = 1
+        self.art['dspl_trigger_ts'] = utils.timestamp_ms()
+        # needs to reset after a some time
+
+        # clear blinking '---' this is set later if needed
+        self.art_msg['ART_DSPL_LIM'] = 0
+        self.art_msg['ART_DSPL_BL'] = 0
+
+        self.log.debug('Trigger Display')
+
+    def acc_set_dspl_lim_trigger(self):
+    
+        # show --- in display if speed is too slow or too fast
+        self.art_msg['ART_DSPL_LIM'] = 1
+        # blink display
+        self.art_msg['ART_DSPL_BL'] = 1
+        # set VERUGBAR
+        self.art_msg['ART_VFBR'] = 0
+
+    def acc_reset_trigger(self):
+        # reset only if a trigger is active
+        if self.art['dspl_trigger_ts'] != 0:
+
+            # get current time
+            now = utils.timestamp_ms()
+
+            # to calc time delta
+            delta_time = now - self.art['dspl_trigger_ts']
+
+            # time is up
+            if delta_time >= self.config.art_trigger_time:
+                self.log.debug('Reset Display trigger')
+
+                # clear
+                self.art_msg['ART_DSPL_EIN'] = 0
+                self.art_msg['ART_DSPL_LIM'] = 0
+                self.art_msg['ART_DSPL_BL'] = 0
+                # is ready again
+                self.art_msg['ART_VFBR'] = 1
+                # clear trigger
+                self.art['dspl_trigger_ts'] = 0
+
+    def set_warning(self, light=0, beep=0, duration=200):
+    
+            # switch to acc display
+            self.acc_set_dspl_trigger()
+    
+            if light > 0:
+                # set light on timer
+                self.art['info_light_duration'] = duration
+                self.log.info('INFO LIGHT on')
+    
+            if beep > 0:
+                # set beep on timer
+                self.art['warn_beep_duration'] = duration
+                self.log.info('BEEP')
+
+    # TODO calc warnings only with radar input
+    def warnings(self):
+        # TODO car too close
+        # TODO delta speed too big
+
+        # AAS_LED_BL -> LED ACC blinking -> check/test
+
+        # ART_INFO -> Light
+        if self.art['info_light_duration'] > 0:
+            # switch warning light on
+            self.art_msg['ART_INFO'] = 1
+
+            # reduce duration time
+            self.art['info_light_duration'] -= self.art['dt_ms']
+
+            # set to zero if it goes too far
+            if self.art['info_light_duration'] < 0:
+                self.art['info_light_duration'] = 0
+
+        else:
+            # set warning light off
+            self.art_msg['ART_INFO'] = 0
+
+        # ART_WT -> Warning (Ton) Sound
+        if self.art['warn_beep_duration'] > 0:
+            # warning beep on
+            self.art_msg['ART_WT'] = 1
+
+            # reduce duration time
+            self.art['warn_beep_duration'] -= self.art['dt_ms']
+
+            # set to zero if it goes too far
+            if self.art['warn_beep_duration'] < 0:
+                self.art['warn_beep_duration'] = 0
+        else:
+            # warning beep off
+            self.art_msg['ART_WT'] = 0
 
     # -------------- STATUS ------------------------------
 
