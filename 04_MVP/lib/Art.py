@@ -143,7 +143,7 @@ class ART:
         if self.art['ready']:
 
             # is the driver braking
-            if self.is_btn_pressed(new_msgs, 'SFB'):
+            if self.is_btn_pressed(new_msgs, 'SFB', double_use=True):
                 self.art_braking()
 
             # not braking
@@ -185,7 +185,7 @@ class ART:
                     self.lever_down()
 
                 # LIMITER Activation
-                if self.is_btn_pressed(new_msgs, 'VMAX_AKT'):
+                if self.is_btn_pressed(new_msgs, 'VMAX_AKT', double_use=True):
                     self.log.info('Limiter Mode ON')
                     # TODO self.acc_deactivation()
                     #self.art.state = ArtState.LIM
@@ -194,7 +194,8 @@ class ART:
                 if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1):  # FALLING_EDGE -> ??? don't work ->
                     self.log.info('Limiter Mode OFF')
 
-            # TODO - go on
+            # TODO - signal updates for time critical updates
+            # for acceleration
 
             pass
 
@@ -343,17 +344,22 @@ class ART:
         self.art_msg['V_ART'] = target_speed # but remember target speed ;)
         self.art_msg['ART_ABW_AKT'] = abw_akt # remember warning config
 
-    def is_btn_pressed(self, data, signal, mode=0):
+    def is_btn_pressed(self, data, signal, mode=0, double_use=False):
+        """
+        data is a dict {'signal_name':0, ...}
 
-        # data is a dict {'signal_name':0, ...}
+        Modes
+        0 = Rising Edge - button is now pressed - DEFAULT
+        1 = Falling Edge - button is not pressed anymore
+        2 = Holding - Triggers output every x time during long hold
+        Modes not needed now:
+        falling edge, is ON, is OFF
 
-        # Modes
-        # 0 = Rising Edge - button is now pressed - DEFAULT
-        # 1 = Falling Edge - button is not pressed anymore
-        # 2 = Holding - Triggers output every x time during long hold
-        # Modes not needed now:
-        # falling edge, is ON, is OFF
-
+        double_use - if the same button is used more times
+        for example for Mode 0 and 1, set the first button check on double_use=True
+        NOTE: the last button check have to be double_use=False - it set the last state to compare to the new one
+        """
+        
         out = False
 
         # signal_key is in data
@@ -370,15 +376,13 @@ class ART:
                     if self.art['button_states'][signal] == 0:
                         # YES it was not pressed before -> RISING EDGE detected -> action
                         self.log.debug('Button: ' + signal + ' - Rising Edge detection')
-                        out = True
+                        out = True               
 
-                    self.log.info(self.art['button_states'][signal])
-
-            # TODO: Dont detect falling edges ----- BUT WHY
             # MODE 1: Falling Edge - button is not pressed anymore
             if mode == 1:
                 # is button NOT pressed now?
                 if signal_value == 0:
+                #if signal_value == 0 and self.art['button_states'][signal] > 0:
                     # YES it is NOT pressed now
                     # but was it pressed before?
                     # if self.art['button_states'][signal] == 1:
@@ -410,14 +414,15 @@ class ART:
             # remember the current state to compare it with the next input
             # state = signal_value
 
-            # reset button state if button is not pressed
-            if signal_value == 0:
-                self.art['button_states'][signal] = 0
+            if not double_use:
+                # reset button state if button is not pressed
+                if signal_value == 0:
+                    self.art['button_states'][signal] = 0
 
-            # set when button was pressed ONYL when the button is pressed, and it was not pressed before
-            if signal_value == 1 and self.art['button_states'][signal] == 0:
-                # save timestamp
-                self.art['button_states'][signal] = utils.timestamp_ms()
+                # set when button was pressed ONYL when the button is pressed, and it was not pressed before
+                if signal_value == 1 and self.art['button_states'][signal] == 0:
+                    # save timestamp
+                    self.art['button_states'][signal] = utils.timestamp_ms()
 
         # report result
         return out
@@ -437,19 +442,19 @@ class ART:
         #    self.acc_set_dspl_trigger()
 
     def art_warning_button(self):
-        pass
+        self.log.info('Warning Button pressed')
 
     def lever_off(self):
-        pass
+        self.log.info('Lever OFF pressed')
 
     def lever_wa(self):
-        pass
+        self.log.info('Lever WA/Resume pressed')
 
     def lever_up(self):
-        pass
+        self.log.info('Lever PLUS pressed')
 
     def lever_down(self):
-        pass
+        self.log.info('Lever MINUS pressed')
 
     # -------------- STATUS ------------------------------
 
