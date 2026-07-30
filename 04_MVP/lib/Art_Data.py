@@ -30,8 +30,8 @@ from queue import Queue
 
 class ArtState(Enum):
     OFF = 0
-    ART_standby= 1
-    ART_active = 2
+    ACC_standby= 1
+    ACC_active = 2
     LIM_standby = 3
     LIM_active = 4
 

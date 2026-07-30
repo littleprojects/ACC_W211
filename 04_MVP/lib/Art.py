@@ -8,6 +8,9 @@ ART/DTS Class
     - Adaptive Cruise Control (ACC)
     - Limiter (Lim)
 
+    
+CAS - SBC-S
+
 """
 
 import copy
@@ -38,7 +41,7 @@ class ART:
 
             'cas_active': 0,
             
-            #'dist_factor': 100,
+            'dist_factor': 100,
 
             'dt_ms': 100, # delta time 100ms = 10Hz
             'dspl_trigger_ts': 0,
@@ -154,7 +157,7 @@ class ART:
 
             # not braking
             if self.is_btn_pressed(new_msgs, 'SFB', mode=1):
-                self.log.info('Braking End')
+                self.log.info('Brake release')
 
             # Warning ON/OFF toggle button
             if self.is_btn_pressed(new_msgs, 'ART_ABW_BET'):
@@ -194,7 +197,7 @@ class ART:
                 if self.is_btn_pressed(new_msgs, 'VMAX_AKT', double_use=True):
                     self.log.info('Limiter Mode ON')
                     # TODO self.acc_deactivation()
-                    #self.art.state = ArtState.LIM
+                    #self.art['state'] = ArtState.LIM
 
                 # LIMITER deactivation
                 if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1):  # FALLING_EDGE -> ??? don't work ->
@@ -216,6 +219,10 @@ class ART:
 
         self.log.debug("10Hz tick")
 
+        # clear warnings - will be overwritten if something is wrong
+        self.art_msg['ART_WT'] = 0
+        self.art_msg['ART_INFO'] = 0
+
         # load data from ART Data
         self.art_msg = self.Art_Data.get_art_msg()
         self.vehicle_msgs = self.Art_Data.get_vehicle_msgs()
@@ -223,8 +230,17 @@ class ART:
         # do the magic
         self.update_bz()    # increment message counter
         self.is_ready()     # ready check - are all messages there and in time
+        self.acc_reset_trigger() # display trigger
 
-        self.acc_reset_trigger()
+        if self.art['ready']:
+
+            self.cas_check()    # CAS deactivation at higher speeds
+
+            self.radar()        # TODO
+
+            self.acc_calc_distance()
+
+            self.warnings()         # warning sound and light
         # TODO
 
         # write data back
@@ -323,7 +339,9 @@ class ART:
     def set_art_ready(self):
         # if it was not ready before
         if not self.art['ready']:
+            self.art['state'] = ArtState.ACC_standby
             self.log.info('READY')
+            
 
         # set
         self.art_msg['ART_OK'] = 1
@@ -332,6 +350,7 @@ class ART:
 
         # if no chancel condition quit - we are ready to go
         self.art['ready'] = True
+
 
     def reset_to_default(self):
         # if art is not ready anymore
@@ -440,7 +459,7 @@ class ART:
     
         self.log.info('BRAKING')
 
-        if self.art.state == ArtState.ACC_active:
+        if self.art['state'] == ArtState.ACC_active:
             # self.level_off()
             self.acc_deactivation()
 
@@ -469,14 +488,14 @@ class ART:
             return
 
         # ACC off
-        if self.art.state == ArtState.ACC_active:
+        if self.art['state'] == ArtState.ACC_active:
             # display trigger
             #self.acc_set_dspl_trigger()
             self.acc_deactivation()
             return
 
         # Limiter off
-        if self.art.state == ArtState.LIM_active:
+        if self.art['state'] == ArtState.LIM_active:
             #self.acc_set_dspl_trigger()
             self.lim_deactivation()
             return
@@ -491,7 +510,7 @@ class ART:
         # signal = self.vehicle_msgs['signals']
 
         # ACC activation
-        if self.art.state == ArtState.ACC_standby:
+        if self.art['state'] == ArtState.ACC_standby:
 
             # CAS handling
             if self.cas_activation():
@@ -510,19 +529,19 @@ class ART:
             return
 
         # ACC speed adjustment
-        if self.art.state == ArtState.ACC_active:
+        if self.art['state'] == ArtState.ACC_active:
             #  speed +1
             v_set = self.art_msg['V_ART'] + 1
 
             self.acc_set_speed(v_set)
 
         # LIM activation
-        if self.art.state == ArtState.LIM_standby:
+        if self.art['state'] == ArtState.LIM_standby:
             self.lim_activation(self.vehicle_msgs['signals']['V_ANZ'])
             return
 
         # LIM speed adjustment
-        if self.art.state == ArtState.LIM_active:
+        if self.art['state'] == ArtState.LIM_active:
             self.art_msg['V_ART'] += 1
             self.art_msg['V_ZIEL'] = self.art_msg['V_ART']
 
@@ -535,7 +554,7 @@ class ART:
         # signal = self.vehicle_msgs['signals']
 
         # ACC activation
-        if self.art.state == ArtState.ACC_standby:
+        if self.art['state'] == ArtState.ACC_standby:
 
             # CAS handling
             if self.cas_activation():
@@ -549,7 +568,7 @@ class ART:
             return
 
         # ACC speed adjustment
-        if self.art.state == ArtState.ACC_active:
+        if self.art['state'] == ArtState.ACC_active:
 
             # CAS handling
             if self.cas_activation():
@@ -562,13 +581,13 @@ class ART:
             self.acc_set_speed(v_set)
 
         # LIM activation
-        if self.art.state == ArtState.LIM_standby:
+        if self.art['state'] == ArtState.LIM_standby:
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
             self.lim_activation(v_set)
             return
 
         # LIM speed adjustment
-        if self.art.state == ArtState.LIM_active:
+        if self.art['state'] == ArtState.LIM_active:
             speed = self.art_msg['V_ART'] + 1
             self.art_msg['V_ART'] = math.ceil(speed / 10) * 10
             self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
@@ -582,7 +601,7 @@ class ART:
         # signal = self.vehicle_msgs['signals']
 
         # ACC ready -> activation
-        if self.art.state == ArtState.ACC_standby:
+        if self.art['state'] == ArtState.ACC_standby:
 
             if self.cas_activation():
                 return
@@ -594,7 +613,7 @@ class ART:
             return
 
         # ACC active
-        if self.art.state == ArtState.ACC_active:
+        if self.art['state'] == ArtState.ACC_active:
 
             if self.cas_activation():
                 return
@@ -606,20 +625,21 @@ class ART:
             self.acc_set_speed(v_set)
 
         # LIM activation
-        if self.art.state == ArtState.LIM_standby:
+        if self.art['state'] == ArtState.LIM_standby:
             # set current speed
             v_set = math.ceil(self.vehicle_msgs['signals']['V_ANZ'])
             self.lim_activation(v_set)
             return
 
         # LIM speed adjustment
-        if self.art.state == ArtState.LIM_active:
+        if self.art['state'] == ArtState.LIM_active:
             speed = self.art_msg['V_ART'] - 1
             self.art_msg['V_ART'] = math.floor(speed / 10) * 10
             self.log.info('LIM: set speed to ' + str(self.art_msg['V_ART']))
 
-    # -------------- CAS ------------------------------
+    # -------------- CAS / SBC-S------------------------------
 
+    # TODO: do optional via config
     def cas_activation(self):
         # CAS will be activated only at low speed
         # LIM overwrites CAS
@@ -630,20 +650,136 @@ class ART:
             return True
         return False
 
+    def cas_check(self):
+        # CAS deactivation if speed is over 60
+        if self.art['cas_active'] == 1 and self.vehicle_msgs['signals']['V_ANZ'] > 60:
+            self.cas_deactivation()
+
     def cas_deactivation(self):
         self.art['cas_active'] = 0
         self.log.info('CAS off')
 
     # -------------- ACC ------------------------------
 
+    # TODO PID init
     def acc_activation(self, v_set):
 
-        self.acc_set_speed(v_set)
+        ready_to_activate = True
 
-        pass
+        # activation check
 
-    def acc_deactivation(self):
-        pass
+        signal = self.vehicle_msgs['signals']
+
+        if self.art.state is not ArtState.ACC_standby:
+            self.log.warning('Cant enable ACC: was not in ACC state before')
+            ready_to_activate = False
+
+        # is driver BRAKING currently
+        if self.button_states['SFB'] == 1:
+            self.log.info('Cant enable ACC: Driver is braking - SFB = 1')
+            ready_to_activate = False
+
+        # gear is NOT in D by wahlhelbelstellung or drehrichtungtempomat
+        if signal['WHST'] != 4 or signal['DRTGTM'] != 1:
+            self.log.info('Cant enable ACC: Gear is NOT in D')
+            ready_to_activate = False
+
+        # CAS is active
+        if self.art['cas_active'] == 1:
+            self.log.info('Cant enable ACC: CAS is active')
+            ready_to_activate = False
+
+        # check for MIN speed
+        if signal['V_ANZ'] < int(self.config.acc_off_speed):
+            self.log.info('Cant enable ACC: too slow - V_ANZ: ' + str(signal['V_ANZ']))
+            # trigger '---' display
+            self.acc_set_dspl_lim_trigger()
+            ready_to_activate = False
+
+        # check for MAX speed
+        if signal['V_ANZ'] > int(self.config.acc_max_speed):
+            self.log.info('Cant enable ACC: too fast - V_ANZ: ' + str(signal['V_ANZ']))
+            # trigger '---' display
+            self.acc_set_dspl_lim_trigger()
+            ready_to_activate = False
+
+        # lever not OK
+        if signal['WH_UP'] == 1:
+            self.log.info('Cant enable ACC: Selector Level implausible - WH_UP = 1')
+            ready_to_activate = False
+
+        # all good -> ACTIVATE ACC
+        if ready_to_activate:
+
+            self.log.info('ACC activation')
+
+            # activate ACC
+            self.art.state = ArtState.ACC_active
+
+            # set speed
+            self.acc_set_speed(v_set)
+            #self.art_msg['V_ART'] = target_speed
+            #self.log.info('ACC: set speed to ' + str(self.art_msg['V_ART']))
+
+            # segment display on
+            self.art_msg['ART_SEG_EIN'] = 1
+
+            # init PID Controller
+            # TODO self.pid.init_pid(target_speed, signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
+
+            # set distance
+            self.acc_calc_distance()
+
+            self.log.info(f"Init PID with Kp: {self.pid.kp}, Ki: {self.pid.ki}, Kd: {self.pid.kd}")
+
+        else:
+            # just to be sure
+            self.art.state = ArtState.ACC_standby
+
+    # TODO: PID reset
+    def acc_deactivation(self, beep=False):
+
+        self.log.info('ACC deactivation')
+
+        # disable segment display
+        self.art_msg['ART_SEG_EIN'] = 0
+
+        # ART AUS in Display
+        # self.art_msg['TM_EIN_ART'] = 0
+        # will not work here,because it's not triggered by 10Hz function
+
+        # reset outputs
+        self.art_msg['ART_REG'] = 0
+        self.art_msg['M_ART'] = 0
+        self.art_msg['ART_BRE'] = 0
+        self.art_msg['MBRE_ART'] = 0
+        self.art_msg['BL_UNT'] = 0
+        self.art_msg['ART_UEBERSP'] = 0
+
+        self.art_msg['LIM_REG'] = 0
+        self.art_msg['VMAX_AKT'] = 0
+
+        self.art_msg['GMIN_ART'] = 0  # minimum gear
+        self.art_msg['GMAX_ART'] = 0  # maximum gear
+        self.art_msg['AKT_R_ART'] = 0  # shift down request from art
+
+        # switch to state ACC ready
+        # TODO: switch state here or in caller function?
+        self.art.state = ArtState.ACC_standby
+
+        # reset integral
+        # self.pid.set_integral(0)
+        # TODO: self.pid.reset()
+
+        # display trigger
+        self.acc_set_dspl_trigger()
+
+        if beep:
+            self.set_warning(beep=1, duration=self.config.warning_time)
+
+        # TODO: somewhere else
+        #if self.config.mdf_auto_save:
+        #    self.mdf.write_mdf()
 
     def acc_set_speed(self, v_set):
 
@@ -655,15 +791,108 @@ class ART:
         if v_set > self.config.acc_max_speed:
             v_set = self.config.acc_max_speed
 
+        v_set = int(v_set)
+
         # set
         self.art_msg['V_ART'] = v_set
 
         self.log.info('Set speed: ' + str(self.art_msg['V_ART']))
 
+    # TODO from Radar imput
+    def acc_calc_distance(self):
+        # Vehiclespeed and distance factor related dist calc
+
+        # get vehicle speed
+        
+        # get the distance from the ajuster
+        if 'ART_ABSTAND' in self.vehicle_msgs['signals']:
+            # read dist_factor from CAN
+            new_dist_factor = self.vehicle_msgs['signals']['ART_ABSTAND']
+
+            # is factor different to the old one
+            if new_dist_factor != self.art['dist_factor']:
+                # show on display
+                self.acc_set_dspl_trigger()
+                self.log.info('Dist Factor ajust: ' + str(new_dist_factor))
+
+            # safe factor
+            self.art['dist_factor'] = new_dist_factor
+
+            # 0 -> wide
+            # 100 -> normal
+            # 200 -> short distance
+
+        # is signal already in vehicle data
+        if 'V_ANZ' in self.vehicle_msgs['signals']:
+
+            speed = self.vehicle_msgs['signals']['V_ANZ']
+            # round up
+            speed = math.ceil(speed)
+
+            # calc distance in [m]
+            # but doesnt matter if no radar is connected
+            #dist = speed / 2
+
+            factor_var = self.art['dist_factor'] / -100  # turn 200->-2 short; 100->-1 normal; 0->0 wide
+            dist = speed * (0.475 - factor_var * 0.2476) + 3.5
+
+            # round up to meter
+            dist = math.ceil(dist)
+
+            # keep a minimum distance of 3 meter Todo min_dist as config parameter
+            dist = max(3, dist)
+
+            # zero dist at standstill
+            if speed == 0:
+                dist = 0
+
+            # and set new distance
+            self.art_msg['SOLL_ABST'] = dist
+
+    # TODO
+    def radar(self):
+        # Data
+        # S_OBJ - standing object detected
+        # ABST_R_OBJ - distance to relevant object [m]
+        # OBJ_ERK - object detected
+        # V_ZIEL - target vehicle speed [kph]
+
+        # set/update V_ZIEL / Targetspeed for ACC (rounded up)
+        self.art_msg['V_ZIEL'] = math.ceil(self.art_msg['V_ART'])
+
+        # OBJ_AGB - Object offer acc ? -> check
+        # ART_REAKT - show reaktivation after error -> check/test
+
+    def acc_gear_max(self, current_speed, current_gear, current_moment):
+
+        # TODO: a better speed and moment gear map
+
+        max_gear = 0
+
+        # torque is requested
+        if current_moment > 150:
+            max_gear = current_gear + 1
+
+        return max_gear
+
+    def acc_gear_min(self, current_speed, current_gear, current_moment):
+
+        # TODO: a better speed and moment gear map
+
+        min_gear = 0
+
+        # torque is requested
+        if current_moment > 150:
+            min_gear = current_gear - 1
+
+            # min gear is 2
+            min_gear = max(min_gear, 2)
+
+        return min_gear
     
     # TODO -------------- LIM ------------------------------
 
-    def lim_activation(v_set)
+    def lim_activation(v_set):
         pass
 
     def lim_deactivation(self):
