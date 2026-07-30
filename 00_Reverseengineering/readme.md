@@ -10,8 +10,8 @@
 
 <img src="SCU.jpg">
 
-The fist version of the *Distronic* is based on a SCU (Sensor and Control Unit).
-The Sensor data analys was also integrated in the ACC controll unit.
+The first version of the *Distronic* is based on a SCU (Sensor and Control Unit).
+The Sensor data analysis was also integrated in the ACC control unit.
 Later versions and the most comon architecture are seperate units. This makes it very hard to replace the sensor, because we also need to replace the control unit completly.
 
 **Challenge accepted**
@@ -29,7 +29,7 @@ The Distronic is connected via CAN to the CAN C (Engine Bus) and to the Radar Se
 
 <img src="DTR_Network.jpeg">
 
-So the DTR gehts the Radar RAW data, to the digitalisation and Speed control just via CAN and is located under the passenger seat.
+So the DTR gets the Radar RAW data, to the digitalization and Speed control just via CAN and is located under the passenger seat.
 
 Connection via CAN
 - CAN C: 
@@ -40,7 +40,7 @@ Connection via CAN
         - CAN C (Engine CAN)
     - Access at the ACC ECU or under entry at the left (driver) side (Green cables) -> for debug and reverse engineering
 - Power
-    - 12V from Cirtuit 87
+    - 12V from Circuit 87
     - GND
 
 Source https://w220.wiki/Distronic
@@ -53,8 +53,8 @@ Source https://w220.wiki/Distronic
 - doppler radar at 24Ghz
 - Sensor range: 0 - 150m
 - measure of speed differences form -50 to 200kph
-- Field of view: 3 bream with 3 deg = 9 deg total
-    - main corridor 3 deg = a line with at 100m
+- Field of view: 3 beams with 3 deg = 9 deg total
+    - main corridor 3 deg = a line at 100m
     - adapt this by 3 deg per side
 - sends the sensor data over a high frequency coaxial cable to the ACC CU
 
@@ -84,7 +84,7 @@ Needes Signals:
   - 300 = 180°
   - 600 = 360°
 - GIER_ROH / 1.6666 = ° or GIER_ROH * 0.6 = °
-  - 0.6 is very close to 57,2958 (180/PI) what is used to transform rad into deg
+  - 0.6 is very close to 57.2958 (180/PI) which is used to transform rad into deg
   - yaw rate is given in rad/s with factor 0.001
 
 - check mounting position to be sure. But should be in rage
@@ -104,14 +104,14 @@ Needes Signals:
 - Accelerate (ECU ME-SFI)
     - Speed increase by 1 kph or 10 kph steps
     - decease by 10 kph steps
-- breaks automaticaly (via ESP)
+- breaks automatically (via ESP)
     - limited to 2 m/s (20% of max break power)
     - if more breaking is required -> warn signal
     - breaking is off if the driver push the acceleration pedal (overwrite)
 - Gear shift (ETC Electronic Transmission Controll)
-- distance can be ajust between 1 to 2 seconds with a lever at the cenre consol
-- warnig at high speed difference to vehicle ahead (red distance warning lamp)
-- low distance warning <0.8 sec over 3 sec (red distance waring lamp)
+- distance can be adjust between 1 to 2 seconds with a lever at the center console
+- warning at high speed difference to vehicle ahead (red distance warning lamp)
+- low distance warning <0.8 sec over 3 sec (red distance warning lamp)
 - constant distance measure and display up to 150m, also if ACC is off
 - DTS swith of via
     - cruise control switch push forward
@@ -125,9 +125,9 @@ DTR will NOT engage:
 - With Parking Brake activated
 - With ESP manually switched OFF
 - If gear selector is NOT in position 'D'
-- SBC-S/H is activ
-- ESP, ABS,, Brake Gearbox or Engine shows an error
-- Chrash Signal
+- SBC-S/H is active
+- ESP, ABS, Brake Gearbox or Engine shows an error
+- Crash Signal
 
 
 ### Controll inputs
@@ -140,7 +140,7 @@ Cruise Control Switch
 
 Distance lever
 - select distance between 1 and 2 sec
-- Center sonsole
+- Center console
 
 Distance Warning button
 - Enable/disable the distance warning
@@ -150,23 +150,28 @@ Distance Warning button
 
 ### Limiter
 
-Is acitvated be pressing the lever stick.
+Is activated by pressing the lever stick.
 - Disables ACC
 - Disables Limiter 
 
-### ACC - Adaptive Criuse Control
+### ACC - Adaptive Cruise Control
 
-Can be activate over 30kph.
+Can be activated over 30kph.
 Switch off at 20 kph.
 
-### CAS - City Assist
+### CAS - City Assist - aka - SBC-S (Stop) or (Stau - Trafficjam)
 
-Breaks automatically your car down and hold the brak until you push the pedal again.
-Helps on hillup start or on traffic jam.
+Brakes automatically your car down and hold the brake until you push the pedal again.
+Helps on hill start or on traffic jam. In traffic you just need to push the accelration pedal to go on. The car brakes itself if you release the acc pedal.
 
-Can be activate between 0 and 20 kph by Resume, up, Down.
-Work until 60 kph.
+Can be activated between 0 and 20 kph by lever resume, up, down.
+Deactivates over 60 kph.
 If you press Resume, Up or Down over 30 kph. The ACC switch on and CAS goes off
+
+Only know on the W211 from 2003 to 2005.
+Maybe I can deactivate it on may 2003 W211. The SBC-S system kicks in at low speed and blocks the inputs in this range.
+
+SBS-S (Stop) is not SBC-H (Hold)!
 
 ## Vehicle Interface
 
@@ -188,10 +193,10 @@ CAN C (Chassis or engine CAN)
 | Input                 | Signal              | Source      | Reason                                                                                 | Alternative                     |
 |-----------------------|---------------------|-------------|----------------------------------------------------------------------------------------|---------------------------------|
 | **Driver**            |                     |             |                                                                                        |                                 |
-| Acc Pedel             | M_FV                | MS_212      | overwrite, acc in passiv mode Moment Fahrervorgabe                                     |                                 |
-| Breake pedal          | SFB (Fahrer Bremst) | BS_300      | ACC OFF                                                                                | BLS (BremsLichtSchalter) BS_200 |
-| Steeringangle         | LWL                 | ACC_LRW 236 | Target selection in corners, acc passiv at shart corners, switch off at fast steerings |                                 |
-| Steering speed        | vLWL                | ACC_LRW     | switch OFF at high steering manouvers                                                  | Ableitung von LWL               |
+| Acc Pedal             | M_FV                | MS_212      | overwrite, acc in passive mode Moment Fahrervorgabe                                    |                                 |
+| Brake pedal           | SFB (Fahrer Bremst) | BS_300      | ACC OFF                                                                                | BLS (BremsLichtSchalter) BS_200 |
+| Steeringangle         | LWL                 | ACC_LRW 236 | Target selection in corners, acc passive at sharp corners, switch off at fast steerings |                                 |
+| Steering speed        | vLWL                | ACC_LRW     | switch OFF at high steering maneuvers                                                  | Ableitung von LWL               |
 | **ACC related**       |                     |             |                                                                                        |                                 |
 | - **from Stick**      |                     |             |                                                                                        |                                 |
 | - set                 | WA                  | ART_MRM_238 | (on, resume, +1 kph)                                                                   |                                 |
@@ -199,15 +204,15 @@ CAN C (Chassis or engine CAN)
 | - down                | S_Minus_B           | ART_MRM_238 | (on, -10kph)                                                                           |                                 |
 | - off                 | AUS                 | ART_MRM_238 | OFF                                                                                    |                                 |
 | - **from Console:**   |                     |             |                                                                                        |                                 |
-| - distance ajust      | ART_Abstand         | ESZ_240     | (acc distance calc)                                                                    |                                 |
+| - distance adjust     | ART_Abstand         | ESZ_240     | (acc distance calc)                                                                    |                                 |
 | - warning on/off      | ART_ABW_BET         | ESZ_240     | send warning or not                                                                    |                                 |
 | **vehicle**           |                     |             |                                                                                        |                                 |
 | speed                 | V_ANZ kph           | Kombi_412   | (current speed -> acceleration calc, NO acc activation below 30 and over max)          |                                 |
 | current engine moment | M_STAT              | MS_312      | startmoment for ACC                                                                    |                                 |
 | max speed             | V_MAX_FIX (kph)     | MS_608      | (winterreifen) (Limit acc) optional, can be hardcoded                                  |                                 |
-| Fuellevel             | Tank_FS (L)         | Kombi_408   | ACC diable or switch off at low fuel                                                   |                                 |
+| Fuellevel             | Tank_FS (L)         | Kombi_408   | ACC disable or switch off at low fuel                                                  |                                 |
 | Gear is in 'D'        | DRTGTM = 1          | BS_200      | enable                                                                                 | V_ANZ speed over 30kph          |
-| ESP is NOT off        | ESP_BET             | ESZ_240     | off or diabled                                                                         |                                 |
+| ESP is NOT off        | ESP_BET             | ESZ_240     | off or disabled                                                                        |                                 |
 | ESP Eperation         | ESP_BET             | ESZ_240     | off                                                                                    |                                 |
 | Crash                 | CRASH               | ESZ_240     | off                                                                                    | CRASH_CNF                       |
 
@@ -255,7 +260,7 @@ Focus on:
 | Device          | CANs | Power | Housing  | Cost  | Addon needs                 |
 |-----------------|------|-------|----------|-------|-----------------------------|
 | MRS M2600       | 2-3  | 9-32V | Alu IP65 | <500€ | -                           |
-| TTC 32x         | 2    | 8-32V | Alu IP67 | 1000€ | Dev Enviroment (extra cost) | 
+| TTC 32x         | 2    | 8-32V | Alu IP67 | 1000€ | Dev Environment (extra cost) | 
 | BODAS RC5-6/40  | 3    | 8-32V | Alu IP6x | ?     | -                           | 
 | BODAS RC-4-5/30 | 2    | 8-32V | Alu IP6x | ?     | -                           | 
 
@@ -311,6 +316,9 @@ Warning calc
 * distance to low warning <0.8 sec over 3 sec (red distance waring lamp)
 * high speed differences to target
 
+- test brake conditions and edge cases
+- test sensor reliability
+- test CAN message parsing
 
 ## Reverse Engineering
 
