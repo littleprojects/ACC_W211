@@ -272,6 +272,7 @@ def task_10hz():
         mdf.add_signals(art_msgs, 'ART_')
         mdf.add_signals(art.art, 'art_')
 
+        # TODO: MDF auto save
 
     except Exception as e:
         log.exception(e)

@@ -201,7 +201,7 @@ class ART:
 
                 # LIMITER deactivation
                 if self.is_btn_pressed(new_msgs, 'VMAX_AKT', mode=1):  # FALLING_EDGE -> ??? don't work ->
-                    self.log.info('Limiter Mode OFF')
+                    self.log.info('ACC Mode ON - Limiter Mode OFF')
 
             # TODO - signal updates for time critical updates
             # for acceleration
@@ -240,14 +240,33 @@ class ART:
 
             self.acc_calc_distance()
 
-            self.warnings()         # warning sound and light
-        # TODO
+            state = self.art['state']
+
+            # DO THE MAGIC
+            if state == ArtState.ACC_standby or state == ArtState.ACC_active:
+                # set modes
+                self.art_msg['ART_EIN'] = 1
+                self.art_msg['LIM_REG'] = 0
+
+                self.acc_calc()
+
+            if state == ArtState.LIM_standby or state == ArtState.LIM_active:
+                # set modes
+                self.art_msg['ART_EIN'] = 0
+                self.art_msg['LIM_REG'] = 1
+
+                self.lim_calc()
+
+            self.warnings()         # at least the warning sound and light calc to have the lastet values 
+        
+        else:
+            # ART is NOT ready
+            # TODO: do an reset, show error, ...
+            pass
 
         # write data back
         self.Art_Data.set_art_msg(self.art_msg)
         self.Art_Data.set_state(self.art['state'])
-        
-        #self.Art_Data.set_vehicle_msgs(self.vehicle_msgs)
 
     def update_bz(self):
 
@@ -639,6 +658,26 @@ class ART:
 
     # -------------- CAS / SBC-S------------------------------
 
+    # TODO - currenty not in use
+    def mode_change(self, new_mode):
+
+        # current state
+        state = self.art['state']
+
+        # ACC to LIM
+        if state == ArtState.ACC_standby or state == ArtState.ACC_active:
+            if new_mode == ArtState.LIM_standby:
+
+                self.acc_deactivation()
+
+                # set modes
+                self.art_msg['ART_EIN'] = 1
+                self.art_msg['LIM_REG'] = 0
+
+        # LIM to ACC
+
+    # -------------- CAS / SBC-S------------------------------
+
     # TODO: do optional via config
     def cas_activation(self):
         # CAS will be activated only at low speed
@@ -889,13 +928,19 @@ class ART:
             min_gear = max(min_gear, 2)
 
         return min_gear
+
+    def acc_calc(self):
+        pass
     
     # TODO -------------- LIM ------------------------------
 
-    def lim_activation(v_set):
+    def lim_activation(self, v_set):
         pass
 
     def lim_deactivation(self):
+        pass
+
+    def lim_calc(self):
         pass
 
 # -------------- HMI ------------------------------
