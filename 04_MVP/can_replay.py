@@ -151,7 +151,7 @@ def read_file(file):
     if not os.path.exists(file):
         log.error(f"File not found: '{file}' ")
         # deactivate loop
-        config['loop'] = 0
+        config.loop = 0
         return
     
     line_count = 0
