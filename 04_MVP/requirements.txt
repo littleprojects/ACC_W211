@@ -1,0 +1,9 @@
+can
+cantools
+asammdf
+asammdf[gui]
+
+plotly
+
+flask
+streamlit
