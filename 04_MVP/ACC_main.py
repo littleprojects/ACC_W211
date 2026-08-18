@@ -23,7 +23,7 @@ from lib import utils
 from lib import Logger
 from lib.Can import Can
 from lib.Art import ART
-from lib.Mdf import Mdf
+#from lib.Mdf import Mdf # NOTE: ASAMMDF is not installed in this environment, so the MDF logging is disabled.
 from lib.Config import Config
 from lib.Art_Data import ArtData
 from lib.Can_Handler import CanHandler
@@ -210,7 +210,7 @@ if config.MAIN.comment is not None:
 #log.debug('New Config: ' + str(config_reader.print_config()))
 
 # MDF
-mdf = Mdf(config.MDF)
+#mdf = Mdf(config.MDF)
 
 # Data class to handle the data exchange between the different modules
 art_data = ArtData(config.ART_DATA)
@@ -268,9 +268,9 @@ def task_10hz():
         # log to MDF        
         # NOTE: if interval or autosave is active - do this in a thread to prevent long save times and interruptions
         # NOTE: save CAN data when they arrive 
-        mdf.add_signals(vehicle_msgs['signals'], 'CAN_C_')
-        mdf.add_signals(art_msgs, 'ART_')
-        mdf.add_signals(art.art, 'art_')
+        #mdf.add_signals(vehicle_msgs['signals'], 'CAN_C_')
+        #mdf.add_signals(art_msgs, 'ART_')
+        #mdf.add_signals(art.art, 'art_')
 
         # TODO: MDF auto save
 
@@ -404,6 +404,6 @@ if __name__ == "__main__":
     can_1.shutdown_connection()
 
     # write MDF log file
-    mdf.write_mdf()
+    #mdf.write_mdf()
 
     log.info('STOPPED - over and out')
