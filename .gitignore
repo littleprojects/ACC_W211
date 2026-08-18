@@ -4,6 +4,7 @@
 *.pdf
 *.mdf
 *.mf4
+*.bat
 ~*
 *.xlsx
 *.lnk
@@ -18,6 +19,7 @@ test_*.py
 03_PoC/log/
 03_PoC/test/
 04_MVP/log/
+log/
 Docu/
 
 

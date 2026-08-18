@@ -56,9 +56,9 @@ stats_update_time = 2
 # simulating CAN
 #can_app_name = vCAN
 
-[CAN_2]
+[CAN_0]
 
-app_name = VN1610
+#app_name = VN1610
 
 [DATA_SERVER]
 #port = 6000
@@ -67,5 +67,5 @@ app_name = VN1610
 #loglevel = debug
 
 # ONLY for tests
-max_msg_delay = 1000
+max_msg_delay = 1500
 
