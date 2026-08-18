@@ -39,6 +39,16 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 - Do not attempt at home.  
 - Project is under active development.  
 
+## Contribution 
+
+I am looking for contributors to help advance this project! 
+
+**Help needed:**
+- **Software:** Control algorithms, testing and validation, ecu integration, ...
+- **Hardware:** Sensor integration and mounting on the vehicle, ecu, ...
+
+If you are interested in contributing to this ACC replacement project, feel free to reach out.
+
 ---
 
 ## Development Progress
@@ -57,12 +67,15 @@ Modern radar systems use frequency sweeps, continuously changing frequency to im
 ### Pilot / Minimum Viable Product
 - ✅ PoC review and refactor
 - [ ] Driver inputs and state machine - 🚧 under construction 🚧
+- [ ] GUI
 - [ ] Simple Speed controller
-- [ ] Radar and tracking module  
+- [ ] Radar and tracking module
+  - [ ] Target selector
+  - [ ] Warning module  
 - [ ] Controller modules  
   - [ ] Distance control (`a_dist`)  
-  - [ ] Speed control (`a_speed`)  
-  - [ ] Warning module  
+  - [ ] Speed control (`a_speed`)
+  - [ ] Brake control    
   - [ ] Dynamic limiter (curve adaptation, `a_max`)  
 - [ ] Coordinator module `min(a_dist, a_speed, a_max)`  
 - [ ] Longitudinal control (vehicle model, `a → M`)  
