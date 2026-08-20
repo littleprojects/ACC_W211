@@ -24,8 +24,12 @@ st.set_page_config(page_title="ACC Live", layout="wide")
 #st.caption("Drücke Start, um die Abfrage zu beginnen. Stopp beendet die Schleife.")
 
 # --- Konfiguration: lokale API-Adresse ---
-api_url = "http://localhost:5001/data/can_c"
+can_api_url = "http://localhost:5001/data/can_c"
+art_api_url = "http://localhost:5001/data/art"
+radar_api_url = "http://localhost:5001/data/radar"
 
+# API response
+# can
 _ = """
 {
     "msgs":{"0x200":1787045085435,"0x210":1787045085383,"0x212":1787045085391,"0x218":1787045085383,"0x236":1787045085414,"0x238":1787045085341,"0x240":1787045085362,"0x300":1787045085340,"0x308":1787045085404,"0x312":1787045085425,"0x328":1787045085340,"0x408":1787045085404,"0x412":1787045085391,"0x418":1787045085383,"0x608":1787045085119},
@@ -106,8 +110,6 @@ _ = """
     }
 }
 """
-
-# api
 # art
 _ = """
 {
@@ -156,23 +158,65 @@ _ = """
 """
 # radar
 
+signals_to_display = [
+    "AUS", # off
+    "WA",
+    "S_MINUS_B",
+    "S_PLUS_B",   
+    "V_MAX_EIN",
+    "ART_ABSTAND",
+    "AKU_WARN_AUS",
+    "ART_REG",
+    "ART_UEBERSP",
+    "SFB", # brake
+]
 
 # Signale, die geplottet werden sollen
 signals_to_plot = [
-    #"V_MPH", 
     #"VB", 
-    #"T_MOT", 
-    #"T_AUSSEN",
-    "V_ANZ"
+    "V_ANZ",
+    "V_ART",
+    "V_ZIEL"
 ]
+
+signals_to_list = [
+    "V_ANZ",
+    "V_ART",
+    "V_ZIEL",
+    "",
+    "GIC",
+    "GMAX_ART",
+    "GMIN_ART",
+    " ",
+    "M_FV",
+    "M_ART",
+    "MBRE_ART",
+]
+
+signals_to_display2 = [
+    "ART_OK",
+]
+
+st.markdown(''' 
+    <style>
+    [data-testid="stAlertContainer"] {
+    #outline: 2px solid red;
+    //border-radius: 2px;
+    padding: 8px;
+} 
+    </style>
+    ''', unsafe_allow_html=True)
+
+# main signal list
+signals = {}
 
 # Wahl der Fenstergröße (Anzahl Messpunkte, z.B. 10 Sekunden bei 10 Hz = 100)
 window_size = st.sidebar.number_input("Fenstergröße (Messpunkte)", min_value=10, max_value=5000, value=200, step=10)
 
+# top bar
 with st.container(horizontal=True):
-    start_btn = st.button('Start', shortcut="s")
-    stop_btn= st.button('Stop', shortcut="w")
-    start_btn.
+    start_btn = st.button('GO', shortcut="g")
+    stop_btn= st.button('Stop', shortcut="s")
     status_placeholder = st.empty()
 
 # Speicher für Zeitstempel und Signale (fixed-size rolling buffer)
@@ -180,20 +224,55 @@ buffers = {s: deque(maxlen=window_size) for s in signals_to_plot}
 buffers["timestamp"] = deque(maxlen=window_size)
 
 # Display fields for latest values
-st.subheader("Aktuelle Werte")
-value_cols = st.columns(len(signals_to_plot))
-value_placeholders = {s: value_cols[i].empty() for i, s in enumerate(signals_to_plot)}
+#st.subheader("Aktuelle Werte")
+#value_cols = st.columns(len(signals_to_list))
+#value_placeholders = {s: value_cols[i].empty() for i, s in enumerate(signals_to_list)}
 
+# display signal values
+info_list = {}
+with st.container(horizontal=True, border=True):
+    for s in signals_to_display:
+        info_list[s] = st.info(f"{s}: ---")
 
 left_col, right_col = st.columns([3, 1], vertical_alignment="center")
 
+# plot
 with left_col:
     plot_placeholder = st.empty()
 
+# table
 with right_col:
-    st.dataframe({"Item": ["V_ANZ", 2, 3], 
-                  "Value": [str(buffers["V_ANZ"][-1]) if buffers["V_ANZ"] else "N/A", 5, 6]})
-    #st.write("V_ANZ: " + str(buffers["V_ANZ"][-1]) if buffers["V_ANZ"] else "V_ANZ: N/A")
+    right_col_placeholder = st.empty()
+
+table_data = {}
+for s in signals_to_list:
+    table_data[s] = None #signals.get(s, '---')
+
+with right_col_placeholder: 
+    st.table(
+    table_data,
+    border="horizontal",
+    width="content",
+    )
+
+# display signal values
+info_list2 = {}
+with st.container(horizontal=True, border=True):
+    for s in signals_to_display2:
+        info_list2[s] = st.info(f"{s}: ---")
+
+#info_list = {}
+#with st.container(horizontal=True, border=True):
+#    for s in signals_to_display:
+#        info_list[s] = st.info(f"{s}: ---")
+    
+
+#def plot_signal_values(placeholder, signals, signals_to_plot):
+#    """Plot signals to a line chart in the given placeholder"""
+#    # TODO: buffering is data is needed
+#    pass
+
+json_view = st.sidebar.empty()
 
 def fetch_once(url):
     try:
@@ -218,15 +297,32 @@ if running:
     try:
         while st.session_state.get("running", False):
             t = pd.Timestamp.now()
-            data = fetch_once(api_url)
-            if "error" in data:
-                status_placeholder.warning(f"Fehler bei API-Abfrage: {data['error']}")
+
+            can_data = fetch_once(can_api_url)
+            art_data = fetch_once(art_api_url)
+            #radar_data = fetch_once(radar_api_url)
+
+            if "error" in can_data or "error" in art_data:
+                status_placeholder.warning(f"Fehler bei API-Abfrage: {can_data['error']}")
                 time.sleep(0.5)
                 continue
 
-            signals = data.get("signals", {})
+            # update signal list
+            signals.update(can_data.get("signals", {}))
+            signals.update(art_data)
 
+            #signal_status.empty()
+            #display_signal_values(signals, signals_to_display)
+            for s in signals_to_display:
+                    sig = signals.get(s, '---')
+                    if sig > 0:
+                        info_list[s].success(f"{s}: {sig}")
+                    else:
+                        info_list[s].info(f"{s}: {sig}")
+
+            # plot
             buffers["timestamp"].append(t)
+
             for s in signals_to_plot:
                 val = signals.get(s, None)
                 buffers[s].append(val if val is not None else float("nan"))
@@ -235,20 +331,47 @@ if running:
             df_melt = df.melt(id_vars="timestamp", value_vars=signals_to_plot,
                               var_name="signal", value_name="value")
 
-            fig = px.line(df_melt, x="timestamp", y="value", color="signal",
-                          title="Signale über Zeit",
-                          labels={"value": "Wert", "timestamp": "Zeit"})
+            fig = px.line(df_melt, 
+                          x="timestamp", y="value", color="signal",
+                          #title="Signale über Zeit",
+                          labels={"value": "Wert", "timestamp": "Zeit"}
+                          )
             fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 
             plot_placeholder.plotly_chart(fig, width="stretch")
 
+            # table
+            table_data = {}
+            for s in signals_to_list:
+                table_data[s] = signals.get(s, None)
+
+            with right_col_placeholder: 
+                st.table(
+                    table_data,
+                    border="horizontal",
+                    width="content",
+                )
+
+            # display signals 2
+            for s in signals_to_display2:
+                sig = signals.get(s, '---')
+                if sig > 0:
+                    info_list2[s].success(f"{s}: {sig}")
+                else:
+                    info_list2[s].info(f"{s}: {sig}")
+
+            # json viewer
+            with json_view:
+                json_view.json(signals, expanded=True)
+
             # ~10 Hz
-            time.sleep(0.01)
+            time.sleep(0.005)
 
     except Exception as e:
         status_placeholder.error(f"Unerwarteter Fehler: {e}")
 else:
     status_placeholder.info("Stopped")
-    empty_df = pd.DataFrame({"timestamp": [], "value": [], "signal": []})
-    fig_empty = px.line(empty_df, x="timestamp", y="value")
-    plot_placeholder.plotly_chart(fig_empty, width="stretch")
+    # clear
+    #empty_df = pd.DataFrame({"timestamp": [], "value": [], "signal": []})
+    #fig_empty = px.line(empty_df, x="timestamp", y="value")
+    #plot_placeholder.plotly_chart(fig_empty, width="stretch")
