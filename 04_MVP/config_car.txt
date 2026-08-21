@@ -1,0 +1,8 @@
+
+
+[CAN_0]
+
+# connect to physical CAN device
+app_name = VN1610
+
+send = False

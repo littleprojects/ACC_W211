@@ -18,6 +18,7 @@ Todo:
 
 import time
 import threading
+import argparse
 
 from lib import utils
 from lib import Logger
@@ -193,6 +194,17 @@ log = Logger.Log('Main').get_logger()
 log.setLevel(Logger.parse_log_level(default_config['MAIN'].get('loglevel')))
 
 log.info('Init')
+
+# argparese
+parser=argparse.ArgumentParser()
+parser.add_argument("--config")
+args=parser.parse_args()
+
+# read arguments
+if args.config:
+    log.info('Load config from file: ' + args.config)
+    default_config['config_file'] = args.config
+
 
 # init config dict as global variable and load config from file
 # config data will load from the config file and overwrite the default values
@@ -377,6 +389,9 @@ def main_loop():
 
 # MAIN 
 if __name__ == "__main__":
+
+    log.info('Start Loop - Press Ctrl+C to stop')
+    
     # do the magic
     try:
         main_loop()
