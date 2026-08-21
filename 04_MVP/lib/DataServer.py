@@ -52,8 +52,10 @@ class DataServer:
                 return jsonify(self.art_data.get_vehicle_msgs()), 200
             elif key == 'radar':
                 return jsonify(self.art_data.get_radar_msgs()), 200
-            elif key == 'art':
+            elif key == 'can_art':
                 return jsonify(self.art_data.get_art_msg()), 200
+            elif key == 'art_states':
+                return jsonify(self.art_data.get_art_states()), 200
             else:
                 return jsonify({"error": "Key not found"}), 404
             

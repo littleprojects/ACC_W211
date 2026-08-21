@@ -132,9 +132,12 @@ class ArtData:
         }
         self._lock_radar_msgs = threading.Lock()  # threading lock variable for radar CAN msgs
 
+        # ART internal states to share
+        self._art_states = {}
+        self._lock_art_states = threading.Lock()  # threading lock variable for ART states
+
         # callbacks to notify other modules (e.g. Art.can_update)
         self._can_update_callbacks = []
-
 
         # storage for persistent data
         self._persistent_data = {
@@ -228,6 +231,19 @@ class ArtData:
         with self._lock_radar_msgs:
             self._radar_msgs['msgs'].update(new_msgs['msgs'])  # update the dict with new values
             self._radar_msgs['signals'].update(new_msgs['signals'])  # update the dict with new values
+
+    # ------ ART States SET GET Methods -----------------------------
+    def get_art_states(self):
+        # thread protection
+        with self._lock_art_states:
+            return copy.deepcopy(self._art_states)  # return a copy of the dict
+
+    def set_art_states(self, new_states):
+        # thread protection
+        with self._lock_art_states:
+            self._art_states.update(new_states)  # update the dict with new values
+            # convert state to string for JSON serialization
+            self._art_states['state'] = str(self._art_states['state'])
 
     # ------ write warning state to persitent memory -----------------------------
 

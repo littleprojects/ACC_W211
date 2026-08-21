@@ -25,8 +25,10 @@ st.set_page_config(page_title="ACC Live", layout="wide")
 
 # --- Konfiguration: lokale API-Adresse ---
 can_api_url = "http://localhost:5001/data/can_c"
-art_api_url = "http://localhost:5001/data/art"
+art_api_url = "http://localhost:5001/data/can_art"
+art_states_api_url = "http://localhost:5001/data/art_states"
 radar_api_url = "http://localhost:5001/data/radar"
+
 
 # API response
 # can
@@ -193,10 +195,11 @@ signals_to_list = [
     "MBRE_ART",
 ]
 
-signals_to_display2 = [
-    "ART_OK",
+art_signals_to_display = [
+    "ready",
 ]
 
+# css to make the info boxes smaller and more compact
 st.markdown(''' 
     <style>
     [data-testid="stAlertContainer"] {
@@ -208,7 +211,11 @@ st.markdown('''
     ''', unsafe_allow_html=True)
 
 # main signal list
+# CAN_C + ART CAN signals
 signals = {}
+
+# internal ART states and signals
+art_states = {}
 
 # Wahl der Fenstergröße (Anzahl Messpunkte, z.B. 10 Sekunden bei 10 Hz = 100)
 window_size = st.sidebar.number_input("Fenstergröße (Messpunkte)", min_value=10, max_value=5000, value=200, step=10)
@@ -258,7 +265,7 @@ with right_col_placeholder:
 # display signal values
 info_list2 = {}
 with st.container(horizontal=True, border=True):
-    for s in signals_to_display2:
+    for s in art_signals_to_display:
         info_list2[s] = st.info(f"{s}: ---")
 
 #info_list = {}
@@ -300,6 +307,7 @@ if running:
 
             can_data = fetch_once(can_api_url)
             art_data = fetch_once(art_api_url)
+            art_states = fetch_once(art_states_api_url)
             #radar_data = fetch_once(radar_api_url)
 
             if "error" in can_data or "error" in art_data:
@@ -310,6 +318,7 @@ if running:
             # update signal list
             signals.update(can_data.get("signals", {}))
             signals.update(art_data)
+            art_states.update(art_states)
 
             #signal_status.empty()
             #display_signal_values(signals, signals_to_display)
@@ -353,8 +362,8 @@ if running:
                 )
 
             # display signals 2
-            for s in signals_to_display2:
-                sig = signals.get(s, '---')
+            for s in art_signals_to_display:
+                sig = art_states.get(s, '---')
                 if sig > 0:
                     info_list2[s].success(f"{s}: {sig}")
                 else:
@@ -362,7 +371,8 @@ if running:
 
             # json viewer
             with json_view:
-                json_view.json(signals, expanded=True)
+                json_view.json(art_states, expanded=True)
+                #json_view.json(signals, expanded=False)
 
             # ~10 Hz
             time.sleep(0.005)

@@ -264,8 +264,9 @@ class ART:
             # TODO: do an reset, show error, ...
             pass
 
-        # write data back
+        # write data back to ART Data for sending out via CAN and sharing
         self.Art_Data.set_art_msg(self.art_msg)
+        self.Art_Data.set_art_states(self.art)
         self.Art_Data.set_state(self.art['state'])
 
     def update_bz(self):
