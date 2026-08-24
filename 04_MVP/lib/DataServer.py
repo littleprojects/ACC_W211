@@ -12,6 +12,11 @@ from flask import Flask, jsonify, request
 
 class DataServer:
     def __init__(self, config_DS, art_data=None):
+
+        # test to access global config
+        #global config
+        #self.main_config = config
+        #print(self.main_config)
         
         self.config = config_DS
         self.art_data = art_data

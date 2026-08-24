@@ -701,7 +701,7 @@ class ART:
 
     # -------------- ACC ------------------------------
 
-    # TODO PID init
+    # TODO controller init
     def acc_activation(self, v_set):
 
         ready_to_activate = True
@@ -776,7 +776,7 @@ class ART:
             # just to be sure
             self.art.state = ArtState.ACC_standby
 
-    # TODO: PID reset
+    # TODO: controller reset
     def acc_deactivation(self, beep=False):
 
         self.log.info('ACC deactivation')
@@ -930,7 +930,10 @@ class ART:
 
         return min_gear
 
+    # TODO
     def acc_calc(self):
+
+
         pass
     
     # TODO -------------- LIM ------------------------------

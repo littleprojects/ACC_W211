@@ -90,7 +90,7 @@ _ = """
         "TFSM":0,"TF_AUF":0,"TM_DL":81,"TM_REG":0,"T_AUSSEN":13.5,"T_GET":12.0,
         "T_LUFT":5.0,"T_MOT":8.5,"T_OEL":5.5,"UEHITZ":0,"UEHITZ_GET":0,"VB":8.15,"VGL_KL_DEF":0,
         "VMAX_AKT":0,"V_DSPL_AKT":0,"V_DSPL_AUS":0,"V_MAX_FIX":250,"V_MPH":0,
-        "WHST":4,"WH_PA":0,"WH_UP":0,"WRC":0,"WRC3":0,"ZH_FREIG":1,"vLRW":0.0
+        "WH_PA":0,"WH_UP":0,"WRC":0,"WRC3":0,"ZH_FREIG":1,"vLRW":0.0
 
         # vehicle
         "V_ANZ":6.1,
@@ -98,6 +98,7 @@ _ = """
         # driver
         "SFB":0, # brake
         "Pedalwert":0.0,
+        "WHST":4,
 
         #lever
         "SBCSH_AKT":1,
@@ -161,6 +162,7 @@ _ = """
 # radar
 
 signals_to_display = [
+    "WHST",
     "AUS", # off
     "WA",
     "S_MINUS_B",
@@ -168,9 +170,14 @@ signals_to_display = [
     "V_MAX_EIN",
     "ART_ABSTAND",
     "AKU_WARN_AUS",
-    "ART_REG",
-    "ART_UEBERSP",
+    #"ART_REG",
+    #"ART_UEBERSP",
     "SFB", # brake
+    "Pedalwert",
+    "ART_REG",
+    "ART_SEG_EIN",
+    "ART_UEBERSP",
+    "ART_BRE",
 ]
 
 # Signale, die geplottet werden sollen
@@ -178,26 +185,44 @@ signals_to_plot = [
     #"VB", 
     "V_ANZ",
     "V_ART",
-    "V_ZIEL"
+    "V_ZIEL",
+    "M_FV",
+    #"NMOT", RPM
+    "M_ART",
+    "MBRE_ART",
 ]
 
 signals_to_list = [
     "V_ANZ",
     "V_ART",
     "V_ZIEL",
+    "IST_ABST",
     "",
     "GIC",
     "GMAX_ART",
     "GMIN_ART",
     " ",
     "M_FV",
+    #"NMOT", RPM
     "M_ART",
     "MBRE_ART",
 ]
 
 art_signals_to_display = [
     "ready",
+    "state",    
 ]
+
+info_signals_to_display = {
+    "TANK_FS",
+    "T_AUSSEN",
+    "T_LUFT",
+    "T_MOT",
+    "T_OEL",
+    "T_GET",
+    "OEL_QUAL",
+    "OEL_FS",
+}
 
 # css to make the info boxes smaller and more compact
 st.markdown(''' 
@@ -218,7 +243,7 @@ signals = {}
 art_states = {}
 
 # Wahl der Fenstergröße (Anzahl Messpunkte, z.B. 10 Sekunden bei 10 Hz = 100)
-window_size = st.sidebar.number_input("Fenstergröße (Messpunkte)", min_value=10, max_value=5000, value=200, step=10)
+window_size = st.sidebar.number_input("Fenstergröße (Messpunkte)", min_value=10, max_value=500, value=100, step=10)
 
 # top bar
 with st.container(horizontal=True):
@@ -268,6 +293,13 @@ with st.container(horizontal=True, border=True):
     for s in art_signals_to_display:
         info_list2[s] = st.info(f"{s}: ---")
 
+# diplay the INFO signals
+
+info_list3 = {}
+with st.container(horizontal=True, border=True):
+    for s in info_signals_to_display:
+        info_list3[s] = st.info(f"{s}: ---")
+
 #info_list = {}
 #with st.container(horizontal=True, border=True):
 #    for s in signals_to_display:
@@ -279,12 +311,15 @@ with st.container(horizontal=True, border=True):
 #    # TODO: buffering is data is needed
 #    pass
 
+st.sidebar.subheader("ART states")
 json_view = st.sidebar.empty()
+st.sidebar.subheader("CAN signals")
+json_view2 = st.sidebar.empty()
 
 def fetch_once(url):
     try:
-        resp = requests.get(url, timeout=1.0)
-        resp.raise_for_status()
+        resp = requests.get(url, timeout=0.2)
+        #resp.raise_for_status()
         return resp.json()
     except Exception as e:
         return {"error": str(e)}
@@ -364,18 +399,34 @@ if running:
             # display signals 2
             for s in art_signals_to_display:
                 sig = art_states.get(s, '---')
-                if sig > 0:
-                    info_list2[s].success(f"{s}: {sig}")
+                if isinstance(sig, (int, bool)):
+                    if sig > 0:
+                        info_list2[s].success(f"{s}: {sig}")
+                    else:
+                        info_list2[s].info(f"{s}: {sig}")    
                 else:
-                    info_list2[s].info(f"{s}: {sig}")
+                    info_list2[s].success(f"{s}: {sig}")
+
+            # display signals 3
+            for s in info_signals_to_display:
+                sig = signals.get(s, '---')
+                #if isinstance(sig, (int, bool)):
+                if sig > 0:
+                    info_list3[s].success(f"{s}: {sig}")
+                else:
+                    info_list3[s].info(f"{s}: {sig}")    
+                #else:
+                #    info_list2[s].success(f"{s}: {sig}")
 
             # json viewer
             with json_view:
                 json_view.json(art_states, expanded=True)
-                #json_view.json(signals, expanded=False)
+
+            with json_view2:
+                json_view2.json(signals, expanded=False)
 
             # ~10 Hz
-            time.sleep(0.005)
+            #time.sleep(0.005)
 
     except Exception as e:
         status_placeholder.error(f"Unerwarteter Fehler: {e}")
