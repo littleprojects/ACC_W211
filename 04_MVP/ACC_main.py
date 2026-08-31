@@ -131,8 +131,8 @@ default_config = {
         #'acc_max_dec_rate': 20,     # [Nm/s] maximal deceleration rate
 
         # Moment Limits - Anti wind up - Limit output - CAN signal limits
-        #'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
-        #'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
+        'max_acc_moment': 320,      # [Nm] maximal acceleration moment - max 800 by CAN signal (13bit * 0.1)
+        'max_dec_moment': 100,      # [Nm] maximal deceleration moment - max 400 by CAN signal (12bit * 0.1)
     },
 
     # Limiter functions
@@ -391,7 +391,7 @@ def main_loop():
 if __name__ == "__main__":
 
     log.info('Start Loop - Press Ctrl+C to stop')
-    
+
     # do the magic
     try:
         main_loop()

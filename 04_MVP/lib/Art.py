@@ -21,6 +21,8 @@ from lib import utils
 from lib.Logger import Log
 from lib.Art_Data import ArtState
 
+from lib.CC_Controller import CC_Controller
+
 class ART:
     def __init__(self, config, art_data):
         
@@ -32,6 +34,9 @@ class ART:
         self.Art_Data = art_data # ART_Data class where all information are shared
         #self.mdf = mdf
 
+        # init Cruise Controller
+        self.cc = CC_Controller(self.config)
+
         # ART internal values
         self.art = {
             'state': ArtState.OFF,
@@ -40,6 +45,7 @@ class ART:
             'ready': False,
 
             'cas_active': 0,
+            'override': False,
             
             'dist_factor': 100,
 
@@ -60,6 +66,8 @@ class ART:
                 'CRASH': 0,  # Crash detection
                 'VMAX_AKT': 0,  # Limiter
             },            
+
+            'old_m_art': 0,
             
             # erros; 0 = no error
             'ready_error': 0,
@@ -236,7 +244,8 @@ class ART:
 
             self.cas_check()    # CAS deactivation at higher speeds
 
-            self.radar()        # TODO
+            # TODO
+            self.radar()        
 
             self.acc_calc_distance()
 
@@ -701,7 +710,6 @@ class ART:
 
     # -------------- ACC ------------------------------
 
-    # TODO controller init
     def acc_activation(self, v_set):
 
         ready_to_activate = True
@@ -765,18 +773,18 @@ class ART:
             self.art_msg['ART_SEG_EIN'] = 1
 
             # init PID Controller
-            # TODO self.pid.init_pid(target_speed, signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
+            # self.pid.init_pid(target_speed, signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
+            self.cc.start(v_set, signal['V_ANZ'], signal['M_STA'], signal['M_MIN'], signal['M_MAX'])
 
             # set distance
             self.acc_calc_distance()
 
-            self.log.info(f"Init PID with Kp: {self.pid.kp}, Ki: {self.pid.ki}, Kd: {self.pid.kd}")
+            #self.log.info(f"Init PID with Kp: {self.pid.kp}, Ki: {self.pid.ki}, Kd: {self.pid.kd}")
 
         else:
             # just to be sure
             self.art.state = ArtState.ACC_standby
 
-    # TODO: controller reset
     def acc_deactivation(self, beep=False):
 
         self.log.info('ACC deactivation')
@@ -809,7 +817,7 @@ class ART:
 
         # reset integral
         # self.pid.set_integral(0)
-        # TODO: self.pid.reset()
+        self.cc.reset
 
         # display trigger
         self.acc_set_dspl_trigger()
@@ -835,8 +843,10 @@ class ART:
 
         # set
         self.art_msg['V_ART'] = v_set
+        self.cc.set_target_speed(v_set)
 
         self.log.info('Set speed: ' + str(self.art_msg['V_ART']))
+        
 
     # TODO from Radar imput
     def acc_calc_distance(self):
@@ -889,7 +899,7 @@ class ART:
             # and set new distance
             self.art_msg['SOLL_ABST'] = dist
 
-    # TODO
+    # TODO - no radar now
     def radar(self):
         # Data
         # S_OBJ - standing object detected
@@ -933,8 +943,43 @@ class ART:
     # TODO
     def acc_calc(self):
 
+        m_out = 0
 
-        pass
+        signal = self.vehicle_msgs['signals']
+
+        # OVERRIDE 
+        # passive mode
+        if self.art['override']:
+
+            # override disable detection
+            # pedal < 5%
+            # speed <= target_speed
+            if signal['Pedalwert'] < 5 or signal['V_ANZ'] <= self.art_msg['V_ART']:
+
+                self.art['override'] = False
+                # passive mode OFF
+                self.set_passive(False)
+                
+
+        # Normal operation - NOT on passiv/override mode
+        #if not self.art['override']:
+        else:
+
+            # override / passive detection
+            if signal['M_FV'] > m_out + 20:
+                self.art['override'] = True
+                # display Distronic passive
+                self.set_passive(True)
+
+
+        # Controller
+        if not self.art['override']:
+            m_out = self.cc.calc(signal['V_ANZ'], signal['M_FEV'], signal['M_MIN'], signal['M_MAX'])
+
+            self.art['old_m_art'] = m_out
+
+        return m_out
+        
     
     # TODO -------------- LIM ------------------------------
 
@@ -1011,6 +1056,18 @@ class ART:
                 # set beep on timer
                 self.art['warn_beep_duration'] = duration
                 self.log.info('BEEP')
+
+    # TODO
+    def set_passive(self, state=bool):
+        # passive on
+        if state:
+            self.art_msg['ART_UEBERSP'] = 1
+            self.acc_set_dspl_trigger()
+
+        # passive OFF
+        else:
+            self.art_msg['ART_UEBERSP'] = 0
+            self.acc_set_dspl_trigger()
 
     # TODO calc warnings only with radar input
     def warnings(self):
