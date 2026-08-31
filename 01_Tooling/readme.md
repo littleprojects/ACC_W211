@@ -101,3 +101,14 @@ details view at close objects
 
 <img src="radar_view_2.jpg"><br>
 long distance view
+
+## Live Data Dashboard
+
+A Software to display the data live of the ACC
+
+- highlight the important data
+- Plot the data pver time to see the trend
+- Detail Data output
+- JSON bowser to show all data
+
+<img src="gui/Screenshot_gui.png">
