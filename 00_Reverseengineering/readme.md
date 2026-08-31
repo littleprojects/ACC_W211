@@ -274,11 +274,11 @@ FreeRTOS
 
 ## State machine
 
-INIT
+### INIT
 * startup
 Not Ready (Disabled)
 * Ready Checker (No -> Not Ready)
-Ready
+Ready_standby
 * Ready Checker (No -> NotReady, Yes -> go on)
 * warning calc
 * Enable condition (No -> Rady, Yes -> Active)
@@ -287,7 +287,7 @@ Activ
 * warning calc
 * Disable condition (No -> Active, Yes -> Ready)
 
-Ready_checker
+### Ready_checker
 * timeout check: collect all needed CAN messages to fill info storage
     * BS_200
     * ...
@@ -296,13 +296,13 @@ Ready_checker
     * other ready conditions (Vehicle, Radar)
     * speed to high >180
 
-Enable Condition
+### Enable Condition
 * Ready Check position
 * Speed over 30 kph
 * No Reverse
 * Set Speed (Up, Down, resume)
 
-Disable Condition
+### Disable Condition
 * cruise control switch push forward
 * break manually
 * speed is below 30 kph
@@ -310,6 +310,17 @@ Disable Condition
 * to hard breaking
 * to fast steering
 * to big Steering angle
+
+### Override / Passive
+You can overwrite the Distronic / ACC everytime by pressing the accelerator pedal.
+The ACC goes into a passive mode and will resume if you release the pedal.
+
+#### Enable Override (Distronic Passiv)
+* M_FEV > M_ART # Driver Moment request is bigger than the Distronic moment request
+
+#### Disable Override (Distronic Passive)
+* Speed V < V_ART
+* Pedal < 5%
 
 Warning calc
 * if warnings are active
